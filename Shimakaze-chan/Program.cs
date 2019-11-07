@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
@@ -12,6 +11,7 @@ using DSharpPlus.Lavalink.EventArgs;
 using DSharpPlus.Net;
 using System.Collections.Generic;
 using System.Threading;
+using Microsoft.EntityFrameworkCore;
 
 namespace Shimakaze
 {
@@ -49,7 +49,7 @@ namespace Shimakaze
     public static class ShimakazeBot
     {
         public static DiscordClient Client;
-
+        public static ShimaContext DbCtx;
         public static CommandsNextConfiguration CommandConfig = new CommandsNextConfiguration();
         public static Dictionary<ulong, string> CustomPrefixes = new Dictionary<ulong, string>();
         public static string DefaultPrefix = "!";
@@ -59,9 +59,8 @@ namespace Shimakaze
 
         public static void FetchPrefixes()
         {
-            //TODO: SLAVE VISCO SLAVE
-
-            // commandConfig.StringPrefixes = customPrefixes.Values.ToArray().Prepend(defaultPrefix);
+            var prefixes = DbCtx.GuildPrefix.ToList();
+            prefixes.ForEach(g => CustomPrefixes.Add(g.GuildId, g.Prefix));
         }
 
         public static void DumpPrefixes()
@@ -104,16 +103,22 @@ namespace Shimakaze
         [Command("cprefix")]
         public async Task CustomizePrefix(CommandContext ctx, [RemainingText] string newPrefix)
         {
-            if(ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id))
+            if (ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) || newPrefix == ShimakazeBot.DefaultPrefix)
             {
-                if (string.IsNullOrWhiteSpace(newPrefix))
+                if (string.IsNullOrWhiteSpace(newPrefix) || newPrefix == ShimakazeBot.DefaultPrefix)
                 {
                     ShimakazeBot.CustomPrefixes.Remove(ctx.Guild.Id);
+                    ShimakazeBot.DbCtx.GuildPrefix.RemoveRange(ShimakazeBot.DbCtx.GuildPrefix.Where(p => p.GuildId == ctx.Guild.Id));
+                    ShimakazeBot.DbCtx.SaveChanges();
                     await ctx.RespondAsync($"Prefix reset to default: **{ShimakazeBot.DefaultPrefix}**");
                 }
                 else
                 {
                     ShimakazeBot.CustomPrefixes[ctx.Guild.Id] = newPrefix;
+                    var guildPrefix = ShimakazeBot.DbCtx.GuildPrefix.First(p => p.GuildId == ctx.Guild.Id);
+                    guildPrefix.Prefix = newPrefix;
+                    ShimakazeBot.DbCtx.GuildPrefix.Update(guildPrefix);
+                    ShimakazeBot.DbCtx.SaveChanges();
                     await ctx.RespondAsync($"Prefix updated to: **{newPrefix}**");
                 }
             }
@@ -126,11 +131,13 @@ namespace Shimakaze
                 else
                 {
                     ShimakazeBot.CustomPrefixes.Add(ctx.Guild.Id, newPrefix);
+                    ShimakazeBot.DbCtx.GuildPrefix.Add(new GuildPrefix {GuildId = ctx.Guild.Id, Prefix = newPrefix});
+                    ShimakazeBot.DbCtx.SaveChanges();
                     await ctx.RespondAsync("Prefix updated to: **" + newPrefix + "**");
                 }
             }
-
-            ShimakazeBot.DumpPrefixes();
+            // TODO: move db stuff here maybe
+            // ShimakazeBot.DumpPrefixes();
         }
 
         //todo: also seems that join > play > leave > join > play doesn't play
@@ -440,8 +447,6 @@ namespace Shimakaze
 
             return Task.CompletedTask;
         }
-
-        
     }
 
     class Program
@@ -457,6 +462,8 @@ namespace Shimakaze
                 UseInternalLogHandler = true,
                 LogLevel = LogLevel.Debug
             });
+            
+            ShimakazeBot.DbCtx = new ShimaContext();
 
             ShimakazeBot.FetchPrefixes();
 
