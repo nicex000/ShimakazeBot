@@ -5,10 +5,10 @@ namespace Shimakaze
     public class ShimaContext : DbContext
     {
         public DbSet<GuildPrefix> GuildPrefix { get; set; }
-         
+        public DbSet<GuildJoin> GuildJoin { get; set; }
+
         public ShimaContext()
         {
-            Database.EnsureCreated();
         }
          
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

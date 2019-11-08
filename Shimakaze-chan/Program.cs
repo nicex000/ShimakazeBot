@@ -11,7 +11,6 @@ using DSharpPlus.Lavalink.EventArgs;
 using DSharpPlus.Net;
 using System.Collections.Generic;
 using System.Threading;
-using Microsoft.EntityFrameworkCore;
 
 namespace Shimakaze
 {
@@ -103,6 +102,12 @@ namespace Shimakaze
         [Command("cprefix")]
         public async Task CustomizePrefix(CommandContext ctx, [RemainingText] string newPrefix)
         {
+            if (ctx.Member != ctx.Guild.Owner)
+            {
+                await ctx.RespondAsync("Only the server owner can change the prefix.");
+                return;
+            }
+
             if (ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) || newPrefix == ShimakazeBot.DefaultPrefix)
             {
                 if (string.IsNullOrWhiteSpace(newPrefix) || newPrefix == ShimakazeBot.DefaultPrefix)
@@ -144,6 +149,20 @@ namespace Shimakaze
         [Command("j")]
         public async Task Join(CommandContext ctx)
         {
+
+            //db shit first
+            var existingJoin = ShimakazeBot.DbCtx.GuildJoin.FirstOrDefault(p => p.GuildId == ctx.Guild.Id);
+            if (existingJoin == null)
+            {
+                ShimakazeBot.DbCtx.GuildJoin.Add(new GuildJoin { GuildId = ctx.Guild.Id, ChannelId = ctx.Channel.Id });
+            }
+            else
+            {
+                existingJoin.ChannelId = ctx.Channel.Id;
+                ShimakazeBot.DbCtx.GuildJoin.Update(existingJoin);
+            }
+            ShimakazeBot.DbCtx.SaveChanges();
+
             var lv = ctx.Client.GetLavalink();
             if (ShimakazeBot.lvn == null)
                 try
@@ -457,7 +476,8 @@ namespace Shimakaze
         {
             ShimakazeBot.Client = new DiscordClient(new DiscordConfiguration
             {
-                Token = "NDc2MTUxMjIwMDA0OTc4Njg5.DnXuqg.ANWX8zmMBLU5U7XLI9ZA-8E0nRQ",
+                //Token = "NDc2MTUxMjIwMDA0OTc4Njg5.DnXuqg.ANWX8zmMBLU5U7XLI9ZA-8E0nRQ", //test
+                Token = "NjQyNDc4MDIzOTQ5NjgwNjYx.XcXg2A.wVEsOqhb1ZN6vczovBFAxkJ6Fro", //voice
                 TokenType = TokenType.Bot,
                 UseInternalLogHandler = true,
                 LogLevel = LogLevel.Debug
