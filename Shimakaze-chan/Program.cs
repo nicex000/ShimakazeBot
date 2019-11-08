@@ -10,7 +10,6 @@ using DSharpPlus.Lavalink;
 using DSharpPlus.Lavalink.EventArgs;
 using DSharpPlus.Net;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Shimakaze
 {
@@ -49,7 +48,6 @@ namespace Shimakaze
     {
         public static DiscordClient Client;
         public static ShimaContext DbCtx;
-        public static CommandsNextConfiguration CommandConfig = new CommandsNextConfiguration();
         public static Dictionary<ulong, string> CustomPrefixes = new Dictionary<ulong, string>();
         public static string DefaultPrefix = "!";
 
@@ -61,37 +59,23 @@ namespace Shimakaze
             var prefixes = DbCtx.GuildPrefix.ToList();
             prefixes.ForEach(g => CustomPrefixes.Add(g.GuildId, g.Prefix));
         }
-
-        public static void DumpPrefixes()
-        {
-            //TODO: SLAVE VISCO SLAVE
-
-            CommandConfig.StringPrefixes = CustomPrefixes.Values.ToArray().Prepend(DefaultPrefix);
-        }
     }
 
     public class Commands : BaseCommandModule
     {
         public override Task BeforeExecutionAsync(CommandContext ctx)
         {
-            CancellationToken token = new CancellationToken(true);
-            Task cancelledTask = Task.FromCanceled(token);
-
-            if (ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id))
-            {
-                if (ctx.Prefix != ShimakazeBot.CustomPrefixes[ctx.Guild.Id])
-                {
-                    //return cancelledTask; 
-                }
-            }
-            else if (ctx.Prefix != ShimakazeBot.DefaultPrefix)
-            {
-                //return cancelledTask;
-            }
-            return Task.CompletedTask; 
+            ShimakazeBot.Client.DebugLogger.LogMessage(
+                LogLevel.Info,
+                "DSharpPlus",
+                $"Executing {ctx.Message.Content} from {ctx.User.Username} in {ctx.Guild.Name}",
+                ctx.Message.Timestamp.DateTime);
+            return Task.CompletedTask;
         }
+       
 
         [Command("prefix")]
+        [Description("Displays the current prefix, if you\'re that confused.")]
         public async Task DisplayPrefix(CommandContext ctx)
         {
             await ctx.RespondAsync("This server\'s prefix is: **" + 
@@ -100,6 +84,7 @@ namespace Shimakaze
         }
 
         [Command("cprefix")]
+        [Description("Changes the prefix.")]
         public async Task CustomizePrefix(CommandContext ctx, [RemainingText] string newPrefix)
         {
             if (ctx.Member != ctx.Guild.Owner)
@@ -141,12 +126,11 @@ namespace Shimakaze
                     await ctx.RespondAsync("Prefix updated to: **" + newPrefix + "**");
                 }
             }
-            // TODO: move db stuff here maybe
-            // ShimakazeBot.DumpPrefixes();
         }
 
-        //todo: also seems that join > play > leave > join > play doesn't play
-        [Command("j")]
+        [Command("join")]
+        [Aliases("j", "s", "join-voice")]
+        [Description("Joins the voice channel you\'re in.")]
         public async Task Join(CommandContext ctx)
         {
 
@@ -215,6 +199,8 @@ namespace Shimakaze
         }
 
         [Command("leave")]
+        [Aliases("leave-voice")]
+        [Description("Leaves the voice channel.")]
         public async Task Leave(CommandContext ctx)
         {
             ctx.Client.GetLavalink();
@@ -241,19 +227,12 @@ namespace Shimakaze
             ShimakazeBot.musicLists.Remove(ctx.Guild);
             lvc.PlaybackFinished -= PlayNextTrack;
             lvc.Stop();
-
-            try
-            {
-                await ShimakazeBot.lvn.StopAsync();
-            }
-            catch (Exception e)
-            {
-                await ctx.RespondAsync(e.ToString());
-                throw;
-            }
+            lvc.Disconnect();
         }
 
-        [Command("p")]
+        [Command("play")]
+        [Aliases("p", "r", "req", "request")]
+        [Description("Plays the requested link or youtube search.")]
         public async Task Play(CommandContext ctx, [RemainingText] string songName)
         {
            
@@ -285,6 +264,7 @@ namespace Shimakaze
                 lavaConnection.Resume();
                 ShimakazeBot.musicLists[ctx.Guild].isPaused = false;
                 await ctx.RespondAsync("Music resumed.");
+                return;
             }
 
             var path = Path.Combine(Directory.GetCurrentDirectory(), songName);
@@ -293,7 +273,7 @@ namespace Shimakaze
                     ? await ShimakazeBot.lvn.GetTracksAsync(new Uri(songName))
                     : await ShimakazeBot.lvn.GetTracksAsync(songName);
 
-            await ctx.RespondAsync("👌");
+           
 
             switch (lavalinkLoadResult.LoadResultType)
             {
@@ -320,10 +300,13 @@ namespace Shimakaze
             if (lavaConnection.CurrentState.CurrentTrack.Equals(default(LavalinkTrack)))
             {
                 lavaConnection.Play(ShimakazeBot.musicLists[ctx.Guild].playlist.First().track);
+                await ctx.RespondAsync($"Playing **{ShimakazeBot.musicLists[ctx.Guild].playlist.First().track.Title}** Requested by *{ShimakazeBot.musicLists[ctx.Guild].playlist.First().requester}*");
             }
         }
 
         [Command("list")]
+        [Aliases("l", "playlist")]
+        [Description("Displays the playlist.")]
         public async Task List(CommandContext ctx)
         {
             var lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
@@ -368,6 +351,8 @@ namespace Shimakaze
         }
 
         [Command("pause")]
+        [Aliases("resume", "playpause")]
+        [Description("Pauses or resumes the music playback.")]
         public async Task Pause(CommandContext ctx)
         {
 
@@ -406,6 +391,7 @@ namespace Shimakaze
         }
 
         [Command("skip")]
+        [Description("Skips the current song in the playlist.")]
         public async Task Skip(CommandContext ctx)
         {
             var lavaConnection = ShimakazeBot.lvn.GetConnection(ctx.Guild);
@@ -487,13 +473,13 @@ namespace Shimakaze
 
             ShimakazeBot.FetchPrefixes();
 
-            ShimakazeBot.CommandConfig.PrefixResolver = (msg) =>
+
+
+        CommandsNextConfiguration CommandConfig = new CommandsNextConfiguration();
+
+        CommandConfig.PrefixResolver = (msg) =>
             {
-                ShimakazeBot.Client.DebugLogger.LogMessage(
-                    LogLevel.Info,
-                    "DSharpPlus",
-                    $"Processing {msg.Content}",
-                    DateTime.Now);
+                
                 return Task.Run(() =>
                 {
                     var guild = msg.Channel.Guild;
@@ -503,7 +489,7 @@ namespace Shimakaze
                 });
             };
 
-            ShimakazeBot.Client.UseCommandsNext(ShimakazeBot.CommandConfig).RegisterCommands<Commands>();
+            ShimakazeBot.Client.UseCommandsNext(CommandConfig).RegisterCommands<Commands>();
 
             ShimakazeBot.Client.UseLavalink();
 
