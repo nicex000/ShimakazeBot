@@ -43,7 +43,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Lavalink.jar">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="opus.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
