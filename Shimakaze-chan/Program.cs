@@ -10,6 +10,7 @@ using DSharpPlus.Lavalink;
 using DSharpPlus.Lavalink.EventArgs;
 using DSharpPlus.Net;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace Shimakaze
 {
@@ -471,25 +472,26 @@ namespace Shimakaze
             
             ShimakazeBot.DbCtx = new ShimaContext();
 
+            ShimakazeBot.DbCtx.Database.Migrate();
+
             ShimakazeBot.FetchPrefixes();
 
-
-
-        CommandsNextConfiguration CommandConfig = new CommandsNextConfiguration();
-
-        CommandConfig.PrefixResolver = (msg) =>
+            CommandsNextConfiguration commandConfig = new CommandsNextConfiguration
             {
-                
-                return Task.Run(() =>
+                PrefixResolver = (msg) =>
                 {
-                    var guild = msg.Channel.Guild;
-                    return msg.GetStringPrefixLength(ShimakazeBot.CustomPrefixes.ContainsKey(guild.Id)
-                        ? ShimakazeBot.CustomPrefixes[guild.Id]
-                        : ShimakazeBot.DefaultPrefix);
-                });
+                    return Task.Run(() =>
+                    {
+                        var guild = msg.Channel.Guild;
+                        return msg.GetStringPrefixLength(ShimakazeBot.CustomPrefixes.ContainsKey(guild.Id)
+                            ? ShimakazeBot.CustomPrefixes[guild.Id]
+                            : ShimakazeBot.DefaultPrefix);
+                    });
+                }
             };
 
-            ShimakazeBot.Client.UseCommandsNext(CommandConfig).RegisterCommands<Commands>();
+
+            ShimakazeBot.Client.UseCommandsNext(commandConfig).RegisterCommands<Commands>();
 
             ShimakazeBot.Client.UseLavalink();
 
