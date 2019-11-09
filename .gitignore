@@ -360,7 +360,9 @@ MigrationBackup/
 #resharper
 _ReSharper.Caches/
 
-#lavalink
+# Lavalink
 *.jar
-#test songs
+# Test songs
 *.mp3
+# User specific SDK settings
+global.json
