@@ -74,16 +74,6 @@ namespace Shimakaze
             return Task.CompletedTask;
         }
        
-
-        [Command("prefix")]
-        [Description("Displays the current prefix, if you\'re that confused.")]
-        public async Task DisplayPrefix(CommandContext ctx)
-        {
-            await ctx.RespondAsync("This server\'s prefix is: **" + 
-                             (ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) ? ShimakazeBot.CustomPrefixes[ctx.Guild.Id] : ShimakazeBot.DefaultPrefix) +
-                             "**\n You can change the prefix with **cprefix**");
-        }
-
         [Command("cprefix")]
         [Description("Changes the prefix.")]
         public async Task CustomizePrefix(CommandContext ctx, [RemainingText] string newPrefix)
@@ -127,6 +117,15 @@ namespace Shimakaze
                     await ctx.RespondAsync("Prefix updated to: **" + newPrefix + "**");
                 }
             }
+        }
+
+        [Command("info")]
+        [Description("Quick tooltip regarding the purpose of this bot.")]
+        public async Task DisplayInfo(CommandContext ctx)
+        {
+            await ctx.RespondAsync("This bot serves as a temporary hotfix compliment to the original Shimakaze's broken voicechat functions." +
+                " We will notify You when we're done with rewriting mainline Shimakaze and bring all of her functionality back up. At least " + 
+                "the parts that were actively used, we will leave out some useless shit like cleverbot.");
         }
 
         [Command("join")]
@@ -231,80 +230,6 @@ namespace Shimakaze
             lvc.Disconnect();
         }
 
-        [Command("play")]
-        [Aliases("p", "r", "req", "request")]
-        [Description("Plays the requested link or youtube search.")]
-        public async Task Play(CommandContext ctx, [RemainingText] string songName)
-        {
-           
-            LavalinkTrack track;
-            LavalinkLoadResult lavalinkLoadResult;
-            var lavaConnection = ShimakazeBot.lvn.GetConnection(ctx.Guild);
-
-            if (lavaConnection == null)
-            {
-                await ctx.RespondAsync("Not connected in this guild.");
-                return;
-            }
-
-            var chn = ctx.Member?.VoiceState?.Channel;
-            if (chn == null)
-            {
-                await ctx.RespondAsync("You need to be in a voice channel.");
-                return;
-            }
-            if (chn != lavaConnection.Channel)
-            {
-                await ctx.RespondAsync("You need to be in the same voice channel.");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(songName) && ShimakazeBot.musicLists[ctx.Guild].isPaused)
-            {
-                //fock u vosco
-                lavaConnection.Resume();
-                ShimakazeBot.musicLists[ctx.Guild].isPaused = false;
-                await ctx.RespondAsync("Music resumed.");
-                return;
-            }
-
-            var path = Path.Combine(Directory.GetCurrentDirectory(), songName);
-
-            lavalinkLoadResult = songName.StartsWith("http")
-                    ? await ShimakazeBot.lvn.GetTracksAsync(new Uri(songName))
-                    : await ShimakazeBot.lvn.GetTracksAsync(songName);
-
-           
-
-            switch (lavalinkLoadResult.LoadResultType)
-            {
-                case LavalinkLoadResultType.SearchResult:
-                case LavalinkLoadResultType.TrackLoaded:
-                    track = lavalinkLoadResult.Tracks.First();
-                    ShimakazeBot.musicLists[ctx.Guild].playlist.Add(new SongRequest(ctx.Member.Nickname, track));
-                    break;
-                case LavalinkLoadResultType.PlaylistLoaded:
-                    ShimakazeBot.musicLists[ctx.Guild].playlist.AddRange(lavalinkLoadResult.Tracks.Select(t => new SongRequest(ctx.Member.Nickname, t)));
-                    break;
-                case LavalinkLoadResultType.NoMatches:
-                    await ctx.RespondAsync("No matches found.");
-                    break;
-                case LavalinkLoadResultType.LoadFailed:
-                    await ctx.RespondAsync("Load failed.");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            // == null for structs, can be overloaded
-            // https://stackoverflow.com/a/15199135/8873517
-            if (lavaConnection.CurrentState.CurrentTrack.Equals(default(LavalinkTrack)))
-            {
-                lavaConnection.Play(ShimakazeBot.musicLists[ctx.Guild].playlist.First().track);
-                await ctx.RespondAsync($"Playing **{ShimakazeBot.musicLists[ctx.Guild].playlist.First().track.Title}** Requested by *{ShimakazeBot.musicLists[ctx.Guild].playlist.First().requester}*");
-            }
-        }
-
         [Command("list")]
         [Aliases("l", "playlist")]
         [Description("Displays the playlist.")]
@@ -389,6 +314,89 @@ namespace Shimakaze
                 ShimakazeBot.musicLists[ctx.Guild].isPaused = true;
                 await ctx.RespondAsync("Music paused.");
             }
+        }
+
+        [Command("play")]
+        [Aliases("p", "r", "req", "request")]
+        [Description("Plays the requested link or youtube search.")]
+        public async Task Play(CommandContext ctx, [RemainingText] string songName)
+        {
+           
+            LavalinkTrack track;
+            LavalinkLoadResult lavalinkLoadResult;
+            var lavaConnection = ShimakazeBot.lvn.GetConnection(ctx.Guild);
+
+            if (lavaConnection == null)
+            {
+                await ctx.RespondAsync("Not connected in this guild.");
+                return;
+            }
+
+            var chn = ctx.Member?.VoiceState?.Channel;
+            if (chn == null)
+            {
+                await ctx.RespondAsync("You need to be in a voice channel.");
+                return;
+            }
+            if (chn != lavaConnection.Channel)
+            {
+                await ctx.RespondAsync("You need to be in the same voice channel.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(songName) && ShimakazeBot.musicLists[ctx.Guild].isPaused)
+            {
+                //fock u vosco
+                lavaConnection.Resume();
+                ShimakazeBot.musicLists[ctx.Guild].isPaused = false;
+                await ctx.RespondAsync("Music resumed.");
+                return;
+            }
+
+            var path = Path.Combine(Directory.GetCurrentDirectory(), songName);
+
+            lavalinkLoadResult = songName.StartsWith("http")
+                    ? await ShimakazeBot.lvn.GetTracksAsync(new Uri(songName))
+                    : await ShimakazeBot.lvn.GetTracksAsync(songName);
+
+           
+
+            switch (lavalinkLoadResult.LoadResultType)
+            {
+                case LavalinkLoadResultType.SearchResult:
+                case LavalinkLoadResultType.TrackLoaded:
+                    track = lavalinkLoadResult.Tracks.First();
+                    ShimakazeBot.musicLists[ctx.Guild].playlist.Add(new SongRequest(ctx.Member.Nickname, track));
+                    break;
+                case LavalinkLoadResultType.PlaylistLoaded:
+                    ShimakazeBot.musicLists[ctx.Guild].playlist.AddRange(lavalinkLoadResult.Tracks.Select(t => new SongRequest(ctx.Member.Nickname, t)));
+                    break;
+                case LavalinkLoadResultType.NoMatches:
+                    await ctx.RespondAsync("No matches found.");
+                    break;
+                case LavalinkLoadResultType.LoadFailed:
+                    await ctx.RespondAsync("Load failed.");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            // == null for structs, can be overloaded
+            // https://stackoverflow.com/a/15199135/8873517
+            if (lavaConnection.CurrentState.CurrentTrack.Equals(default(LavalinkTrack)))
+            {
+                lavaConnection.Play(ShimakazeBot.musicLists[ctx.Guild].playlist.First().track);
+                await ctx.RespondAsync($"Playing **{ShimakazeBot.musicLists[ctx.Guild].playlist.First().track.Title}** Requested by *{ShimakazeBot.musicLists[ctx.Guild].playlist.First().requester}*");
+            }
+        }
+
+        [Command("prefix")]
+        [Description("Displays the current prefix, if you\'re that confused.")]
+        public async Task DisplayPrefix(CommandContext ctx)
+        {
+            await ctx.RespondAsync("This server\'s prefix is: **" + 
+                             (ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) ? ShimakazeBot.CustomPrefixes[ctx.Guild.Id] : ShimakazeBot.DefaultPrefix) +
+                             "**\n You can change the prefix with **cprefix**");
         }
 
         [Command("skip")]
