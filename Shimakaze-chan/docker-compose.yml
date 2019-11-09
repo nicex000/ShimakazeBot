@@ -1,0 +1,11 @@
+﻿version: '3'
+services:
+  shima:
+    build: .
+    network_mode: "host"
+    depends_on:
+      - db
+  db:
+    build: ./Database
+    ports:
+      - "5432:5432"
