@@ -5,7 +5,16 @@ services:
     network_mode: "host"
     depends_on:
       - db
+      - lava
+  lava:
+    image: fredboat/lavalink:master
+    volumes:
+      - ${PWD}/application.yml:/opt/Lavalink/application.yml
+    ports:
+      - "2333:2333"
   db:
-    build: ./Database
+    image: postgres:alpine
+    environment:
+      - POSTGRES_PASSWORD=password
     ports:
       - "5432:5432"
