@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -357,7 +357,7 @@ namespace Shimakaze
             
             lavalinkLoadResult = songName.StartsWith("http")
                     ? await ShimakazeBot.lvn.Rest.GetTracksAsync(new Uri(songName))
-                    : await ShimakazeBot.lvn.Rest.GetTracksAsync(songName, LavalinkSearchType.Youtube);
+                    : await ShimakazeBot.lvn.Rest.GetTracksAsync(songName);
 
             switch (lavalinkLoadResult.LoadResultType)
             {
@@ -379,12 +379,14 @@ namespace Shimakaze
                     throw new ArgumentOutOfRangeException();
             }
 
-            // == null for structs, can be overloaded
-            // https://stackoverflow.com/a/15199135/8873517
-            if (lavaConnection.CurrentState.CurrentTrack.Equals(default(LavalinkTrack)))
+            if (lavaConnection.CurrentState.CurrentTrack == null)
             {
                 lavaConnection.Play(ShimakazeBot.musicLists[ctx.Guild].playlist.First().track);
                 await ctx.RespondAsync($"Playing **{ShimakazeBot.musicLists[ctx.Guild].playlist.First().track.Title}** Requested by *{ShimakazeBot.musicLists[ctx.Guild].playlist.First().requester}*");
+            }
+            else
+            {
+                await ctx.RespondAsync($"Added **{lavalinkLoadResult.Tracks.First().Title}** to the queue. Requested by *{ctx.Member.Nickname}*");
             }
         }
 
@@ -469,7 +471,7 @@ namespace Shimakaze
         {
             ShimakazeBot.Client = new DiscordClient(new DiscordConfiguration
             {
-                //Token = "NDc2MTUxMjIwMDA0OTc4Njg5.DnXuqg.ANWX8zmMBLU5U7XLI9ZA-8E0nRQ", //test
+                // Token = "NDc2MTUxMjIwMDA0OTc4Njg5.DnXuqg.ANWX8zmMBLU5U7XLI9ZA-8E0nRQ", //test
                 Token = "NjQyNDc4MDIzOTQ5NjgwNjYx.XcXg2A.wVEsOqhb1ZN6vczovBFAxkJ6Fro", //voice
                 TokenType = TokenType.Bot,
                 UseInternalLogHandler = true,
