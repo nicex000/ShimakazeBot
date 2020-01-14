@@ -469,8 +469,8 @@ namespace Shimakaze
         {
             ShimakazeBot.Client = new DiscordClient(new DiscordConfiguration
             {
-                Token = "NDc2MTUxMjIwMDA0OTc4Njg5.DnXuqg.ANWX8zmMBLU5U7XLI9ZA-8E0nRQ", //test
-                //Token = "NjQyNDc4MDIzOTQ5NjgwNjYx.XcXg2A.wVEsOqhb1ZN6vczovBFAxkJ6Fro", //voice
+                // Token = "NDc2MTUxMjIwMDA0OTc4Njg5.DnXuqg.ANWX8zmMBLU5U7XLI9ZA-8E0nRQ", //test
+                Token = "NjQyNDc4MDIzOTQ5NjgwNjYx.XcXg2A.wVEsOqhb1ZN6vczovBFAxkJ6Fro", //voice
                 TokenType = TokenType.Bot,
                 UseInternalLogHandler = true,
                 LogLevel = LogLevel.Debug
