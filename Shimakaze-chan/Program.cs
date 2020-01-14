@@ -354,12 +354,10 @@ namespace Shimakaze
             }
 
             var path = Path.Combine(Directory.GetCurrentDirectory(), songName);
-
+            
             lavalinkLoadResult = songName.StartsWith("http")
-                    ? await ShimakazeBot.lvn.GetTracksAsync(new Uri(songName))
-                    : await ShimakazeBot.lvn.GetTracksAsync(songName);
-
-           
+                    ? await ShimakazeBot.lvn.Rest.GetTracksAsync(new Uri(songName))
+                    : await ShimakazeBot.lvn.Rest.GetTracksAsync(songName, LavalinkSearchType.Youtube);
 
             switch (lavalinkLoadResult.LoadResultType)
             {
