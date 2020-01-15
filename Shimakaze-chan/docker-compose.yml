@@ -15,8 +15,8 @@ services:
   db:
     image: postgres:alpine
     restart: always
-    # volumes:
-      # - /opt/shima-data:/var/lib/postgresql/data
+    volumes:
+      - ${HOME}/Shimakaze-db:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=password
     ports:
