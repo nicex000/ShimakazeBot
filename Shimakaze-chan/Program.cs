@@ -226,8 +226,8 @@ namespace Shimakaze
 
             ShimakazeBot.musicLists.Remove(ctx.Guild);
             lvc.PlaybackFinished -= PlayNextTrack;
-            lvc.Stop();
-            lvc.Disconnect();
+            await lvc.StopAsync();
+            await lvc.DisconnectAsync();
         }
 
         [Command("list")]
@@ -304,13 +304,13 @@ namespace Shimakaze
 
             if (ShimakazeBot.musicLists[ctx.Guild].isPaused)
             {
-                lavaConnection.Resume();
+                await lavaConnection.ResumeAsync();
                 ShimakazeBot.musicLists[ctx.Guild].isPaused = false;
                 await ctx.RespondAsync("Music resumed.");
             }
             else
             {
-                lavaConnection.Pause();
+                await lavaConnection.PauseAsync();
                 ShimakazeBot.musicLists[ctx.Guild].isPaused = true;
                 await ctx.RespondAsync("Music paused.");
             }
@@ -346,8 +346,7 @@ namespace Shimakaze
 
             if (string.IsNullOrWhiteSpace(songName) && ShimakazeBot.musicLists[ctx.Guild].isPaused)
             {
-                //fock u vosco
-                lavaConnection.Resume();
+                await lavaConnection.ResumeAsync();
                 ShimakazeBot.musicLists[ctx.Guild].isPaused = false;
                 await ctx.RespondAsync("Music resumed.");
                 return;
@@ -381,7 +380,7 @@ namespace Shimakaze
 
             if (lavaConnection.CurrentState.CurrentTrack == null)
             {
-                lavaConnection.Play(ShimakazeBot.musicLists[ctx.Guild].playlist.First().track);
+                await lavaConnection.PlayAsync(ShimakazeBot.musicLists[ctx.Guild].playlist.First().track);
                 await ctx.RespondAsync($"Playing **{ShimakazeBot.musicLists[ctx.Guild].playlist.First().track.Title}** Requested by *{ShimakazeBot.musicLists[ctx.Guild].playlist.First().requester}*");
             }
             else
@@ -434,12 +433,12 @@ namespace Shimakaze
 
             if (ShimakazeBot.musicLists[ctx.Guild].playlist.Count > 0)
             {
-                lavaConnection.Play(ShimakazeBot.musicLists[ctx.Guild].playlist.First().track);
+                await lavaConnection.PlayAsync(ShimakazeBot.musicLists[ctx.Guild].playlist.First().track);
                 await ctx.RespondAsync("Skipped *" + title +"*.");
             }
             else
             {
-                lavaConnection.Stop();
+                await lavaConnection.StopAsync();
                 await ctx.RespondAsync("Playlist ended with skip. (Skipped *" + title + "*)");
             }
         }
@@ -455,7 +454,7 @@ namespace Shimakaze
 
             if (ShimakazeBot.musicLists[e.Player.Guild].playlist.Count > 0)
             {
-                e.Player.Play(ShimakazeBot.musicLists[e.Player.Guild].playlist.First().track);
+                e.Player.PlayAsync(ShimakazeBot.musicLists[e.Player.Guild].playlist.First().track);
             }
 
 
