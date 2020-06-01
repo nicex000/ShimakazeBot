@@ -13,10 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00686" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00686" />
-    <PackageReference Include="DSharpPlus.Lavalink" Version="4.0.0-nightly-00686" />
-    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.0.0-nightly-00686" />
+    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00699" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00699" />
+    <PackageReference Include="DSharpPlus.Lavalink" Version="4.0.0-nightly-00699" />
+    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.0.0-nightly-00699" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.4" />
