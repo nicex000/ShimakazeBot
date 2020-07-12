@@ -55,10 +55,22 @@ namespace Shimakaze
         public static LavalinkNodeConnection lvn;
         public static Dictionary<DiscordGuild, GuildPlayer> musicLists = new Dictionary<DiscordGuild, GuildPlayer>();
 
+        public static List<ulong> guildDebugMode = new List<ulong>();
+
         public static void FetchPrefixes()
         {
             var prefixes = DbCtx.GuildPrefix.ToList();
             prefixes.ForEach(g => CustomPrefixes.Add(g.GuildId, g.Prefix));
+        }
+
+        public static bool CheckDebugMode(ulong guildId)
+        {
+            return guildDebugMode.Contains(guildId);
+        }
+
+        public static string AddWithDebug(string text, CommandContext ctx, bool condition)
+        {
+            return (condition && guildDebugMode.Contains(ctx.Guild.Id)) ? (text + "\n") : "";
         }
     }
 
@@ -119,6 +131,17 @@ namespace Shimakaze
             }
         }
 
+        [Command("debug")]
+        [Aliases("supadebug", "sd", "スーパーデバッグモード")]
+        public async Task DebugMode(CommandContext ctx)
+        {
+            bool toRemove = ShimakazeBot.guildDebugMode.Contains(ctx.Guild.Id);
+            if (toRemove) ShimakazeBot.guildDebugMode.Remove(ctx.Guild.Id);
+            else ShimakazeBot.guildDebugMode.Add(ctx.Guild.Id);
+
+            await ctx.RespondAsync("スーパーデバッグモード" + (!toRemove ? " **enabled** for " : " **disabled** for ") + ctx.Guild.Name + " (" + ctx.Guild.Id + ")");
+        }
+
         [Command("info")]
         [Description("Quick tooltip regarding the purpose of this bot.")]
         public async Task DisplayInfo(CommandContext ctx)
@@ -133,6 +156,7 @@ namespace Shimakaze
         [Description("Joins the voice channel you\'re in.")]
         public async Task Join(CommandContext ctx)
         {
+            string debugResponse = "";
 
             //db shit first
             var existingJoin = ShimakazeBot.DbCtx.GuildJoin.FirstOrDefault(p => p.GuildId == ctx.Guild.Id);
@@ -148,6 +172,7 @@ namespace Shimakaze
             ShimakazeBot.DbCtx.SaveChanges();
 
             var lv = ctx.Client.GetLavalink();
+            debugResponse += ShimakazeBot.AddWithDebug("Unable to get LavaLink", ctx, lv == null);
             if (ShimakazeBot.lvn == null)
                 try
                 {
@@ -165,27 +190,40 @@ namespace Shimakaze
                 }
 
             var lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
+            debugResponse += ShimakazeBot.AddWithDebug("LVC status: " +
+                (lvc != null).ToString(), ctx, true);
             if (lvc != null)
             {
-                await ctx.RespondAsync("Already connected in this guild.");
+
+                await ctx.RespondAsync(debugResponse + "Already connected in this guild.");
                 return;
             }
 
             var chn = ctx.Member?.VoiceState?.Channel;
             if (chn == null)
             {
-                await ctx.RespondAsync("You need to be in a voice channel.");
+                await ctx.RespondAsync(debugResponse + "You need to be in a voice channel.");
                 return;
             }
 
             try
             {
+                if (ShimakazeBot.CheckDebugMode(ctx.Guild.Id)) await ctx.RespondAsync(
+                    "attempting connectAsync to " + chn.Name);
                 await ShimakazeBot.lvn.ConnectAsync(chn).ConfigureAwait(false);
-               
+                debugResponse += ShimakazeBot.AddWithDebug("Connection status after: " +
+                    (ShimakazeBot.lvn.GetConnection(ctx.Guild) != null).ToString(), ctx, true);
+                if (ShimakazeBot.lvn.GetConnection(ctx.Guild) != null)
+                {
+                    debugResponse += ShimakazeBot.AddWithDebug("  - Is connected: " +
+                        ShimakazeBot.lvn.GetConnection(ctx.Guild).IsConnected.ToString() + 
+                        "\n  - Channel: " +
+                        ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel.Name, ctx, true);
+                }
             }
             catch (Exception e)
             {
-                await ctx.RespondAsync(e.ToString());
+                await ctx.RespondAsync(debugResponse + e.ToString());
                 throw;
             }
 
@@ -195,7 +233,8 @@ namespace Shimakaze
             }
             ShimakazeBot.lvn.GetConnection(ctx.Guild).PlaybackFinished += PlayNextTrack;
 
-            await ctx.RespondAsync("Joined");
+
+            await ctx.RespondAsync(debugResponse + "Joined");
         }
 
         [Command("leave")]
@@ -203,24 +242,35 @@ namespace Shimakaze
         [Description("Leaves the voice channel.")]
         public async Task Leave(CommandContext ctx)
         {
-            ctx.Client.GetLavalink();
+
+            string debugResponse = "";
+
+            var lv = ctx.Client.GetLavalink();
+
+            debugResponse += ShimakazeBot.AddWithDebug("Unable to get LavaLink", ctx, lv == null);
 
             var lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
             if (ShimakazeBot.lvn == null || lvc == null)
             {
-                await ctx.RespondAsync("Not connected in this guild.");
+                await ctx.RespondAsync(debugResponse + "Not connected in this guild.");
                 return;
             }
+
+            debugResponse += ShimakazeBot.AddWithDebug("Connection state before: " +
+                "\n  - Is connected: " +
+                ShimakazeBot.lvn.GetConnection(ctx.Guild).IsConnected.ToString() +
+                "\n  - Channel: " +
+                ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel.Name, ctx, true);
 
             var chn = ctx.Member?.VoiceState?.Channel;
             if (chn == null)
             {
-                await ctx.RespondAsync("You need to be in a voice channel.");
+                await ctx.RespondAsync(debugResponse + "You need to be in a voice channel.");
                 return;
             }
             if (chn != lvc.Channel)
             {
-                await ctx.RespondAsync("You need to be in the same voice channel.");
+                await ctx.RespondAsync(debugResponse + "You need to be in the same voice channel.");
                 return;
             }
 
@@ -228,6 +278,26 @@ namespace Shimakaze
             lvc.PlaybackFinished -= PlayNextTrack;
             await lvc.StopAsync();
             await lvc.DisconnectAsync();
+
+            if (ShimakazeBot.CheckDebugMode(ctx.Guild.Id))
+            {
+                if (lvc != null || ShimakazeBot.lvn != null)
+                {
+                    debugResponse += "lvn node endpoint after: " +
+                        ShimakazeBot.lvn.NodeEndpoint +
+                        "\nConnection state after: " +
+                        (ShimakazeBot.lvn.GetConnection(ctx.Guild) != null).ToString() + "\n";
+
+                    if (ShimakazeBot.lvn.GetConnection(ctx.Guild) != null)
+                    {
+                        debugResponse += "\n  - Is connected: " +
+                            ShimakazeBot.lvn.GetConnection(ctx.Guild).IsConnected.ToString() +
+                            "\n  - Channel: " +
+                            ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel.Name;
+                    }
+                }
+                await ctx.RespondAsync(debugResponse + "Attempted leave.");
+            }
         }
 
         [Command("list")]
@@ -441,6 +511,73 @@ namespace Shimakaze
                 await lavaConnection.StopAsync();
                 await ctx.RespondAsync("Playlist ended with skip. (Skipped *" + title + "*)");
             }
+        }
+
+        [Command("status")]
+        public async Task Status(CommandContext ctx)
+        {
+            string responseString = "⛺\n";
+
+
+            responseString += "**LavalinkNodeConnection status**\n";
+
+            responseString += "  - connected: " + (ShimakazeBot.lvn != null ?
+                ShimakazeBot.lvn.IsConnected.ToString() : "false") + "\n";
+
+            if (ShimakazeBot.lvn != null)
+            {
+                responseString += "  - node endpoint: " + ShimakazeBot.lvn.NodeEndpoint + "\n";
+
+
+                responseString += "**LavalinkGuildConnection status**\n";
+
+                responseString += "  - connected: " +
+                    (ShimakazeBot.lvn.GetConnection(ctx.Guild) != null ?
+                    ShimakazeBot.lvn.GetConnection(ctx.Guild).IsConnected.ToString() :
+                    "**GetConnection Failed**") + "\n";
+
+                if (ShimakazeBot.lvn.GetConnection(ctx.Guild) != null &&
+                    ShimakazeBot.lvn.GetConnection(ctx.Guild).IsConnected)
+                {
+                    responseString += "  - channel: " +
+                        (ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel != null ?
+                        ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel.Name +
+                        " (*" + ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel.Id + "*)" :
+                        "**NULL**") + "\n";
+
+                    responseString += "  - current state: ";
+                    if (ShimakazeBot.lvn.GetConnection(ctx.Guild).CurrentState != null)
+                    {
+                        responseString += "\n";
+                        responseString += "        - track: " +
+                            (ShimakazeBot.lvn.GetConnection(ctx.Guild).CurrentState.CurrentTrack != null ?
+                            ShimakazeBot.lvn.GetConnection(ctx.Guild).CurrentState.CurrentTrack.Title :
+                            "**not playing**") + "\n";
+
+                        responseString += "        - position: " +
+                            ShimakazeBot.lvn.GetConnection(ctx.Guild).CurrentState.PlaybackPosition.ToString() + "\n";
+                        
+                        responseString += "        - last update: " +
+                            ShimakazeBot.lvn.GetConnection(ctx.Guild).CurrentState.LastUpdate.ToString() + "\n";
+
+
+                    }
+                    else responseString += "**NULL**";
+                }
+            }
+
+            responseString += "**Playlist status**\n";
+            responseString += "  - length: " + ShimakazeBot.musicLists.Count() + "\n";
+            responseString += "  - guild length: " +
+                (ShimakazeBot.musicLists.ContainsKey(ctx.Guild) ?
+                ShimakazeBot.musicLists[ctx.Guild].playlist.Count().ToString() :
+                "**no playlist**");
+
+
+
+
+
+            await ctx.RespondAsync(responseString);
         }
 
         private Task PlayNextTrack(TrackFinishEventArgs e)
