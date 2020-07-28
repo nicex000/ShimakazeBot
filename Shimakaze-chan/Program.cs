@@ -56,6 +56,7 @@ namespace Shimakaze
         public static Dictionary<DiscordGuild, GuildPlayer> musicLists = new Dictionary<DiscordGuild, GuildPlayer>();
 
         public static List<ulong> guildDebugMode = new List<ulong>();
+        public static bool shouldSendToDebugRoom = true;
 
         public static void FetchPrefixes()
         {
@@ -71,6 +72,12 @@ namespace Shimakaze
         public static string AddWithDebug(string text, CommandContext ctx, bool condition)
         {
             return (condition && guildDebugMode.Contains(ctx.Guild.Id)) ? (text + "\n") : "";
+        }
+
+        public async static void SendToDebugRoom(string text)
+        {
+            var channel = await Client.GetChannelAsync(421236403515686913);
+            await channel.SendMessageAsync(text, true);
         }
     }
 
@@ -140,6 +147,14 @@ namespace Shimakaze
             else ShimakazeBot.guildDebugMode.Add(ctx.Guild.Id);
 
             await ctx.RespondAsync("スーパーデバッグモード" + (!toRemove ? " **enabled** for " : " **disabled** for ") + ctx.Guild.Name + " (" + ctx.Guild.Id + ")");
+        }
+
+        [Command("debugchannel")]
+        [Aliases("debugflag")]
+        public async Task DebugChannelFlag(CommandContext ctx)
+        {
+            ShimakazeBot.shouldSendToDebugRoom = !ShimakazeBot.shouldSendToDebugRoom;
+            await ctx.RespondAsync("Shima debug channel " + (ShimakazeBot.shouldSendToDebugRoom ? " **enabled**" : "**disabled**"));
         }
 
         [Command("info")]
