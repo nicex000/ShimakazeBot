@@ -250,6 +250,11 @@ namespace Shimakaze
             {
                 ShimakazeBot.musicLists.Add(ctx.Guild, new GuildPlayer());
             }
+            else
+            {
+                lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
+                await lvc.PlayAsync(ShimakazeBot.musicLists[ctx.Guild].playlist.First().track);
+            }
             ShimakazeBot.lvn.GetConnection(ctx.Guild).PlaybackFinished += PlayNextTrack;
 
 
@@ -259,7 +264,7 @@ namespace Shimakaze
         [Command("leave")]
         [Aliases("leave-voice")]
         [Description("Leaves the voice channel.")]
-        public async Task Leave(CommandContext ctx)
+        public async Task Leave(CommandContext ctx, [RemainingText] string remainingText)
         {
 
             string debugResponse = "";
@@ -293,7 +298,9 @@ namespace Shimakaze
                 return;
             }
 
-            ShimakazeBot.musicLists.Remove(ctx.Guild);
+            if (!string.IsNullOrWhiteSpace(remainingText))
+                ShimakazeBot.musicLists.Remove(ctx.Guild);
+
             lvc.PlaybackFinished -= PlayNextTrack;
             await lvc.StopAsync();
             await lvc.DisconnectAsync();
@@ -324,23 +331,23 @@ namespace Shimakaze
         [Description("Displays the playlist.")]
         public async Task List(CommandContext ctx)
         {
-            var lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
-            if (lvc == null || !ShimakazeBot.musicLists.ContainsKey(ctx.Guild))
+            if (!ShimakazeBot.musicLists.ContainsKey(ctx.Guild))
             {
                 await ctx.RespondAsync("No playlist. Try making Shima join voice first.");
-
             }
             else
             {
                 if (ShimakazeBot.musicLists[ctx.Guild].playlist.Count > 0)
                 {
                     int i = 0;
+                    var lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
                     string msg = "";
                     foreach (var req in ShimakazeBot.musicLists[ctx.Guild].playlist)
                     {
                         if (i == 0)
                         {
-                            msg += ShimakazeBot.musicLists[ctx.Guild].isPaused ? "***PAUSED*** " : "Now playing ";
+                            msg += lvc == null ? "Starting with " :
+                                (ShimakazeBot.musicLists[ctx.Guild].isPaused ? "***PAUSED*** " : "Now playing ");
                         }
                         else if (i > 10)
                         {
@@ -403,6 +410,16 @@ namespace Shimakaze
                 ShimakazeBot.musicLists[ctx.Guild].isPaused = true;
                 await ctx.RespondAsync("Music paused.");
             }
+        }
+
+        [Command("clearplaylist")]
+        [Aliases("clear", "clearlist", "clist", "cl")]
+        [Description("Clears the playlist.")]
+        public async Task ClearPlaylist(CommandContext ctx)
+        {
+            ShimakazeBot.musicLists[ctx.Guild].playlist = new List<SongRequest> { 
+                ShimakazeBot.musicLists[ctx.Guild].playlist[0] };
+            await ctx.RespondAsync("Playlist cleared.");
         }
 
         [Command("play")]
