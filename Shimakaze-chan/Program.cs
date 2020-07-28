@@ -693,7 +693,7 @@ namespace Shimakaze
                 Token = "NjQyNDc4MDIzOTQ5NjgwNjYx.XtpHoA.P6U_GOWwkYOBML1lUCM5whbTN9s", //voice
                 TokenType = TokenType.Bot,
                 UseInternalLogHandler = true,
-                LogLevel = LogLevel.Debug
+                LogLevel = LogLevel.Info
             });
             
             ShimakazeBot.DbCtx = new ShimaContext();
