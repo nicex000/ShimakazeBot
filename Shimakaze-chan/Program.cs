@@ -22,12 +22,16 @@ namespace Shimakaze
     public struct SongRequest
     {
         public string requester;
+        public DiscordMember requestMember;
+        public DiscordChannel requestedChannel;
         public LavalinkTrack track;
         //public Guid unique;
 
-        public SongRequest(string requester, LavalinkTrack track)
+        public SongRequest(string requester, DiscordMember requestMember, DiscordChannel requestedChannel, LavalinkTrack track)
         {
             this.requester = requester;
+            this.requestMember = requestMember;
+            this.requestedChannel = requestedChannel;
             this.track = track;
             //unique = Guid.NewGuid();
         }
@@ -448,10 +452,12 @@ namespace Shimakaze
                 case LavalinkLoadResultType.SearchResult:
                 case LavalinkLoadResultType.TrackLoaded:
                     track = lavalinkLoadResult.Tracks.First();
-                    ShimakazeBot.musicLists[ctx.Guild].playlist.Add(new SongRequest(ctx.Member.Nickname, track));
+                    ShimakazeBot.musicLists[ctx.Guild].playlist.Add(new SongRequest(
+                        ctx.Member.Nickname, ctx.Member, ctx.Channel, track));
                     break;
                 case LavalinkLoadResultType.PlaylistLoaded:
-                    ShimakazeBot.musicLists[ctx.Guild].playlist.AddRange(lavalinkLoadResult.Tracks.Select(t => new SongRequest(ctx.Member.Nickname, t)));
+                    ShimakazeBot.musicLists[ctx.Guild].playlist.AddRange(lavalinkLoadResult.Tracks.Select(t => new SongRequest(
+                        ctx.Member.Nickname, ctx.Member, ctx.Channel, t)));
                     break;
                 case LavalinkLoadResultType.NoMatches:
                     await ctx.RespondAsync("No matches found.");
@@ -597,20 +603,64 @@ namespace Shimakaze
 
         private Task PlayNextTrack(TrackFinishEventArgs e)
         {
-            
-            if (e.Reason != TrackEndReason.Finished)
+
+            if (e.Reason == TrackEndReason.Cleanup)
+            {
+                ShimakazeBot.SendToDebugRoom("Lavalink failed in **" +
+                    e.Player.Guild.Name + "** (" + e.Player.Guild.Id + ") - **" +
+                    e.Player.Channel.Name + "** (" + e.Player.Channel.Id + ") - song: " +
+                    e.Track.Title);
+                ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Warning, "PlayNextTrack", e.Reason +
+                    " - playlist length at error: " + ShimakazeBot.musicLists[e.Player.Guild].playlist.Count, DateTime.Now);
+
+                if (ShimakazeBot.musicLists[e.Player.Guild].playlist.Count > 0)
+                {
+                    ShimakazeBot.musicLists[e.Player.Guild].playlist[0].requestedChannel.SendMessageAsync(
+                        ShimakazeBot.musicLists[e.Player.Guild].playlist[0].requestMember.Mention +
+                        "Lavalink failed... Shima will leave the voice channel. Don't worry your playlist has been saved. You can make her rejoin." +
+                        (ShimakazeBot.shouldSendToDebugRoom ? " The devs have been notified." : ""));
+                    ForceLeave(e.Player.Guild);
+                }
+                    
+
+                return Task.CompletedTask;
+            }
+            if (e.Reason == TrackEndReason.LoadFailed) 
+                ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Warning, "PlayNextTrack", e.Reason +
+                    " - playlist length at error: " + ShimakazeBot.musicLists[e.Player.Guild].playlist.Count, DateTime.Now);
+
+            if (e.Reason == TrackEndReason.Replaced)
+               return Task.CompletedTask;
+
+            if (ShimakazeBot.musicLists[e.Player.Guild].playlist.Count <= 0)
                 return Task.CompletedTask;
 
             ShimakazeBot.musicLists[e.Player.Guild].playlist.RemoveAt(0);
-            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info, "DSharpPlus", e.Handled + ShimakazeBot.Client.VersionString, DateTime.Now);
+            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info, "DSharpPlus", e.Reason + ShimakazeBot.Client.VersionString, DateTime.Now);
 
             if (ShimakazeBot.musicLists[e.Player.Guild].playlist.Count > 0)
             {
                 e.Player.PlayAsync(ShimakazeBot.musicLists[e.Player.Guild].playlist.First().track);
+                
+                if (ShimakazeBot.CheckDebugMode(e.Player.Guild.Id))
+                {
+                    ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info, "SupaDebug @"+e.Player.Guild.Name,
+                        ShimakazeBot.lvn.GetConnection(e.Player.Guild)?.CurrentState?.CurrentTrack?.Title + " - " +
+                        e.Handled.ToString(),
+                        DateTime.Now);
+                }
             }
 
 
             return Task.CompletedTask;
+        }
+
+        private async void ForceLeave(DiscordGuild guild)
+        {
+            var lvc = ShimakazeBot.lvn.GetConnection(guild);
+            lvc.PlaybackFinished -= PlayNextTrack;
+            await lvc.StopAsync();
+            await lvc.DisconnectAsync();
         }
     }
 
