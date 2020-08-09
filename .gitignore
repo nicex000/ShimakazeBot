@@ -366,3 +366,7 @@ _ReSharper.Caches/
 *.mp3
 # User specific SDK settings
 global.json
+.vscode/
+
+#Un-ignore commands folder subfolders like debug
+!*/Commands/**
