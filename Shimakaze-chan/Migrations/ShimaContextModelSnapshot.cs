@@ -14,18 +14,18 @@ namespace Shimakaze_chan.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+                .HasAnnotation("ProductVersion", "3.1.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("GuildJoin", b =>
                 {
                     b.Property<decimal>("GuildId")
                         .ValueGeneratedOnAdd()
-                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+                        .HasColumnType("numeric(20,0)");
 
                     b.Property<decimal>("ChannelId")
-                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+                        .HasColumnType("numeric(20,0)");
 
                     b.HasKey("GuildId");
 
@@ -36,14 +36,29 @@ namespace Shimakaze_chan.Migrations
                 {
                     b.Property<decimal>("GuildId")
                         .ValueGeneratedOnAdd()
-                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+                        .HasColumnType("numeric(20,0)");
 
                     b.Property<string>("Prefix")
+                        .HasColumnType("character varying(16)")
                         .HasMaxLength(16);
 
                     b.HasKey("GuildId");
 
                     b.ToTable("GuildPrefix");
+                });
+
+            modelBuilder.Entity("StreamingGuild", b =>
+                {
+                    b.Property<decimal>("GuildId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<decimal>("RoleId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.HasKey("GuildId");
+
+                    b.ToTable("StreamingGuild");
                 });
 #pragma warning restore 612, 618
         }
