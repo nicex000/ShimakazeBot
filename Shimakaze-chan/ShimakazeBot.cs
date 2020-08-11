@@ -13,7 +13,7 @@ namespace Shimakaze
         public static ShimaContext DbCtx;
         public static Dictionary<ulong, string> CustomPrefixes = new Dictionary<ulong, string>();
         public static Dictionary<ulong, ulong> StreamingEnabledGuilds = new Dictionary<ulong, ulong>();
-        public static string DefaultPrefix = "a";
+        public static string DefaultPrefix = "!";
 
         public static LavalinkNodeConnection lvn;
         public static Dictionary<DiscordGuild, GuildPlayer> playlists = new Dictionary<DiscordGuild, GuildPlayer>();
