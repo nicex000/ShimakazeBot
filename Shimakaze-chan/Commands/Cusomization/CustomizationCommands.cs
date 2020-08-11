@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shimakaze_chan.Attributes;
+using DSharpPlus;
 
 namespace Shimakaze
 {
@@ -12,6 +14,7 @@ namespace Shimakaze
     {
         [Command("streamrole")]
         [Description("Sets or removes the streaming role.")]
+        [RequireAdmin()]
         public async Task SetStreamingRole(CommandContext ctx, [RemainingText] string roleName)
         {
             ulong roleId = 0;
@@ -66,14 +69,9 @@ namespace Shimakaze
 
         [Command("cprefix")]
         [Description("Changes the prefix.")]
+        [RequireAdmin("Only a server admin can change the prefix.")]
         public async Task CustomizePrefix(CommandContext ctx, [RemainingText] string newPrefix)
         {
-            if (ctx.Member != ctx.Guild.Owner)
-            {
-                await ctx.RespondAsync("Only the server owner can change the prefix.");
-                return;
-            }
-
             if (ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) || newPrefix == ShimakazeBot.DefaultPrefix)
             {
                 if (string.IsNullOrWhiteSpace(newPrefix) || newPrefix == ShimakazeBot.DefaultPrefix)
