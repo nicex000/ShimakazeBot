@@ -9,7 +9,7 @@ using Shimakaze;
 namespace Shimakaze_chan.Migrations
 {
     [DbContext(typeof(ShimaContext))]
-    [Migration("20200809161132_StreamingGuilds")]
+    [Migration("20200810084622_StreamingGuilds")]
     partial class StreamingGuilds
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

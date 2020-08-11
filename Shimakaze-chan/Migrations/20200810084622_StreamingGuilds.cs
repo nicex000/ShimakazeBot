@@ -11,7 +11,7 @@ namespace Shimakaze_chan.Migrations
                 columns: table => new
                 {
                     GuildId = table.Column<decimal>(nullable: false),
-                    ChannelId = table.Column<decimal>(nullable: false)
+                    RoleId = table.Column<decimal>(nullable: false)
                 },
                 constraints: table =>
                 {
