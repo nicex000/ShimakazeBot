@@ -13,7 +13,10 @@ namespace Shimakaze
         public static ShimaContext DbCtx;
         public static Dictionary<ulong, string> CustomPrefixes = new Dictionary<ulong, string>();
         public static Dictionary<ulong, ulong> StreamingEnabledGuilds = new Dictionary<ulong, ulong>();
+        public static Dictionary<ulong, LevelListContainer> UserLevelList = new Dictionary<ulong, LevelListContainer>();
         public static string DefaultPrefix = "!";
+        public static int DefaultLevel = 1;
+        public static int DefaultServerOwnerLevel = 5;
 
         public static LavalinkNodeConnection lvn;
         public static Dictionary<DiscordGuild, GuildPlayer> playlists = new Dictionary<DiscordGuild, GuildPlayer>();
@@ -31,6 +34,36 @@ namespace Shimakaze
         {
             var streamingRoles = DbCtx.StreamingGuild.ToList();
             streamingRoles.ForEach(g => StreamingEnabledGuilds.Add(g.GuildId, g.RoleId));
+        }
+
+        public static void FetchPermissionLevels()
+        {
+            var permissionLevels = DbCtx.UserPermissionLevel.ToList();
+            permissionLevels.ForEach(g => {
+
+                UserLevels uLevel = new UserLevels(g.Id, g.GuildId, g.Level);
+
+                if (UserLevelList.ContainsKey(g.UserId))
+                {
+                    if (g.GuildId == 0)
+                    {
+                        UserLevelList[g.UserId].levelList.Insert(0, uLevel);
+                    }
+                    else
+                    {
+                        UserLevelList[g.UserId].levelList.Add(uLevel);
+                    }
+                }
+                else
+                {
+                    UserLevelList.Add(g.UserId, new LevelListContainer(g.IsRole, new List<UserLevels>() { uLevel }));
+                }
+            });
+        }
+
+        public static bool IsUserShimaTeam(ulong userId)
+        {
+            return Client.CurrentApplication.Owners.Any(user => user.Id == userId);
         }
 
         public static bool CheckDebugMode(ulong guildId)

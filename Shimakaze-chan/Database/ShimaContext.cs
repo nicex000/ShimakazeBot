@@ -7,6 +7,7 @@ namespace Shimakaze
         public DbSet<GuildPrefix> GuildPrefix { get; set; }
         public DbSet<GuildJoin> GuildJoin { get; set; }
         public DbSet<StreamingGuild> StreamingGuild { get; set; }
+        public DbSet<UserPermissionLevel> UserPermissionLevel { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

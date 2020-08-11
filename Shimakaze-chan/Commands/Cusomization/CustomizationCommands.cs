@@ -106,5 +106,82 @@ namespace Shimakaze
                 }
             }
         }
+
+        [Command("setlevel")]
+        [Description("Sets the user level." +
+            "\nUsage: level mention/id")]
+        [RequireGuild]
+        [RequireLevel(3, "You need a higher level to set levels.")]
+        public async Task SetMemberLevel(CommandContext ctx, [RemainingText] string text)
+        {
+            int requesterLevel = UserLevels.GetLevel(ctx.User.Id, ctx.Guild.Id);
+
+            var textArray = text.Split(" ");
+            int level;
+            if (!Int32.TryParse(textArray[0], out level)) return; //asd
+
+            if (level >= requesterLevel) return; //qwe
+
+            Dictionary<ulong, bool> idList = new Dictionary<ulong, bool>();
+            ulong idFromText;
+            ctx.Message.MentionedUsers.ToList().ForEach(user =>
+            {
+                if (!idList.ContainsKey(user.Id)) idList.Add(user.Id, false);
+            });
+            ctx.Message.MentionedRoles.ToList().ForEach(role =>
+            {
+                if (!idList.ContainsKey(role.Id)) idList.Add(role.Id, true);
+            });
+            for (int i = 1; i < textArray.Length; i++)
+            {
+                
+                if (ulong.TryParse(textArray[i], out idFromText) &&
+                    !idList.ContainsKey(idFromText))
+                {
+                    idList.Add(idFromText, false);
+                }
+            }
+            bool success = true;
+            idList.ToList().ForEach(item =>
+            {
+                if (UserLevels.GetLevel(item.Key, ctx.Guild.Id) < requesterLevel)
+                {
+                    if (!UserLevels.SetLevel(item.Key, ctx.Guild.Id, item.Value, level) && success) success = false;
+                }
+            });
+        }
+
+
+        [Command("setgloballevel")]
+        [Description("Sets the user level." +
+            "\nUsage: level mention/id")]
+        [RequireShimaTeam]
+        public async Task SetGlobalLevel(CommandContext ctx, [RemainingText] string text)
+        {
+            var textArray = text.Split(" ");
+            int level;
+            if (!Int32.TryParse(textArray[0], out level)) return; //asd
+
+            Dictionary<ulong, bool> idList = new Dictionary<ulong, bool>();
+            ulong idFromText;
+            ctx.Message.MentionedUsers.ToList().ForEach(user =>
+            {
+                if (!idList.ContainsKey(user.Id)) idList.Add(user.Id, false);
+            });
+            for (int i = 1; i < textArray.Length; i++)
+            {
+
+                if (ulong.TryParse(textArray[i], out idFromText) &&
+                    !idList.ContainsKey(idFromText))
+                {
+                    idList.Add(idFromText, false);
+                }
+            }
+            bool success = true;
+            idList.ToList().ForEach(item =>
+            {
+                if (!UserLevels.SetLevel(item.Key, 0, false, level) && success) success = false;
+            });
+        }
     }
 }
