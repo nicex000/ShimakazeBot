@@ -1,12 +1,4 @@
-﻿using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.CommandsNext;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shimakaze_chan.Attributes;
-using DSharpPlus;
+﻿using Shimakaze_chan.Attributes;
 
 namespace Shimakaze
 {
@@ -118,37 +110,27 @@ namespace Shimakaze
 
             var textArray = text.Split(" ");
             int level;
-            if (!Int32.TryParse(textArray[0], out level)) return; //asd
-
-            if (level >= requesterLevel) return; //qwe
-
-            Dictionary<ulong, bool> idList = new Dictionary<ulong, bool>();
-            ulong idFromText;
-            ctx.Message.MentionedUsers.ToList().ForEach(user =>
+            if (!Int32.TryParse(textArray[0], out level))
             {
-                if (!idList.ContainsKey(user.Id)) idList.Add(user.Id, false);
-            });
+                await ctx.RespondAsync($"{textArray[0]} is not a valid level.");
+                return;
+            }
+
+            if (level >= requesterLevel)
+            {
+                await ctx.RespondAsync("You cannot assign a level higher than your own");
+                return;
+            }
+
+            Dictionary<ulong, bool> idList = PrepareUserIdList(ctx.Message.MentionedUsers, textArray);
+
             ctx.Message.MentionedRoles.ToList().ForEach(role =>
             {
                 if (!idList.ContainsKey(role.Id)) idList.Add(role.Id, true);
             });
-            for (int i = 1; i < textArray.Length; i++)
-            {
-                
-                if (ulong.TryParse(textArray[i], out idFromText) &&
-                    !idList.ContainsKey(idFromText))
-                {
-                    idList.Add(idFromText, false);
-                }
-            }
-            bool success = true;
-            idList.ToList().ForEach(item =>
-            {
-                if (UserLevels.GetLevel(item.Key, ctx.Guild.Id) < requesterLevel)
-                {
-                    if (!UserLevels.SetLevel(item.Key, ctx.Guild.Id, item.Value, level) && success) success = false;
-                }
-            });
+
+            await SetLevelsFromList(ctx, idList, false);
+
         }
 
 
@@ -160,28 +142,57 @@ namespace Shimakaze
         {
             var textArray = text.Split(" ");
             int level;
-            if (!Int32.TryParse(textArray[0], out level)) return; //asd
+            if (!Int32.TryParse(textArray[0], out level))
+            {
+                await ctx.RespondAsync($"{textArray[0]} is not a valid level.");
+                return;
+            }
 
+            await SetLevelsFromList(ctx, PrepareUserIdList(ctx.Message.MentionedUsers, textArray), false);
+        }
+
+        private Dictionary<ulong, bool> PrepareUserIdList(IReadOnlyList<DiscordUser> mentionedUsers, string[] textArray)
+        {
             Dictionary<ulong, bool> idList = new Dictionary<ulong, bool>();
             ulong idFromText;
-            ctx.Message.MentionedUsers.ToList().ForEach(user =>
+            mentionedUsers.ToList().ForEach(user =>
             {
                 if (!idList.ContainsKey(user.Id)) idList.Add(user.Id, false);
             });
-            for (int i = 1; i < textArray.Length; i++)
+            textArray.Skip(1).ToList().ForEach(userId =>
             {
-
-                if (ulong.TryParse(textArray[i], out idFromText) &&
+                if (ulong.TryParse(userId, out idFromText) &&
                     !idList.ContainsKey(idFromText))
                 {
                     idList.Add(idFromText, false);
                 }
-            }
-            bool success = true;
+            });
+
+            return idList;
+        }
+
+        private async void SetLevelsFromList(CommandContext ctx, Dictionary<ulong, bool> idList, bool isGlobal)
+        {
+            List<int> failedIDs = new List<int>();
             idList.ToList().ForEach(item =>
             {
-                if (!UserLevels.SetLevel(item.Key, 0, false, level) && success) success = false;
+                if (isGlobal || UserLevels.GetLevel(item.Key, ctx.Guild.Id) < requesterLevel)
+                {
+                    if (!UserLevels.SetLevel(item.Key, ctx.Guild.Id, item.Value, level)) failedIDs.Add(item.Key);
+                }
             });
+
+            string response = $"Successfully assigned level to {idList.Length() - failedIDs.Length()} IDs";
+            if (failedIDs.Length() > 0)
+            {
+                response += $"\nFailed to assign level to:";
+                idList.ForEach((id, index) =>
+                {
+                    response += $"{id}{(index < idList.Length() - 1) ? ',' : ''}";
+                });
+            }
+
+            await ctx.RespondAsync(response);
         }
     }
 }

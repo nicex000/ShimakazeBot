@@ -6,6 +6,17 @@ using System.Text;
 
 namespace Shimakaze
 {
+    public struct LevelListContainer
+    {
+        public bool isRole;
+        public List<UserLevels> levelList;
+
+        public LevelListContainer(bool isRole, List<UserLevels> levelList)
+        {
+            this.isRole = isRole;
+            this.levelList = levelList;
+        }
+    }
     public class UserLevels
     {
         public int keyId;
@@ -21,7 +32,10 @@ namespace Shimakaze
 
         public static UserLevels GetUserLevelItem(List<UserLevels> levelList, ulong guildId)
         {
-            if (levelList[0].guildId == 0) return levelList[0];
+            if (levelList[0].guildId == ShimakazeBot.GlobalLevelGuild)
+            {
+                return levelList[0];
+            }
 
             return levelList.FirstOrDefault(item => item.guildId == guildId);
         }
@@ -35,7 +49,10 @@ namespace Shimakaze
 
         public static int GetLevel(ulong userId, ulong guildId)
         {
-            if (ShimakazeBot.IsUserShimaTeam(userId)) return 999;
+            if (ShimakazeBot.IsUserShimaTeam(userId))
+            {
+                return ShimakazeBot.ShimaTeamLevel;
+            }
 
             if (ShimakazeBot.UserLevelList.ContainsKey(userId))
             {
@@ -47,27 +64,37 @@ namespace Shimakaze
 
         public static int GetMemberLevel(DiscordMember member)
         {
-            if (ShimakazeBot.IsUserShimaTeam(member.Id)) return 999;
+            if (ShimakazeBot.IsUserShimaTeam(member.Id))
+            {
+                return ShimakazeBot.ShimaTeamLevel;
+            }
 
 
             int level = ShimakazeBot.DefaultLevel;
-            int lv;
+            int currentLevel;
             member.Roles.ToList().ForEach(role => {
-                lv = GetLevel(role.Id, member.Guild.Id);
-                if (lv > ShimakazeBot.DefaultLevel && lv > level) level = lv;
+                currentLevel = GetLevel(role.Id, member.Guild.Id);
+                if (currentLevel > ShimakazeBot.DefaultLevel && currentLevel > level)
+                {
+                    level = currentLevel;
+                }
             });
 
-            lv = GetLevel(member.Id, member.Guild.Id);
+            currentLevel = GetLevel(member.Id, member.Guild.Id);
 
-            if (lv < ShimakazeBot.DefaultLevel || lv > level)
-                level = lv;
-
+            if (currentLevel < ShimakazeBot.DefaultLevel || currentLevel > level)
+            {
+                level = currentLevel;
+            }
             return level;
         }
 
         public static bool SetLevel(ulong userId, ulong guildId, bool isRole, int level)
         {
-            if (ShimakazeBot.IsUserShimaTeam(userId)) return false;
+            if (ShimakazeBot.IsUserShimaTeam(userId))
+            {
+                return false;
+            }
 
             if (ShimakazeBot.UserLevelList.ContainsKey(userId))
             {
@@ -75,7 +102,10 @@ namespace Shimakaze
 
                 if (levelItem != null)
                 {
-                    if (level == levelItem.level) return false;
+                    if (level == levelItem.level)
+                    {
+                        return false;
+                    }
 
                     if (level == ShimakazeBot.DefaultLevel)
                     {
@@ -127,7 +157,7 @@ namespace Shimakaze
                     int key = ShimakazeBot.DbCtx.UserPermissionLevel.ToList().Find(g =>
                         g.UserId == userId && g.GuildId == guildId).Id;
 
-                    if (guildId == 0)
+                    if (guildId == ShimakazeBot.GlobalLevelGuild)
                     {
                         ShimakazeBot.UserLevelList[userId].levelList.Insert(0, new UserLevels(key, guildId, level));
                     }
@@ -140,7 +170,10 @@ namespace Shimakaze
             }
             else
             {
-                if (level == ShimakazeBot.DefaultLevel) return false;
+                if (level == ShimakazeBot.DefaultLevel)
+                {
+                    return false;
+                }
                 //add and add
                 ShimakazeBot.DbCtx.UserPermissionLevel.Add(new UserPermissionLevel
                 {
@@ -160,18 +193,6 @@ namespace Shimakaze
             }
 
             return true;
-        }
-    }
-
-    public struct LevelListContainer
-    {
-        public bool isRole;
-        public List<UserLevels> levelList;
-
-        public LevelListContainer(bool isRole, List<UserLevels> levelList)
-        {
-            this.isRole = isRole;
-            this.levelList = levelList;
         }
     }
 }

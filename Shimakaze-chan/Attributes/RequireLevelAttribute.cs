@@ -26,22 +26,29 @@ namespace Shimakaze_chan.Attributes
             var app = ctx.Client.CurrentApplication;
 
             if (app == null)
+            {
                 return false;
+            }
 
             if (app.Owners.Any(x => x.Id == ctx.User.Id))
+            {
                 return true;
-
+            }
 
             var userLevel = ctx.Member != null ? 
                 UserLevels.GetMemberLevel(ctx.Member) : 
                 UserLevels.GetLevel(ctx.User.Id, ctx.Guild.Id);
 
             if (ctx.Member == ctx.Guild.Owner && userLevel < ShimakazeBot.DefaultServerOwnerLevel)
+            {
                 userLevel = ShimakazeBot.DefaultServerOwnerLevel;
-
+            }
             if (userLevel < level)
             {
-                if (!string.IsNullOrWhiteSpace(failMessage)) await ctx.RespondAsync(failMessage);
+                if (!string.IsNullOrWhiteSpace(failMessage))
+                {
+                    await ctx.RespondAsync(failMessage);
+                }
                 return false;
             }
             return true;

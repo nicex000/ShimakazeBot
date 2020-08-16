@@ -15,8 +15,10 @@ namespace Shimakaze
         public static Dictionary<ulong, ulong> StreamingEnabledGuilds = new Dictionary<ulong, ulong>();
         public static Dictionary<ulong, LevelListContainer> UserLevelList = new Dictionary<ulong, LevelListContainer>();
         public static string DefaultPrefix = "!";
-        public static int DefaultLevel = 1;
-        public static int DefaultServerOwnerLevel = 5;
+        public const int DefaultLevel = 1;
+        public const int DefaultServerOwnerLevel = 5;
+        public const int ShimaTeamLevel = 999;
+        public const int GlobalLevelGuild = 0;
 
         public static LavalinkNodeConnection lvn;
         public static Dictionary<DiscordGuild, GuildPlayer> playlists = new Dictionary<DiscordGuild, GuildPlayer>();
