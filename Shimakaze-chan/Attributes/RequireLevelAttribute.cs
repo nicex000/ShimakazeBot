@@ -2,9 +2,7 @@
 using DSharpPlus.CommandsNext.Attributes;
 using Shimakaze;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Shimakaze_chan.Attributes
@@ -39,9 +37,9 @@ namespace Shimakaze_chan.Attributes
                 UserLevels.GetMemberLevel(ctx.Member) : 
                 UserLevels.GetLevel(ctx.User.Id, ctx.Guild.Id);
 
-            if (ctx.Member == ctx.Guild.Owner && userLevel < ShimakazeBot.DefaultServerOwnerLevel)
+            if (ctx.Member == ctx.Guild.Owner && userLevel < (int)ShimaConsts.UserPermissionLevel.DEFAULT_SERVER_OWNER)
             {
-                userLevel = ShimakazeBot.DefaultServerOwnerLevel;
+                userLevel = (int)ShimaConsts.UserPermissionLevel.DEFAULT_SERVER_OWNER;
             }
             if (userLevel < level)
             {

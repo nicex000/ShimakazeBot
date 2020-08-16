@@ -1,4 +1,11 @@
-﻿using Shimakaze_chan.Attributes;
+﻿using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.CommandsNext;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Shimakaze_chan.Attributes;
+using DSharpPlus.Entities;
 
 namespace Shimakaze
 {
@@ -6,7 +13,7 @@ namespace Shimakaze
     {
         [Command("streamrole")]
         [Description("Sets or removes the streaming role.")]
-        [RequireAdmin()]
+        [RequireAdmin]
         public async Task SetStreamingRole(CommandContext ctx, [RemainingText] string roleName)
         {
             ulong roleId = 0;
@@ -129,10 +136,8 @@ namespace Shimakaze
                 if (!idList.ContainsKey(role.Id)) idList.Add(role.Id, true);
             });
 
-            await SetLevelsFromList(ctx, idList, false);
-
+            await SetLevelsFromList(ctx, idList, level, requesterLevel);
         }
-
 
         [Command("setgloballevel")]
         [Description("Sets the user level." +
@@ -148,7 +153,8 @@ namespace Shimakaze
                 return;
             }
 
-            await SetLevelsFromList(ctx, PrepareUserIdList(ctx.Message.MentionedUsers, textArray), false);
+            await SetLevelsFromList(ctx, PrepareUserIdList(ctx.Message.MentionedUsers, textArray),
+                level, (int)ShimaConsts.UserPermissionLevel.SHIMA_TEAM);
         }
 
         private Dictionary<ulong, bool> PrepareUserIdList(IReadOnlyList<DiscordUser> mentionedUsers, string[] textArray)
@@ -159,37 +165,35 @@ namespace Shimakaze
             {
                 if (!idList.ContainsKey(user.Id)) idList.Add(user.Id, false);
             });
-            textArray.Skip(1).ToList().ForEach(userId =>
+            foreach (var userId in textArray.Skip(1))
             {
                 if (ulong.TryParse(userId, out idFromText) &&
                     !idList.ContainsKey(idFromText))
                 {
                     idList.Add(idFromText, false);
                 }
-            });
+            }
 
             return idList;
         }
 
-        private async void SetLevelsFromList(CommandContext ctx, Dictionary<ulong, bool> idList, bool isGlobal)
+        private async Task SetLevelsFromList(CommandContext ctx, Dictionary<ulong, bool> idList, int level, int requesterLevel)
         {
-            List<int> failedIDs = new List<int>();
-            idList.ToList().ForEach(item =>
+            List<ulong> failedIDs = new List<ulong>();
+            bool isGlobal = requesterLevel == (int)ShimaConsts.UserPermissionLevel.SHIMA_TEAM;
+
+            foreach (var item in idList)
             {
                 if (isGlobal || UserLevels.GetLevel(item.Key, ctx.Guild.Id) < requesterLevel)
                 {
-                    if (!UserLevels.SetLevel(item.Key, ctx.Guild.Id, item.Value, level)) failedIDs.Add(item.Key);
+                    if (!await UserLevels.SetLevel(item.Key, ctx.Guild.Id, item.Value, level)) failedIDs.Add(item.Key);
                 }
-            });
+            }
 
-            string response = $"Successfully assigned level to {idList.Length() - failedIDs.Length()} IDs";
-            if (failedIDs.Length() > 0)
+            string response = $"Successfully assigned level to {idList.Count() - failedIDs.Count()} IDs";
+            if (failedIDs.Count() > 0)
             {
-                response += $"\nFailed to assign level to:";
-                idList.ForEach((id, index) =>
-                {
-                    response += $"{id}{(index < idList.Length() - 1) ? ',' : ''}";
-                });
+                response += $"\nFailed to assign level to: {String.Join(", ", failedIDs)}";
             }
 
             await ctx.RespondAsync(response);

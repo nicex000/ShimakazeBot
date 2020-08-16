@@ -1,8 +1,7 @@
 ﻿using DSharpPlus.Entities;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Shimakaze
 {
@@ -32,7 +31,7 @@ namespace Shimakaze
 
         public static UserLevels GetUserLevelItem(List<UserLevels> levelList, ulong guildId)
         {
-            if (levelList[0].guildId == ShimakazeBot.GlobalLevelGuild)
+            if (levelList[0].guildId == ShimaConsts.GlobalLevelGuild)
             {
                 return levelList[0];
             }
@@ -44,14 +43,14 @@ namespace Shimakaze
         {
             var levelItem = GetUserLevelItem(levelList, guildId);
 
-            return levelItem != null ? levelItem.level : ShimakazeBot.DefaultLevel;
+            return levelItem != null ? levelItem.level : (int)ShimaConsts.UserPermissionLevel.DEFAULT;
         }
 
         public static int GetLevel(ulong userId, ulong guildId)
         {
             if (ShimakazeBot.IsUserShimaTeam(userId))
             {
-                return ShimakazeBot.ShimaTeamLevel;
+                return (int)ShimaConsts.UserPermissionLevel.SHIMA_TEAM;
             }
 
             if (ShimakazeBot.UserLevelList.ContainsKey(userId))
@@ -59,22 +58,21 @@ namespace Shimakaze
                 return GetUserLevel(ShimakazeBot.UserLevelList[userId].levelList, guildId);
             }
 
-            return ShimakazeBot.DefaultLevel;
+            return (int)ShimaConsts.UserPermissionLevel.DEFAULT;
         }
 
         public static int GetMemberLevel(DiscordMember member)
         {
             if (ShimakazeBot.IsUserShimaTeam(member.Id))
             {
-                return ShimakazeBot.ShimaTeamLevel;
+                return (int)ShimaConsts.UserPermissionLevel.SHIMA_TEAM;
             }
 
-
-            int level = ShimakazeBot.DefaultLevel;
+            int level = (int)ShimaConsts.UserPermissionLevel.DEFAULT;
             int currentLevel;
             member.Roles.ToList().ForEach(role => {
                 currentLevel = GetLevel(role.Id, member.Guild.Id);
-                if (currentLevel > ShimakazeBot.DefaultLevel && currentLevel > level)
+                if (currentLevel > (int)ShimaConsts.UserPermissionLevel.DEFAULT && currentLevel > level)
                 {
                     level = currentLevel;
                 }
@@ -82,14 +80,14 @@ namespace Shimakaze
 
             currentLevel = GetLevel(member.Id, member.Guild.Id);
 
-            if (currentLevel < ShimakazeBot.DefaultLevel || currentLevel > level)
+            if (currentLevel < (int)ShimaConsts.UserPermissionLevel.DEFAULT || currentLevel > level)
             {
                 level = currentLevel;
             }
             return level;
         }
 
-        public static bool SetLevel(ulong userId, ulong guildId, bool isRole, int level)
+        public static async Task<bool> SetLevel(ulong userId, ulong guildId, bool isRole, int level)
         {
             if (ShimakazeBot.IsUserShimaTeam(userId))
             {
@@ -107,7 +105,7 @@ namespace Shimakaze
                         return false;
                     }
 
-                    if (level == ShimakazeBot.DefaultLevel)
+                    if (level == (int)ShimaConsts.UserPermissionLevel.DEFAULT)
                     {
                         //remove
                         if (ShimakazeBot.UserLevelList[userId].levelList.Count > 1)
@@ -124,7 +122,7 @@ namespace Shimakaze
                         }
                         ShimakazeBot.DbCtx.UserPermissionLevel.RemoveRange(
                             ShimakazeBot.DbCtx.UserPermissionLevel.Where(g => g.Id == levelItem.keyId));
-                        ShimakazeBot.DbCtx.SaveChanges();
+                        await ShimakazeBot.DbCtx.SaveChangesAsync();
 
                     }
                     else
@@ -139,13 +137,13 @@ namespace Shimakaze
                         );
                         userPerm.Level = level;
                         ShimakazeBot.DbCtx.UserPermissionLevel.Update(userPerm);
-                        ShimakazeBot.DbCtx.SaveChanges();
+                        await ShimakazeBot.DbCtx.SaveChangesAsync();
                     }
                 }
                 else
                 {
                     //add
-                    ShimakazeBot.DbCtx.UserPermissionLevel.Add(new UserPermissionLevel
+                    await ShimakazeBot.DbCtx.UserPermissionLevel.AddAsync(new UserPermissionLevel
                     { 
                         UserId = userId, 
                         IsRole = isRole, 
@@ -153,11 +151,11 @@ namespace Shimakaze
                         Level = level
                     });
 
-                    ShimakazeBot.DbCtx.SaveChanges();
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
                     int key = ShimakazeBot.DbCtx.UserPermissionLevel.ToList().Find(g =>
                         g.UserId == userId && g.GuildId == guildId).Id;
 
-                    if (guildId == ShimakazeBot.GlobalLevelGuild)
+                    if (guildId == ShimaConsts.GlobalLevelGuild)
                     {
                         ShimakazeBot.UserLevelList[userId].levelList.Insert(0, new UserLevels(key, guildId, level));
                     }
@@ -170,12 +168,12 @@ namespace Shimakaze
             }
             else
             {
-                if (level == ShimakazeBot.DefaultLevel)
+                if (level == (int)ShimaConsts.UserPermissionLevel.DEFAULT)
                 {
                     return false;
                 }
                 //add and add
-                ShimakazeBot.DbCtx.UserPermissionLevel.Add(new UserPermissionLevel
+                await ShimakazeBot.DbCtx.UserPermissionLevel.AddAsync(new UserPermissionLevel
                 {
                     UserId = userId,
                     IsRole = isRole,
@@ -183,7 +181,7 @@ namespace Shimakaze
                     Level = level
                 });
 
-                ShimakazeBot.DbCtx.SaveChanges();
+                await ShimakazeBot.DbCtx.SaveChangesAsync();
                 int key = ShimakazeBot.DbCtx.UserPermissionLevel.ToList().Find(g =>
                     g.UserId == userId && g.GuildId == guildId).Id;
 
