@@ -108,7 +108,7 @@ namespace Shimakaze
 
         [Command("setlevel")]
         [Description("Sets the user level." +
-            "\nUsage: level mention/id")]
+                     "\nUsage: level mention/id")]
         [RequireGuild]
         [RequireLevel(3, "You need a higher level to set levels.")]
         public async Task SetMemberLevel(CommandContext ctx, [RemainingText] string text)
@@ -141,7 +141,7 @@ namespace Shimakaze
 
         [Command("setgloballevel")]
         [Description("Sets the user level." +
-            "\nUsage: level mention/id")]
+                     "\nUsage: level mention/id")]
         [RequireShimaTeam]
         public async Task SetGlobalLevel(CommandContext ctx, [RemainingText] string text)
         {
