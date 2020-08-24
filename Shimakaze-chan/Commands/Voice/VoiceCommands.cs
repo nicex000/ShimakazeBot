@@ -1,4 +1,4 @@
-﻿using DSharpPlus;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
@@ -406,8 +406,11 @@ namespace Shimakaze
                     e.Player.Guild.Name + "** (" + e.Player.Guild.Id + ") - **" +
                     e.Player.Channel.Name + "** (" + e.Player.Channel.Id + ") - song: " +
                     e.Track.Title);
-                ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Warning, "PlayNextTrack", e.Reason +
-                    " - playlist length at error: " + ShimakazeBot.playlists[e.Player.Guild].songRequests.Count, DateTime.Now);
+                ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Warning,
+                    LogMessageSources.PLAYLIST_NEXT_EVENT,
+                    e.Reason + " - playlist length at error: " +
+                    ShimakazeBot.playlists[e.Player.Guild].songRequests.Count,
+                    DateTime.Now);
 
                 if (ShimakazeBot.playlists[e.Player.Guild].songRequests.Count > 0)
                 {
@@ -422,8 +425,13 @@ namespace Shimakaze
                 return Task.CompletedTask;
             }
             if (e.Reason == TrackEndReason.LoadFailed)
-                ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Warning, "PlayNextTrack", e.Reason +
-                    " - playlist length at error: " + ShimakazeBot.playlists[e.Player.Guild].songRequests.Count, DateTime.Now);
+            {
+                ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Warning,
+                    LogMessageSources.PLAYLIST_NEXT_EVENT,
+                    e.Reason + " - playlist length at error: " +
+                    ShimakazeBot.playlists[e.Player.Guild].songRequests.Count,
+                    DateTime.Now);
+            }
 
             if (e.Reason == TrackEndReason.Replaced)
                 return Task.CompletedTask;
@@ -432,7 +440,11 @@ namespace Shimakaze
                 return Task.CompletedTask;
 
             ShimakazeBot.playlists[e.Player.Guild].songRequests.RemoveAt(0);
-            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info, "DSharpPlus", e.Reason + ShimakazeBot.Client.VersionString, DateTime.Now);
+            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
+                LogMessageSources.PLAYLIST_NEXT_EVENT,
+                $"{e.Reason} - " +
+                $"{ShimakazeBot.playlists[e.Player.Guild].songRequests.Count} songs remaining in {e.Player.Guild.Name}.",
+                DateTime.Now);
 
             if (ShimakazeBot.playlists[e.Player.Guild].songRequests.Count > 0)
             {
@@ -440,9 +452,10 @@ namespace Shimakaze
 
                 if (ShimakazeBot.CheckDebugMode(e.Player.Guild.Id))
                 {
-                    ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info, "SupaDebug @" + e.Player.Guild.Name,
-                        ShimakazeBot.lvn.GetConnection(e.Player.Guild)?.CurrentState?.CurrentTrack?.Title + " - " +
-                        e.Handled.ToString(),
+                    ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
+                        LogMessageSources.PLAYLIST_NEXT_EVENT + " SupaDebug @" + e.Player.Guild.Name,
+                        ShimakazeBot.lvn.GetConnection(e.Player.Guild)?.CurrentState?.CurrentTrack?.Title +
+                        " - " + e.Handled.ToString(),
                         DateTime.Now);
                 }
             }

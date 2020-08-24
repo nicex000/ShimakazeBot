@@ -26,13 +26,18 @@ namespace Shimakaze
         private Task SocketOpened()
         {
             ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
-                "DSharpPlus", "Socket Opened", DateTime.Now);
+                LogMessageSources.WEBSOCKET_EVENT,
+                "Socket Opened",
+                DateTime.Now);
             return Task.CompletedTask;
         }
         private Task SocketClosed(SocketCloseEventArgs e)
         {
             string message = $"Socket Closed: {e.CloseCode} - {e.CloseMessage}";
-            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info, "DSharpPlus", message, DateTime.Now);
+            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
+                LogMessageSources.WEBSOCKET_EVENT,
+                message,
+                DateTime.Now);
             ShimakazeBot.SendToDebugRoom(message);
             return Task.CompletedTask;
         }
@@ -41,14 +46,20 @@ namespace Shimakaze
             string message = $"Socket Errored: " +
                 $"{e.Exception.Message} \n\n {e.Exception.StackTrace}" +
                 $"\n\n {e.Exception.InnerException} \n\n {e.Exception.Source}";
-            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info, "DSharpPlus", message, DateTime.Now);
+            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
+                LogMessageSources.WEBSOCKET_EVENT,
+                message,
+                DateTime.Now);
             ShimakazeBot.SendToDebugRoom(message);
             return Task.CompletedTask;
         }
 
         private Task DiscordReady(ReadyEventArgs e)
         {
-            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info, "DSharpPlus", "Ready", DateTime.Now);
+            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
+                LogMessageSources.LAUNCHTIME_EVENT,
+                "Ready",
+                DateTime.Now);
             return Task.CompletedTask;
         }
 

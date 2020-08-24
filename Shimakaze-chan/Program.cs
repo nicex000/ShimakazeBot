@@ -17,7 +17,7 @@ namespace Shimakaze
         {
             ShimakazeBot.Client.DebugLogger.LogMessage(
                 LogLevel.Info,
-                "DSharpPlus",
+                LogMessageSources.COMMAND_EXECUTION_EVENT,
                 $"Executing {ctx.Message.Content} from {ctx.User.Username} in {ctx.Guild.Name}",
                 ctx.Message.Timestamp.DateTime);
             return Task.CompletedTask;
