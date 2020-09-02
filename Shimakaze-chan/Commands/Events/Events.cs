@@ -13,6 +13,7 @@ namespace Shimakaze
         public void LoadEvents()
         {
             ShimakazeBot.Client.Ready += DiscordReady;
+            ShimakazeBot.Client.Resumed += DiscordResumed;
 
             ShimakazeBot.Client.PresenceUpdated += UserPresenceUpdated;
 
@@ -54,11 +55,24 @@ namespace Shimakaze
             return Task.CompletedTask;
         }
 
-        private Task DiscordReady(ReadyEventArgs e)
+        private async Task DiscordReady(ReadyEventArgs e)
         {
             ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
                 LogMessageSources.LAUNCHTIME_EVENT,
                 "Ready",
+                DateTime.Now);
+
+            await ShimakazeBot.Client.UpdateStatusAsync(
+                new DiscordActivity("out for abyssals with Rensouhou-chan",
+                ActivityType.Watching),
+                UserStatus.Online);
+        }
+
+        private Task DiscordResumed(ReadyEventArgs e)
+        {
+            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
+                LogMessageSources.LAUNCHTIME_EVENT,
+                "Gateway resumed",
                 DateTime.Now);
             return Task.CompletedTask;
         }

@@ -94,11 +94,13 @@ namespace Shimakaze
             if (!ShimakazeBot.playlists.ContainsKey(ctx.Guild))
             {
                 ShimakazeBot.playlists.Add(ctx.Guild, new GuildPlayer());
+                debugResponse += "\nPlaylist: **new**";
             }
             else
             {
                 lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
                 await lvc.PlayAsync(ShimakazeBot.playlists[ctx.Guild].songRequests.First().track);
+                debugResponse += $"\nPlaylist: **{ShimakazeBot.playlists[ctx.Guild].songRequests.Count} songs**";
             }
             ShimakazeBot.lvn.GetConnection(ctx.Guild).PlaybackFinished += PlayNextTrack;
             ShimakazeBot.lvn.GetConnection(ctx.Guild).DiscordWebSocketClosed += DiscordSocketClosed;
@@ -145,7 +147,16 @@ namespace Shimakaze
             }
 
             if (!string.IsNullOrWhiteSpace(remainingText))
+            {
                 ShimakazeBot.playlists.Remove(ctx.Guild);
+                debugResponse += "\nPlaylist: **removed**";
+            }
+            else
+            {
+                debugResponse += "\nPlaylist: " +
+                    (ShimakazeBot.playlists.ContainsKey(ctx.Guild) ?
+                    $"**{ShimakazeBot.playlists[ctx.Guild].songRequests.Count} songs**" : $"**already removed**");
+            }
 
             lvc.PlaybackFinished -= PlayNextTrack;
             lvc.DiscordWebSocketClosed -= DiscordSocketClosed;
@@ -399,6 +410,13 @@ namespace Shimakaze
 
         private Task PlayNextTrack(TrackFinishEventArgs e)
         {
+            if (ShimakazeBot.CheckDebugMode(e.Player.Guild.Id))
+            {
+                ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
+                    LogMessageSources.PLAYLIST_NEXT_EVENT + " SupaDebug @" + e.Player.Guild.Name,
+                    e.Reason.ToString(),
+                    DateTime.Now);
+            }
 
             if (e.Reason == TrackEndReason.Cleanup)
             {

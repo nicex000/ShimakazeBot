@@ -24,5 +24,14 @@ namespace Shimakaze
                              (ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) ? ShimakazeBot.CustomPrefixes[ctx.Guild.Id] : ShimakazeBot.DefaultPrefix) +
                              "**\n You can change the prefix with **cprefix**");
         }
+
+        [Command("ping")]
+        [Description("I'll reply to you with pong!")]
+        public async Task Ping(CommandContext ctx)
+        {
+            var message = await ctx.RespondAsync("Pong!");
+            await message.ModifyAsync("Pong! Time taken: " +
+                $"{(message.CreationTimestamp - ctx.Message.CreationTimestamp).TotalMilliseconds}ms.");            
+        }
     }
 }
