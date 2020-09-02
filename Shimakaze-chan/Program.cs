@@ -31,10 +31,19 @@ namespace Shimakaze
 
         static async Task MainAsync(string[] args)
         {
+            ShimakazeBot.Config = ShimaConfig.LoadConfig();
+            if (ShimakazeBot.Config.Equals(null) ||
+                (ShimakazeBot.Config.settings.liveToken == null &&
+                ShimakazeBot.Config.settings.testToken == null))
+            {
+                throw new System.ArgumentNullException("Config ain't set up properly (:");
+            }
+
             ShimakazeBot.Client = new DiscordClient(new DiscordConfiguration
             {
-                // Token = "NDc2MTUxMjIwMDA0OTc4Njg5.DnXuqg.ANWX8zmMBLU5U7XLI9ZA-8E0nRQ", //test
-                Token = "NjQyNDc4MDIzOTQ5NjgwNjYx.XtpHoA.P6U_GOWwkYOBML1lUCM5whbTN9s", //voice
+                Token = ShimakazeBot.Config.settings.isTest ?
+                        ShimakazeBot.Config.settings.testToken :
+                        ShimakazeBot.Config.settings.liveToken,
                 TokenType = TokenType.Bot,
                 UseInternalLogHandler = true,
                 LogLevel = LogLevel.Info

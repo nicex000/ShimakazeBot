@@ -11,7 +11,11 @@ namespace Shimakaze
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseNpgsql("Host=127.0.0.1;Port=5432;Database=ShimakazeDB;Username=postgres;Password=password");
+            optionsBuilder.UseNpgsql($"Host={ShimakazeBot.Config.database.host};" +
+                $"Port={ShimakazeBot.Config.database.port};" +
+                $"Database={ShimakazeBot.Config.database.name};" +
+                $"Username={ShimakazeBot.Config.database.username};" +
+                $"Password={ShimakazeBot.Config.database.password}");
         }
     }
 }

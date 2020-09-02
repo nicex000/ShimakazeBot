@@ -59,7 +59,9 @@ namespace Shimakaze
         {
             ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
                 LogMessageSources.LAUNCHTIME_EVENT,
-                "Ready",
+                "Ready" + (ShimakazeBot.Config.settings.isTest ?
+                " - Using ShimaTest" : "") +
+                $" on ShimaEngine v.{ShimaConsts.Version}",
                 DateTime.Now);
 
             await ShimakazeBot.Client.UpdateStatusAsync(

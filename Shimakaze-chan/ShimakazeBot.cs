@@ -4,11 +4,13 @@ using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Shimakaze
 {
     public static class ShimaConsts
     {
+        public static readonly string Version = Assembly.GetEntryAssembly().GetName().Version.ToString();
         public enum UserPermissionLevel
         {
             DEFAULT = 1,
@@ -21,6 +23,7 @@ namespace Shimakaze
 
     public static class ShimakazeBot
     {
+        public static ShimaConfig Config;
         public static DiscordClient Client;
         public static ShimaContext DbCtx;
         public static Dictionary<ulong, string> CustomPrefixes = new Dictionary<ulong, string>();
@@ -88,7 +91,7 @@ namespace Shimakaze
 
         public async static void SendToDebugRoom(string text)
         {
-            var channel = await Client.GetChannelAsync(421236403515686913);
+            var channel = await Client.GetChannelAsync(Config.settings.debugRoom);
             await channel.SendMessageAsync(text, true);
         }
     }

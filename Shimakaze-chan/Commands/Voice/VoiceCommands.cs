@@ -42,9 +42,13 @@ namespace Shimakaze
                 {
                     ShimakazeBot.lvn = await lv.ConnectAsync(new LavalinkConfiguration
                     {
-                        Password = "mcdonalds",
-                        SocketEndpoint = new ConnectionEndpoint("localhost", 2333),
-                        RestEndpoint = new ConnectionEndpoint("localhost", 2333)
+                        Password = ShimakazeBot.Config.lavalink.password,
+                        SocketEndpoint = new ConnectionEndpoint(
+                            ShimakazeBot.Config.lavalink.host,
+                            ShimakazeBot.Config.lavalink.port),
+                        RestEndpoint = new ConnectionEndpoint(
+                            ShimakazeBot.Config.lavalink.host,
+                            ShimakazeBot.Config.lavalink.port),
 
                     }).ConfigureAwait(false);
                 }
