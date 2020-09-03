@@ -84,11 +84,6 @@ namespace Shimakaze
             return guildDebugMode.Contains(guildId);
         }
 
-        public static string AddWithDebug(string text, CommandContext ctx, bool condition)
-        {
-            return (condition && guildDebugMode.Contains(ctx.Guild.Id)) ? (text + "\n") : "";
-        }
-
         public async static void SendToDebugRoom(string text)
         {
             var channel = await Client.GetChannelAsync(Config.settings.debugRoom);

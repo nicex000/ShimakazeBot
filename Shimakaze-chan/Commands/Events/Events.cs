@@ -10,6 +10,7 @@ namespace Shimakaze
 {
     class Events
     {
+        private DateTime socketCloseTime = new DateTime(0);
         public void LoadEvents()
         {
             ShimakazeBot.Client.Ready += DiscordReady;
@@ -17,33 +18,19 @@ namespace Shimakaze
 
             ShimakazeBot.Client.PresenceUpdated += UserPresenceUpdated;
 
-            ShimakazeBot.Client.SocketOpened += SocketOpened;
             ShimakazeBot.Client.SocketClosed += SocketClosed;
             ShimakazeBot.Client.SocketErrored += SocketErrored;
         }
 
-      
 
-        private Task SocketOpened()
-        {
-            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
-                LogMessageSources.WEBSOCKET_EVENT,
-                "Socket Opened",
-                DateTime.Now);
-            return Task.CompletedTask;
-        }
         private Task SocketClosed(SocketCloseEventArgs e)
         {
-            string message = $"Socket Closed: {e.CloseCode} - {e.CloseMessage}";
-            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
-                LogMessageSources.WEBSOCKET_EVENT,
-                message,
-                DateTime.Now);
-            ShimakazeBot.SendToDebugRoom(message);
+            socketCloseTime = DateTime.Now;
             return Task.CompletedTask;
         }
         private Task SocketErrored(SocketErrorEventArgs e)
         {
+            socketCloseTime = socketCloseTime.Ticks == 0 ? DateTime.Now : socketCloseTime;
             string message = $"Socket Errored: " +
                 $"{e.Exception.Message} \n\n {e.Exception.StackTrace}" +
                 $"\n\n {e.Exception.InnerException} \n\n {e.Exception.Source}";
@@ -73,9 +60,11 @@ namespace Shimakaze
         private Task DiscordResumed(ReadyEventArgs e)
         {
             ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
-                LogMessageSources.LAUNCHTIME_EVENT,
-                "Gateway resumed",
+                LogMessageSources.WEBSOCKET_EVENT,
+                "Gateway resumed" + (socketCloseTime.Ticks == 0 ? "" :
+                $" - closed for {(DateTime.Now - socketCloseTime).TotalMilliseconds}ms"),
                 DateTime.Now);
+            socketCloseTime = new DateTime(0);
             return Task.CompletedTask;
         }
 

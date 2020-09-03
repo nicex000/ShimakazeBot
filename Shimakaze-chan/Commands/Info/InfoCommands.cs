@@ -13,7 +13,8 @@ namespace Shimakaze
         {
             await ctx.RespondAsync("This bot serves as a temporary hotfix compliment to the original Shimakaze's broken voicechat functions." +
                 " We will notify You when we're done with rewriting mainline Shimakaze and bring all of her functionality back up. At least " +
-                "the parts that were actively used, we will leave out some useless shit like cleverbot.");
+                "the parts that were actively used, we will leave out some useless shit like cleverbot." +
+                $"\nRunning ShimaEngine v.{ShimaConsts.Version}");
         }
 
         [Command("prefix")]
