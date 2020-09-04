@@ -5,7 +5,7 @@
 
 # User-specific files
 *.DS_STORE
-*config.json
+config.json
 *.rsuser
 *.suo
 *.user
