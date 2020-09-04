@@ -102,8 +102,11 @@ namespace Shimakaze
             }
             else
             {
-                lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
-                await lvc.PlayAsync(ShimakazeBot.playlists[ctx.Guild].songRequests.First().track);
+                if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 0)
+                {
+                    lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
+                    await lvc.PlayAsync(ShimakazeBot.playlists[ctx.Guild].songRequests.First().track);
+                }
                 debugResponse.AddWithDebug("Playlist: " +
                     $"**{ShimakazeBot.playlists[ctx.Guild].songRequests.Count} songs**", ctx);
             }
@@ -418,14 +421,6 @@ namespace Shimakaze
 
         private Task PlayNextTrack(TrackFinishEventArgs e)
         {
-            if (ShimakazeBot.CheckDebugMode(e.Player.Guild.Id))
-            {
-                ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
-                    LogMessageSources.PLAYLIST_NEXT_EVENT + " SupaDebug @" + e.Player.Guild.Name,
-                    e.Reason.ToString(),
-                    DateTime.Now);
-            }
-
             if (e.Reason == TrackEndReason.Cleanup)
             {
                 ShimakazeBot.SendToDebugRoom("Lavalink failed in **" +
@@ -480,8 +475,8 @@ namespace Shimakaze
                 {
                     ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
                         LogMessageSources.PLAYLIST_NEXT_EVENT + " SupaDebug @" + e.Player.Guild.Name,
-                        ShimakazeBot.lvn.GetConnection(e.Player.Guild)?.CurrentState?.CurrentTrack?.Title +
-                        " - " + e.Handled.ToString(),
+                        "next track: " +
+                        ShimakazeBot.lvn.GetConnection(e.Player.Guild)?.CurrentState?.CurrentTrack?.Title,
                         DateTime.Now);
                 }
             }
