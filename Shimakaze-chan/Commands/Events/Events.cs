@@ -62,7 +62,7 @@ namespace Shimakaze
             ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
                 LogMessageSources.WEBSOCKET_EVENT,
                 "Gateway resumed" + (socketCloseTime.Ticks == 0 ? "" :
-                $" - closed for {(DateTime.Now - socketCloseTime).TotalMilliseconds}ms"),
+                $" - down for {(DateTime.Now - socketCloseTime).TotalMilliseconds}ms"),
                 DateTime.Now);
             socketCloseTime = new DateTime(0);
             return Task.CompletedTask;

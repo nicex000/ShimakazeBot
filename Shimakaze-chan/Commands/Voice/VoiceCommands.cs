@@ -179,12 +179,14 @@ namespace Shimakaze
                         (ShimakazeBot.lvn.GetConnection(ctx.Guild) != null).ToString(),
                         ctx);
 
-                    debugResponse.AddWithDebug("\n  - Is connected: " +
-                        ShimakazeBot.lvn.GetConnection(ctx.Guild).IsConnected.ToString() +
-                        "\n  - Channel: " +
-                        ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel.Name,
-                        ctx,
-                        ShimakazeBot.lvn.GetConnection(ctx.Guild) != null); //condition
+                    if (ShimakazeBot.lvn.GetConnection(ctx.Guild) != null)
+                    {
+                        debugResponse.AddWithDebug("\n  - Is connected: " +
+                            ShimakazeBot.lvn.GetConnection(ctx.Guild).IsConnected.ToString() +
+                            "\n  - Channel: " +
+                            ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel.Name,
+                            ctx);
+                    }
                 }
                 await ctx.RespondAsync(debugResponse + "Attempted leave.");
             }
@@ -296,7 +298,7 @@ namespace Shimakaze
 
             LavalinkTrack track;
             LavalinkLoadResult lavalinkLoadResult;
-            var lavaConnection = ShimakazeBot.lvn.GetConnection(ctx.Guild);
+            var lavaConnection = ShimakazeBot.lvn?.GetConnection(ctx.Guild);
 
             if (lavaConnection == null)
             {
@@ -340,11 +342,11 @@ namespace Shimakaze
                 case LavalinkLoadResultType.TrackLoaded:
                     track = lavalinkLoadResult.Tracks.First();
                     ShimakazeBot.playlists[ctx.Guild].songRequests.Add(new SongRequest(
-                        ctx.Member.Nickname, ctx.Member, ctx.Channel, track));
+                        ctx.Member.DisplayName, ctx.Member, ctx.Channel, track));
                     break;
                 case LavalinkLoadResultType.PlaylistLoaded:
                     ShimakazeBot.playlists[ctx.Guild].songRequests.AddRange(lavalinkLoadResult.Tracks.Select(t => new SongRequest(
-                        ctx.Member.Nickname, ctx.Member, ctx.Channel, t)));
+                        ctx.Member.DisplayName, ctx.Member, ctx.Channel, t)));
                     break;
                 case LavalinkLoadResultType.NoMatches:
                     await ctx.RespondAsync("No matches found.");
@@ -363,7 +365,7 @@ namespace Shimakaze
             }
             else
             {
-                await ctx.RespondAsync($"Added **{lavalinkLoadResult.Tracks.First().Title}** to the queue. Requested by *{ctx.Member.Nickname}*");
+                await ctx.RespondAsync($"Added **{lavalinkLoadResult.Tracks.First().Title}** to the queue. Requested by *{ctx.Member.DisplayName}*");
             }
         }
 
