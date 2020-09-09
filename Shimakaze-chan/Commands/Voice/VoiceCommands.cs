@@ -61,14 +61,14 @@ namespace Shimakaze
             debugResponse.AddWithDebug("LVC status: " + (lvc != null).ToString(), ctx);
             if (lvc != null)
             {
-                await ctx.RespondAsync(debugResponse + "Already connected in this guild.");
+                await ctx.RespondAsync($"{debugResponse}Already connected in this guild.");
                 return;
             }
 
             var chn = ctx.Member?.VoiceState?.Channel;
             if (chn == null)
             {
-                await ctx.RespondAsync(debugResponse + "You need to be in a voice channel.");
+                await ctx.RespondAsync($"{debugResponse}You need to be in a voice channel.");
                 return;
             }
 
@@ -132,7 +132,7 @@ namespace Shimakaze
             var lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
             if (ShimakazeBot.lvn == null || lvc == null)
             {
-                await ctx.RespondAsync(debugResponse + "Not connected in this guild.");
+                await ctx.RespondAsync($"{debugResponse}Not connected in this guild.");
                 return;
             }
 
@@ -140,17 +140,18 @@ namespace Shimakaze
                 "\n  - Is connected: " +
                 ShimakazeBot.lvn.GetConnection(ctx.Guild).IsConnected.ToString() +
                 "\n  - Channel: " +
-                ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel.Name, ctx);
+                ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel.Name,
+                ctx);
 
             var chn = ctx.Member?.VoiceState?.Channel;
             if (chn == null)
             {
-                await ctx.RespondAsync(debugResponse + "You need to be in a voice channel.");
+                await ctx.RespondAsync($"{debugResponse}You need to be in a voice channel.");
                 return;
             }
             if (chn != lvc.Channel)
             {
-                await ctx.RespondAsync(debugResponse + "You need to be in the same voice channel.");
+                await ctx.RespondAsync($"{debugResponse}You need to be in the same voice channel.");
                 return;
             }
 
@@ -163,7 +164,7 @@ namespace Shimakaze
             {
                 debugResponse.AddWithDebug("Playlist: " +
                     (ShimakazeBot.playlists.ContainsKey(ctx.Guild) ?
-                    $"**{ShimakazeBot.playlists[ctx.Guild].songRequests.Count} songs**" : $"**already removed**"),
+                    $"**{ShimakazeBot.playlists[ctx.Guild].songRequests.Count} songs**" : "**already removed**"),
                     ctx);
             }
 
@@ -216,18 +217,19 @@ namespace Shimakaze
                         if (i == 0)
                         {
                             msg += lvc == null ? "Starting with " :
-                                (ShimakazeBot.playlists[ctx.Guild].isPaused ? "***PAUSED*** " : "Now playing ");
+                                (ShimakazeBot.playlists[ctx.Guild].isPaused ? 
+                                "***PAUSED*** " : "Now playing ");
                         }
                         else if (i > 10)
                         {
-                            msg += "\n*And " + (ShimakazeBot.playlists[ctx.Guild].songRequests.Count - 11) + " more...*";
+                            msg += $"\n*And {ShimakazeBot.playlists[ctx.Guild].songRequests.Count - 11} more...*";
                             break;
                         }
                         else
                         {
-                            msg += "\n" + i + ". ";
+                            msg += $"\n{i}. ";
                         }
-                        msg += "**" + req.track.Title + "** Requested by *" + req.requester + "*";
+                        msg += $"**{req.track.Title}** Requested by *{req.requester}*";
                         i++;
                     }
 
@@ -331,7 +333,10 @@ namespace Shimakaze
 
             var path = Path.Combine(Directory.GetCurrentDirectory(), songName);
 
-            if (songName.StartsWith("local")) await ctx.RespondAsync(songName.Substring(songName.IndexOf("local ") + 6));
+            if (songName.StartsWith("local"))
+            {
+                await ctx.RespondAsync(songName.Substring(songName.IndexOf("local ") + 6));
+            }
 
             lavalinkLoadResult = songName.StartsWith("http")
                 ? await ShimakazeBot.lvn.Rest.GetTracksAsync(new Uri(songName))
@@ -364,11 +369,13 @@ namespace Shimakaze
             if (lavaConnection.CurrentState.CurrentTrack == null)
             {
                 await lavaConnection.PlayAsync(ShimakazeBot.playlists[ctx.Guild].songRequests.First().track);
-                await ctx.RespondAsync($"Playing **{ShimakazeBot.playlists[ctx.Guild].songRequests.First().track.Title}** Requested by *{ShimakazeBot.playlists[ctx.Guild].songRequests.First().requester}*");
+                await ctx.RespondAsync($"Playing **{ShimakazeBot.playlists[ctx.Guild].songRequests.First().track.Title}** " +
+                    $"Requested by *{ShimakazeBot.playlists[ctx.Guild].songRequests.First().requester}*");
             }
             else
             {
-                await ctx.RespondAsync($"Added **{lavalinkLoadResult.Tracks.First().Title}** to the queue. Requested by *{ctx.Member.DisplayName}*");
+                await ctx.RespondAsync($"Added **{lavalinkLoadResult.Tracks.First().Title}** to the queue. " +
+                    $"Requested by *{ctx.Member.DisplayName}*");
             }
         }
 
@@ -408,12 +415,12 @@ namespace Shimakaze
             if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 0)
             {
                 await lavaConnection.PlayAsync(ShimakazeBot.playlists[ctx.Guild].songRequests.First().track);
-                await ctx.RespondAsync("Skipped *" + title + "*.");
+                await ctx.RespondAsync($"Skipped *{title}*.");
             }
             else
             {
                 await lavaConnection.StopAsync();
-                await ctx.RespondAsync("Playlist ended with skip. (Skipped *" + title + "*)");
+                await ctx.RespondAsync($"Playlist ended with skip. (Skipped *{title}*)");
             }
         }
 
@@ -424,12 +431,12 @@ namespace Shimakaze
             if (e.Reason == TrackEndReason.Cleanup)
             {
                 ShimakazeBot.SendToDebugRoom("Lavalink failed in **" +
-                    e.Player.Guild.Name + "** (" + e.Player.Guild.Id + ") - **" +
-                    e.Player.Channel.Name + "** (" + e.Player.Channel.Id + ") - song: " +
+                    $"{e.Player.Guild.Name}** ({e.Player.Guild.Id}) - **" +
+                    $"{e.Player.Channel.Name}** ({e.Player.Channel.Id}) - song: " +
                     e.Track.Title);
                 ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Warning,
                     LogMessageSources.PLAYLIST_NEXT_EVENT,
-                    e.Reason + " - playlist length at error: " +
+                    $"{e.Reason} - playlist length at error: " +
                     ShimakazeBot.playlists[e.Player.Guild].songRequests.Count,
                     DateTime.Now);
 
@@ -449,16 +456,20 @@ namespace Shimakaze
             {
                 ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Warning,
                     LogMessageSources.PLAYLIST_NEXT_EVENT,
-                    e.Reason + " - playlist length at error: " +
+                    $"{e.Reason} - playlist length at error: " +
                     ShimakazeBot.playlists[e.Player.Guild].songRequests.Count,
                     DateTime.Now);
             }
 
             if (e.Reason == TrackEndReason.Replaced)
+            { 
                 return Task.CompletedTask;
+            }
 
             if (ShimakazeBot.playlists[e.Player.Guild].songRequests.Count <= 0)
+            { 
                 return Task.CompletedTask;
+            }
 
             ShimakazeBot.playlists[e.Player.Guild].songRequests.RemoveAt(0);
             ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
@@ -474,7 +485,7 @@ namespace Shimakaze
                 if (ShimakazeBot.CheckDebugMode(e.Player.Guild.Id))
                 {
                     ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
-                        LogMessageSources.PLAYLIST_NEXT_EVENT + " SupaDebug @" + e.Player.Guild.Name,
+                        $"{LogMessageSources.PLAYLIST_NEXT_EVENT} SupaDebug @{e.Player.Guild.Name}",
                         "next track: " +
                         ShimakazeBot.lvn.GetConnection(e.Player.Guild)?.CurrentState?.CurrentTrack?.Title,
                         DateTime.Now);

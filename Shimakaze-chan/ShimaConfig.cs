@@ -54,9 +54,12 @@ namespace Shimakaze
             {
                 StreamReader streamReader = File.OpenText("config.json");
                 string json = streamReader.ReadToEnd();
-                if (json.Length < 1) return new ShimaConfig();
-                ShimaConfig config = JsonConvert.DeserializeObject<ShimaConfig>(json);
+                if (json.Length < 1)
+                {
+                    return new ShimaConfig();
+                }
 
+                ShimaConfig config = JsonConvert.DeserializeObject<ShimaConfig>(json);
                 if (config.settings.isTest)
                 {
                     ShimakazeBot.DefaultPrefix = config.settings.testPrefix;

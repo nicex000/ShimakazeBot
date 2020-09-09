@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Shimakaze_chan.Attributes;
+using Shimakaze.Attributes;
 using DSharpPlus.Entities;
 
 namespace Shimakaze
@@ -55,14 +55,14 @@ namespace Shimakaze
                 streamingGuild.RoleId = roleId;
                 ShimakazeBot.DbCtx.StreamingGuild.Update(streamingGuild);
                 ShimakazeBot.DbCtx.SaveChanges();
-                await ctx.RespondAsync("streaming role configuration updated.");
+                await ctx.RespondAsync("Streaming role configuration updated.");
             }
             else
             {
                 ShimakazeBot.StreamingEnabledGuilds.Add(ctx.Guild.Id, roleId);
                 ShimakazeBot.DbCtx.StreamingGuild.Add(new StreamingGuild { GuildId = ctx.Guild.Id, RoleId = roleId });
                 ShimakazeBot.DbCtx.SaveChanges();
-                await ctx.RespondAsync("streaming role configuration added.");
+                await ctx.RespondAsync("Streaming role configuration added.");
             }
         }
 
@@ -94,14 +94,14 @@ namespace Shimakaze
             {
                 if (string.IsNullOrWhiteSpace(newPrefix))
                 {
-                    await ctx.RespondAsync("Default prefix is: **" + ShimakazeBot.DefaultPrefix + "**\nProvide a prefix to change it.");
+                    await ctx.RespondAsync($"Default prefix is: **{ShimakazeBot.DefaultPrefix}**\nProvide a prefix to change it.");
                 }
                 else
                 {
                     ShimakazeBot.CustomPrefixes.Add(ctx.Guild.Id, newPrefix);
                     ShimakazeBot.DbCtx.GuildPrefix.Add(new GuildPrefix { GuildId = ctx.Guild.Id, Prefix = newPrefix });
                     ShimakazeBot.DbCtx.SaveChanges();
-                    await ctx.RespondAsync("Prefix updated to: **" + newPrefix + "**");
+                    await ctx.RespondAsync($"Prefix updated to: **{newPrefix}**");
                 }
             }
         }
@@ -163,7 +163,10 @@ namespace Shimakaze
             ulong idFromText;
             mentionedUsers.ToList().ForEach(user =>
             {
-                if (!idList.ContainsKey(user.Id)) idList.Add(user.Id, false);
+                if (!idList.ContainsKey(user.Id))
+                {
+                    idList.Add(user.Id, false);
+                }
             });
             foreach (var userId in textArray.Skip(1))
             {
@@ -186,7 +189,10 @@ namespace Shimakaze
             {
                 if (isGlobal || UserLevels.GetLevel(item.Key, ctx.Guild.Id) < requesterLevel)
                 {
-                    if (!await UserLevels.SetLevel(item.Key, ctx.Guild.Id, item.Value, level)) failedIDs.Add(item.Key);
+                    if (!await UserLevels.SetLevel(item.Key, ctx.Guild.Id, item.Value, level))
+                    {
+                        failedIDs.Add(item.Key);
+                    }
                 }
             }
 

@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Shimakaze_chan.Attributes
+namespace Shimakaze.Attributes
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     class RequireLevelAttribute : CheckBaseAttribute
@@ -22,7 +22,6 @@ namespace Shimakaze_chan.Attributes
         public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
         {
             var app = ctx.Client.CurrentApplication;
-
             if (app == null)
             {
                 return false;
@@ -41,6 +40,7 @@ namespace Shimakaze_chan.Attributes
             {
                 userLevel = (int)ShimaConsts.UserPermissionLevel.DEFAULT_SERVER_OWNER;
             }
+
             if (userLevel < level)
             {
                 if (!string.IsNullOrWhiteSpace(failMessage))
