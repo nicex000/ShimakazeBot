@@ -22,7 +22,8 @@ namespace Shimakaze
         public async Task DisplayPrefix(CommandContext ctx)
         {
             await ctx.RespondAsync("This server\'s prefix is: **" +
-                             (ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) ? ShimakazeBot.CustomPrefixes[ctx.Guild.Id] : ShimakazeBot.DefaultPrefix) +
+                             (ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) ?
+                             ShimakazeBot.CustomPrefixes[ctx.Guild.Id] : ShimakazeBot.DefaultPrefix) +
                              "**\n You can change the prefix with **cprefix**");
         }
 

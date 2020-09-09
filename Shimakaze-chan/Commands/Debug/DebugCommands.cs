@@ -8,6 +8,7 @@ namespace Shimakaze
     class DebugCommands : Commands
     {
         [Command("debug")]
+        [Attributes.RequireAdmin]
         [Aliases("supadebug", "sd", "スーパーデバッグモード")]
         public async Task DebugMode(CommandContext ctx)
         {
@@ -24,7 +25,7 @@ namespace Shimakaze
         }
 
         [Command("debugchannel")]
-        [Attributes.RequirePermissions(DSharpPlus.Permissions.All)]
+        [Attributes.RequireShimaTeam]
         [Aliases("debugflag")]
         public async Task DebugChannelFlag(CommandContext ctx)
         {

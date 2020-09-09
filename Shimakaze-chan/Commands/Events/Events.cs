@@ -31,14 +31,6 @@ namespace Shimakaze
         private Task SocketErrored(SocketErrorEventArgs e)
         {
             socketCloseTime = socketCloseTime.Ticks == 0 ? DateTime.Now : socketCloseTime;
-            string message = $"Socket Errored: " +
-                $"{e.Exception.Message} \n\n {e.Exception.StackTrace}" +
-                $"\n\n {e.Exception.InnerException} \n\n {e.Exception.Source}";
-            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
-                LogMessageSources.WEBSOCKET_EVENT,
-                message,
-                DateTime.Now);
-            ShimakazeBot.SendToDebugRoom(message);
             return Task.CompletedTask;
         }
 
@@ -124,7 +116,7 @@ namespace Shimakaze
             });
             if (missingPerms.Length > 0)
             {
-                ShimakazeBot.SendToDebugRoom($"Shima is missing manage role perms for streaming in:" +
+                ShimakazeBot.SendToDebugRoom("Shima is missing manage role perms for streaming in:" +
                     $"\n{missingPerms}");
                 return;
             }
