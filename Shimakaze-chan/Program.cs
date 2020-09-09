@@ -51,7 +51,7 @@ namespace Shimakaze
             
             ShimakazeBot.DbCtx = new ShimaContext();
 
-            ShimakazeBot.DbCtx.Database.Migrate();
+            await ShimakazeBot.DbCtx.Database.MigrateAsync();
 
             ShimakazeBot.FetchPrefixes();
             ShimakazeBot.FetchStreamingRoles();

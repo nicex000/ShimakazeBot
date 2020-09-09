@@ -26,14 +26,14 @@ namespace Shimakaze
             var existingJoin = ShimakazeBot.DbCtx.GuildJoin.FirstOrDefault(p => p.GuildId == ctx.Guild.Id);
             if (existingJoin == null)
             {
-                ShimakazeBot.DbCtx.GuildJoin.Add(new GuildJoin { GuildId = ctx.Guild.Id, ChannelId = ctx.Channel.Id });
+                await ShimakazeBot.DbCtx.GuildJoin.AddAsync(new GuildJoin { GuildId = ctx.Guild.Id, ChannelId = ctx.Channel.Id });
             }
             else
             {
                 existingJoin.ChannelId = ctx.Channel.Id;
                 ShimakazeBot.DbCtx.GuildJoin.Update(existingJoin);
             }
-            ShimakazeBot.DbCtx.SaveChanges();
+            await ShimakazeBot.DbCtx.SaveChangesAsync();
 
             var lv = ctx.Client.GetLavalink();
             debugResponse.AddWithDebug("Unable to get LavaLink", ctx, lv == null);

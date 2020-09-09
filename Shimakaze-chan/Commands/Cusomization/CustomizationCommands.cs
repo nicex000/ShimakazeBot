@@ -32,7 +32,7 @@ namespace Shimakaze
                 {
                     ShimakazeBot.StreamingEnabledGuilds.Remove(ctx.Guild.Id);
                     ShimakazeBot.DbCtx.StreamingGuild.RemoveRange(ShimakazeBot.DbCtx.StreamingGuild.Where(g => g.GuildId == ctx.Guild.Id));
-                    ShimakazeBot.DbCtx.SaveChanges();
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
                     await ctx.RespondAsync("Streaming role configuration removed.");
                 }
                 else
@@ -54,14 +54,14 @@ namespace Shimakaze
                 var streamingGuild = ShimakazeBot.DbCtx.StreamingGuild.First(g => g.GuildId == ctx.Guild.Id);
                 streamingGuild.RoleId = roleId;
                 ShimakazeBot.DbCtx.StreamingGuild.Update(streamingGuild);
-                ShimakazeBot.DbCtx.SaveChanges();
+                await ShimakazeBot.DbCtx.SaveChangesAsync();
                 await ctx.RespondAsync("Streaming role configuration updated.");
             }
             else
             {
                 ShimakazeBot.StreamingEnabledGuilds.Add(ctx.Guild.Id, roleId);
-                ShimakazeBot.DbCtx.StreamingGuild.Add(new StreamingGuild { GuildId = ctx.Guild.Id, RoleId = roleId });
-                ShimakazeBot.DbCtx.SaveChanges();
+                await ShimakazeBot.DbCtx.StreamingGuild.AddAsync(new StreamingGuild { GuildId = ctx.Guild.Id, RoleId = roleId });
+                await ShimakazeBot.DbCtx.SaveChangesAsync();
                 await ctx.RespondAsync("Streaming role configuration added.");
             }
         }
@@ -77,7 +77,7 @@ namespace Shimakaze
                 {
                     ShimakazeBot.CustomPrefixes.Remove(ctx.Guild.Id);
                     ShimakazeBot.DbCtx.GuildPrefix.RemoveRange(ShimakazeBot.DbCtx.GuildPrefix.Where(p => p.GuildId == ctx.Guild.Id));
-                    ShimakazeBot.DbCtx.SaveChanges();
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
                     await ctx.RespondAsync($"Prefix reset to default: **{ShimakazeBot.DefaultPrefix}**");
                 }
                 else
@@ -86,7 +86,7 @@ namespace Shimakaze
                     var guildPrefix = ShimakazeBot.DbCtx.GuildPrefix.First(p => p.GuildId == ctx.Guild.Id);
                     guildPrefix.Prefix = newPrefix;
                     ShimakazeBot.DbCtx.GuildPrefix.Update(guildPrefix);
-                    ShimakazeBot.DbCtx.SaveChanges();
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
                     await ctx.RespondAsync($"Prefix updated to: **{newPrefix}**");
                 }
             }
@@ -99,8 +99,8 @@ namespace Shimakaze
                 else
                 {
                     ShimakazeBot.CustomPrefixes.Add(ctx.Guild.Id, newPrefix);
-                    ShimakazeBot.DbCtx.GuildPrefix.Add(new GuildPrefix { GuildId = ctx.Guild.Id, Prefix = newPrefix });
-                    ShimakazeBot.DbCtx.SaveChanges();
+                    await ShimakazeBot.DbCtx.GuildPrefix.AddAsync(new GuildPrefix { GuildId = ctx.Guild.Id, Prefix = newPrefix });
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
                     await ctx.RespondAsync($"Prefix updated to: **{newPrefix}**");
                 }
             }
