@@ -41,7 +41,7 @@ namespace Shimakaze.Attributes
             }
             var pBot = ctx.Channel.PermissionsFor(bot);
 
-            
+
             var userSuccess = user.Id == ctx.Guild.Owner.Id ||
                         ((pUser & Permissions.Administrator) != 0 || (pUser & permissions) == permissions);
             var botSuccess = (pBot & Permissions.Administrator) != 0 || (pBot & permissions) == permissions;
@@ -59,7 +59,5 @@ namespace Shimakaze.Attributes
             if (!string.IsNullOrWhiteSpace(failMessage)) await ctx.RespondAsync(failMessage);
             return userSuccess && botSuccess;
         }
-
-
     }
 }

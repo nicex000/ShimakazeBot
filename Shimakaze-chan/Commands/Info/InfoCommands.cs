@@ -21,10 +21,11 @@ namespace Shimakaze
         [Description("Displays the current prefix, if you\'re that confused.")]
         public async Task DisplayPrefix(CommandContext ctx)
         {
-            await ctx.RespondAsync("This server\'s prefix is: **" +
-                             (ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) ?
-                             ShimakazeBot.CustomPrefixes[ctx.Guild.Id] : ShimakazeBot.DefaultPrefix) +
-                             "**\n You can change the prefix with **cprefix**");
+            string prefix = ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) ?
+                            ShimakazeBot.CustomPrefixes[ctx.Guild.Id] :
+                            ShimakazeBot.DefaultPrefix;
+            await ctx.RespondAsync($"This server\'s prefix is: **{prefix}**" +
+                "\n You can change the prefix with **cprefix**");
         }
 
         [Command("ping")]
