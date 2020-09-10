@@ -8,22 +8,30 @@ namespace Shimakaze
     class DebugCommands : Commands
     {
         [Command("debug")]
+        [Attributes.RequireAdmin]
         [Aliases("supadebug", "sd", "スーパーデバッグモード")]
         public async Task DebugMode(CommandContext ctx)
         {
             bool toRemove = ShimakazeBot.guildDebugMode.Contains(ctx.Guild.Id);
-            if (toRemove) ShimakazeBot.guildDebugMode.Remove(ctx.Guild.Id);
+            if (toRemove)
+            {
+                ShimakazeBot.guildDebugMode.Remove(ctx.Guild.Id);
+            }
             else ShimakazeBot.guildDebugMode.Add(ctx.Guild.Id);
 
-            await ctx.RespondAsync("スーパーデバッグモード" + (!toRemove ? " **enabled** for " : " **disabled** for ") + ctx.Guild.Name + " (" + ctx.Guild.Id + ")");
+            await ctx.RespondAsync("スーパーデバッグモード" + 
+                $" **{(!toRemove ? "enabled" : "disabled")}**" +
+                $" for {ctx.Guild.Name} ({ctx.Guild.Id})") ;
         }
 
         [Command("debugchannel")]
+        [Attributes.RequireShimaTeam]
         [Aliases("debugflag")]
         public async Task DebugChannelFlag(CommandContext ctx)
         {
             ShimakazeBot.shouldSendToDebugRoom = !ShimakazeBot.shouldSendToDebugRoom;
-            await ctx.RespondAsync("Shima debug channel " + (ShimakazeBot.shouldSendToDebugRoom ? " **enabled**" : "**disabled**"));
+            await ctx.RespondAsync("Shima debug channel **" +
+                $"{(ShimakazeBot.shouldSendToDebugRoom ? "enabled" : "disabled")}**");
         }
 
         [Command("status")]

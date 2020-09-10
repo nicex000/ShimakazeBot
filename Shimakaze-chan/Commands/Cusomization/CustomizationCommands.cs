@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Shimakaze_chan.Attributes;
+using Shimakaze.Attributes;
 using DSharpPlus.Entities;
 
 namespace Shimakaze
@@ -32,7 +32,7 @@ namespace Shimakaze
                 {
                     ShimakazeBot.StreamingEnabledGuilds.Remove(ctx.Guild.Id);
                     ShimakazeBot.DbCtx.StreamingGuild.RemoveRange(ShimakazeBot.DbCtx.StreamingGuild.Where(g => g.GuildId == ctx.Guild.Id));
-                    ShimakazeBot.DbCtx.SaveChanges();
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
                     await ctx.RespondAsync("Streaming role configuration removed.");
                 }
                 else
@@ -54,15 +54,15 @@ namespace Shimakaze
                 var streamingGuild = ShimakazeBot.DbCtx.StreamingGuild.First(g => g.GuildId == ctx.Guild.Id);
                 streamingGuild.RoleId = roleId;
                 ShimakazeBot.DbCtx.StreamingGuild.Update(streamingGuild);
-                ShimakazeBot.DbCtx.SaveChanges();
-                await ctx.RespondAsync("streaming role configuration updated.");
+                await ShimakazeBot.DbCtx.SaveChangesAsync();
+                await ctx.RespondAsync("Streaming role configuration updated.");
             }
             else
             {
                 ShimakazeBot.StreamingEnabledGuilds.Add(ctx.Guild.Id, roleId);
-                ShimakazeBot.DbCtx.StreamingGuild.Add(new StreamingGuild { GuildId = ctx.Guild.Id, RoleId = roleId });
-                ShimakazeBot.DbCtx.SaveChanges();
-                await ctx.RespondAsync("streaming role configuration added.");
+                await ShimakazeBot.DbCtx.StreamingGuild.AddAsync(new StreamingGuild { GuildId = ctx.Guild.Id, RoleId = roleId });
+                await ShimakazeBot.DbCtx.SaveChangesAsync();
+                await ctx.RespondAsync("Streaming role configuration added.");
             }
         }
 
@@ -77,7 +77,7 @@ namespace Shimakaze
                 {
                     ShimakazeBot.CustomPrefixes.Remove(ctx.Guild.Id);
                     ShimakazeBot.DbCtx.GuildPrefix.RemoveRange(ShimakazeBot.DbCtx.GuildPrefix.Where(p => p.GuildId == ctx.Guild.Id));
-                    ShimakazeBot.DbCtx.SaveChanges();
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
                     await ctx.RespondAsync($"Prefix reset to default: **{ShimakazeBot.DefaultPrefix}**");
                 }
                 else
@@ -86,7 +86,7 @@ namespace Shimakaze
                     var guildPrefix = ShimakazeBot.DbCtx.GuildPrefix.First(p => p.GuildId == ctx.Guild.Id);
                     guildPrefix.Prefix = newPrefix;
                     ShimakazeBot.DbCtx.GuildPrefix.Update(guildPrefix);
-                    ShimakazeBot.DbCtx.SaveChanges();
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
                     await ctx.RespondAsync($"Prefix updated to: **{newPrefix}**");
                 }
             }
@@ -94,14 +94,14 @@ namespace Shimakaze
             {
                 if (string.IsNullOrWhiteSpace(newPrefix))
                 {
-                    await ctx.RespondAsync("Default prefix is: **" + ShimakazeBot.DefaultPrefix + "**\nProvide a prefix to change it.");
+                    await ctx.RespondAsync($"Default prefix is: **{ShimakazeBot.DefaultPrefix}**\nProvide a prefix to change it.");
                 }
                 else
                 {
                     ShimakazeBot.CustomPrefixes.Add(ctx.Guild.Id, newPrefix);
-                    ShimakazeBot.DbCtx.GuildPrefix.Add(new GuildPrefix { GuildId = ctx.Guild.Id, Prefix = newPrefix });
-                    ShimakazeBot.DbCtx.SaveChanges();
-                    await ctx.RespondAsync("Prefix updated to: **" + newPrefix + "**");
+                    await ShimakazeBot.DbCtx.GuildPrefix.AddAsync(new GuildPrefix { GuildId = ctx.Guild.Id, Prefix = newPrefix });
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
+                    await ctx.RespondAsync($"Prefix updated to: **{newPrefix}**");
                 }
             }
         }
@@ -163,7 +163,10 @@ namespace Shimakaze
             ulong idFromText;
             mentionedUsers.ToList().ForEach(user =>
             {
-                if (!idList.ContainsKey(user.Id)) idList.Add(user.Id, false);
+                if (!idList.ContainsKey(user.Id))
+                {
+                    idList.Add(user.Id, false);
+                }
             });
             foreach (var userId in textArray.Skip(1))
             {
@@ -186,7 +189,10 @@ namespace Shimakaze
             {
                 if (isGlobal || UserLevels.GetLevel(item.Key, ctx.Guild.Id) < requesterLevel)
                 {
-                    if (!await UserLevels.SetLevel(item.Key, ctx.Guild.Id, item.Value, level)) failedIDs.Add(item.Key);
+                    if (!await UserLevels.SetLevel(item.Key, ctx.Guild.Id, item.Value, level))
+                    {
+                        failedIDs.Add(item.Key);
+                    }
                 }
             }
 

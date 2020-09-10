@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shimakaze_chan.Attributes
+namespace Shimakaze.Attributes
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     class RequireServerOwnerAttribute : CheckBaseAttribute
@@ -21,15 +21,18 @@ namespace Shimakaze_chan.Attributes
         public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
         {
             var app = ctx.Client.CurrentApplication;
-            var me = ctx.Client.CurrentUser;
-
             if (app != null)
             {
                 bool success = ctx.Member == ctx.Guild.Owner || app.Owners.Any(x => x.Id == ctx.User.Id);
-                if (!success && !string.IsNullOrWhiteSpace(failMessage)) await ctx.RespondAsync(failMessage);
+                if (!success && !string.IsNullOrWhiteSpace(failMessage))
+                {
+                    await ctx.RespondAsync(failMessage);
+                }
+
                 return success;
             }
 
+            var me = ctx.Client.CurrentUser;
             return ctx.User.Id == me.Id;
         }
     }
