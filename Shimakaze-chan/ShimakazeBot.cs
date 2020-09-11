@@ -10,7 +10,7 @@ namespace Shimakaze
 {
     public static class ShimaConsts
     {
-        public static readonly string Version = Assembly.GetEntryAssembly().GetName().Version.ToString();
+        public static readonly string Version = Assembly.GetEntryAssembly().GetName().Version.ToString(3);
         public enum UserPermissionLevel
         {
             DEFAULT = 1,
@@ -28,6 +28,7 @@ namespace Shimakaze
         public static ShimaContext DbCtx;
         public static Dictionary<ulong, string> CustomPrefixes = new Dictionary<ulong, string>();
         public static Dictionary<ulong, ulong> StreamingEnabledGuilds = new Dictionary<ulong, ulong>();
+        public static Dictionary<ulong, ulong> SelfAssignRoleLimit = new Dictionary<ulong, ulong>();
         public static Dictionary<ulong, LevelListContainer> UserLevelList = new Dictionary<ulong, LevelListContainer>();
         public static string DefaultPrefix = "!";
         
@@ -47,6 +48,12 @@ namespace Shimakaze
         {
             var streamingRoles = DbCtx.StreamingGuild.ToList();
             streamingRoles.ForEach(g => StreamingEnabledGuilds.Add(g.GuildId, g.RoleId));
+        }
+
+        public static void FetchSelfAssignLimits()
+        {
+            var selfAssignLimits = DbCtx.GuildSelfAssign.ToList();
+            selfAssignLimits.ForEach(g => SelfAssignRoleLimit.Add(g.GuildId, g.RoleId));
         }
 
         public static void FetchPermissionLevels()

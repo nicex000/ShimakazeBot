@@ -6,16 +6,18 @@ namespace Shimakaze
     {
         public DbSet<GuildPrefix> GuildPrefix { get; set; }
         public DbSet<GuildJoin> GuildJoin { get; set; }
+        public DbSet<GuildSelfAssign> GuildSelfAssign { get; set; }
         public DbSet<StreamingGuild> StreamingGuild { get; set; }
         public DbSet<UserPermissionLevel> UserPermissionLevel { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseNpgsql($"Host={ShimakazeBot.Config.database.host};" +
-                $"Port={ShimakazeBot.Config.database.port};" +
-                $"Database={ShimakazeBot.Config.database.name};" +
-                $"Username={ShimakazeBot.Config.database.username};" +
-                $"Password={ShimakazeBot.Config.database.password}");
+            ShimaConfig config = ShimaConfig.LoadConfig();
+            optionsBuilder.UseNpgsql($"Host={config.database.host};" +
+                $"Port={config.database.port};" +
+                $"Database={config.database.name};" +
+                $"Username={config.database.username};" +
+                $"Password={config.database.password}");
         }
     }
 }
