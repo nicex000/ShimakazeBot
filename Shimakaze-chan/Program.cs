@@ -55,6 +55,8 @@ namespace Shimakaze
 
             ShimakazeBot.FetchPrefixes();
             ShimakazeBot.FetchStreamingRoles();
+            ShimakazeBot.FetchSelfAssignLimits();
+            ShimakazeBot.FetchPermissionLevels();
 
             CommandsNextConfiguration commandConfig = new CommandsNextConfiguration
             {
@@ -75,6 +77,7 @@ namespace Shimakaze
             commandsNextExtension.RegisterCommands<InfoCommands>();
             commandsNextExtension.RegisterCommands<VoiceCommands>();
             commandsNextExtension.RegisterCommands<CustomizationCommands>();
+            commandsNextExtension.RegisterCommands<ManagementCommands>();
 
             ShimakazeBot.Client.UseLavalink();
 

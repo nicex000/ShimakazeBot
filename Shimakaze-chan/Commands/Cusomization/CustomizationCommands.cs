@@ -12,39 +12,61 @@ namespace Shimakaze
     class CustomizationCommands : Commands
     {
         [Command("streamrole")]
-        [Description("Sets or removes the streaming role.")]
+        [Description("Sets or removes the streaming role." +
+                     "\nUsage: Role name / mention / id, leave empty to remove.")]
         [RequireAdmin]
         public async Task SetStreamingRole(CommandContext ctx, [RemainingText] string roleName)
         {
-            ulong roleId = 0;
-            if (ctx.Message.MentionedRoles.Count > 0)
-            {
-                roleId = ctx.Message.MentionedRoles[0].Id;
-            }
-            else if (!string.IsNullOrWhiteSpace(roleName))
-            {
-                var role = ctx.Guild.Roles.Values.FirstOrDefault(item => item.Name == roleName);
-                roleId = role != null ? role.Id : 0;
-            }
-            else
+            if (string.IsNullOrWhiteSpace(roleName))
             {
                 if (ShimakazeBot.StreamingEnabledGuilds.ContainsKey(ctx.Guild.Id))
                 {
                     ShimakazeBot.StreamingEnabledGuilds.Remove(ctx.Guild.Id);
-                    ShimakazeBot.DbCtx.StreamingGuild.RemoveRange(ShimakazeBot.DbCtx.StreamingGuild.Where(g => g.GuildId == ctx.Guild.Id));
+                    ShimakazeBot.DbCtx.StreamingGuild.RemoveRange(
+                        ShimakazeBot.DbCtx.StreamingGuild.Where(g => g.GuildId == ctx.Guild.Id));
                     await ShimakazeBot.DbCtx.SaveChangesAsync();
                     await ctx.RespondAsync("Streaming role configuration removed.");
                 }
                 else
                 {
-                    await ctx.RespondAsync("Please mention or write the role name.");
+                    await ctx.RespondAsync("No configuration to remove.");
                 }
-                return;
             }
 
-            if (roleId == 0)
+            DiscordRole role = null;
+            ulong roleId = 0;
+            if (ctx.Message.MentionedRoles.Count > 0)
             {
-                await ctx.RespondAsync("Invalid role.");
+                if (ctx.Message.MentionedRoles.Count() > 1)
+                {
+                    await ctx.RespondAsync("Please mention only 1 role.");
+                    return;
+                }
+                else
+                {
+                    role = ctx.Message.MentionedRoles[0];
+                }
+            }
+            else if (ulong.TryParse(roleName, out roleId))
+            {
+                if (ctx.Guild.Roles.ContainsKey(roleId))
+                {
+                    role = ctx.Guild.Roles[roleId];
+                }
+                else
+                {
+                    await ctx.RespondAsync($"Unable to find role with ID **{roleId}**");
+                    return;
+                }
+            }
+            else
+            {
+                role = ctx.Guild.Roles.Values.FirstOrDefault(item => item.Name == roleName);
+            }
+
+            if (role == null)
+            {
+                await ctx.RespondAsync($"Unable to find role **{roleName}**");
                 return;
             }
 
@@ -54,16 +76,16 @@ namespace Shimakaze
                 var streamingGuild = ShimakazeBot.DbCtx.StreamingGuild.First(g => g.GuildId == ctx.Guild.Id);
                 streamingGuild.RoleId = roleId;
                 ShimakazeBot.DbCtx.StreamingGuild.Update(streamingGuild);
-                await ShimakazeBot.DbCtx.SaveChangesAsync();
-                await ctx.RespondAsync("Streaming role configuration updated.");
+                await ctx.RespondAsync($"Streaming role configuration updated with role **{role.Name}**.");
             }
             else
             {
                 ShimakazeBot.StreamingEnabledGuilds.Add(ctx.Guild.Id, roleId);
-                await ShimakazeBot.DbCtx.StreamingGuild.AddAsync(new StreamingGuild { GuildId = ctx.Guild.Id, RoleId = roleId });
-                await ShimakazeBot.DbCtx.SaveChangesAsync();
-                await ctx.RespondAsync("Streaming role configuration added.");
+                await ShimakazeBot.DbCtx.StreamingGuild.AddAsync(
+                    new StreamingGuild { GuildId = ctx.Guild.Id, RoleId = roleId });
+                await ctx.RespondAsync($"Streaming role configuration added with  role **{role.Name}**.");
             }
+            await ShimakazeBot.DbCtx.SaveChangesAsync();
         }
 
         [Command("cprefix")]
@@ -155,6 +177,86 @@ namespace Shimakaze
 
             await SetLevelsFromList(ctx, PrepareUserIdList(ctx.Message.MentionedUsers, textArray),
                 level, (int)ShimaConsts.UserPermissionLevel.SHIMA_TEAM);
+        }
+
+        [Command("setselfassign")]
+        [Description("Sets or removes the role that acts as a hierarchy limit for self assignable roles." +
+                     "\nUsage: Role name / mention / id, leave empty to remove.")]
+        [Aliases("setselfassignlimit", "selfassign", "selfassignlimit")]
+        [RequireAdmin]
+        public async Task SetSelfAssign(CommandContext ctx, [RemainingText] string roleName)
+        {
+            // removes config
+            if (string.IsNullOrWhiteSpace(roleName))
+            {
+                if (ShimakazeBot.SelfAssignRoleLimit.ContainsKey(ctx.Guild.Id))
+                {
+                    ShimakazeBot.SelfAssignRoleLimit.Remove(ctx.Guild.Id);
+                    ShimakazeBot.DbCtx.GuildSelfAssign.RemoveRange(
+                        ShimakazeBot.DbCtx.GuildSelfAssign.Where(p => p.GuildId == ctx.Guild.Id));
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
+                    await ctx.RespondAsync("Successfully removed the configuration.");
+                }
+                else
+                {
+                    await ctx.RespondAsync("No configuration to remove.");
+                }
+                return;
+            }
+
+            DiscordRole role = null;
+            ulong roleId = 0;
+            if (ctx.Message.MentionedRoles.Count() > 0)
+            {
+                if (ctx.Message.MentionedRoles.Count() > 1)
+                {
+                    await ctx.RespondAsync("Please mention only 1 role.");
+                    return;
+                }
+                else
+                {
+                    role = ctx.Message.MentionedRoles[0];
+                }
+            }
+            else if (ulong.TryParse(roleName, out roleId))
+            {
+                if (ctx.Guild.Roles.ContainsKey(roleId))
+                {
+                    role = ctx.Guild.Roles[roleId];
+                }
+                else
+                {
+                    await ctx.RespondAsync($"Unable to find role with ID **{roleId}**");
+                    return;
+                }
+            }
+            else
+            {
+                role = ctx.Guild.Roles.Values.FirstOrDefault(item => item.Name == roleName);
+            }
+
+            if (role == null)
+            {
+                await ctx.RespondAsync($"Unable to find role **{roleName}**");
+                return;
+            }
+
+            if (ShimakazeBot.SelfAssignRoleLimit.ContainsKey(ctx.Guild.Id))
+            {
+                ShimakazeBot.SelfAssignRoleLimit[ctx.Guild.Id] = role.Id;
+                var guildSelfAssign = ShimakazeBot.DbCtx.GuildSelfAssign.First(p => p.GuildId == ctx.Guild.Id);
+                guildSelfAssign.RoleId = role.Id;
+                ShimakazeBot.DbCtx.GuildSelfAssign.Update(guildSelfAssign);
+                await ctx.RespondAsync($"Successfully updated the configuration to use role **{role.Name}**.");
+            }
+            else
+            {
+                ShimakazeBot.SelfAssignRoleLimit.Add(ctx.Guild.Id, role.Id);
+                await ShimakazeBot.DbCtx.GuildSelfAssign.AddAsync(
+                    new GuildSelfAssign { GuildId = ctx.Guild.Id, RoleId = role.Id });
+                await ctx.RespondAsync($"Successfully added the configuration with role **{role.Name}**.");
+            }
+            await ShimakazeBot.DbCtx.SaveChangesAsync();
         }
 
         private Dictionary<ulong, bool> PrepareUserIdList(IReadOnlyList<DiscordUser> mentionedUsers, string[] textArray)
