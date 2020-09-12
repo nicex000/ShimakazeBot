@@ -180,7 +180,7 @@ namespace Shimakaze
         }
 
         [Command("setselfassign")]
-        [Description("Sets or removes the role that acts as a higharchy limit for self assignable roles." +
+        [Description("Sets or removes the role that acts as a hierarchy limit for self assignable roles." +
                      "\nUsage: Role name / mention / id, leave empty to remove.")]
         [Aliases("setselfassignlimit", "selfassign", "selfassignlimit")]
         [RequireAdmin]
