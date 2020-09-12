@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using System;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
@@ -19,6 +20,7 @@ namespace Shimakaze
         }
 
         public const int GlobalLevelGuild = 0;
+        public static readonly DateTime applicationStartTime = DateTime.Now;
     }
 
     public static class ShimakazeBot
