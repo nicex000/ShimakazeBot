@@ -366,17 +366,27 @@ namespace Shimakaze
                     throw new ArgumentOutOfRangeException();
             }
 
+            string responseString = "";
+
             if (lavaConnection.CurrentState.CurrentTrack == null)
             {
                 await lavaConnection.PlayAsync(ShimakazeBot.playlists[ctx.Guild].songRequests.First().track);
-                await ctx.RespondAsync($"Playing **{ShimakazeBot.playlists[ctx.Guild].songRequests.First().track.Title}** " +
-                    $"Requested by *{ShimakazeBot.playlists[ctx.Guild].songRequests.First().requester}*");
+                responseString = $"Playing **{ShimakazeBot.playlists[ctx.Guild].songRequests.First().track.Title}** " +
+                    $"Requested by *{ShimakazeBot.playlists[ctx.Guild].songRequests.First().requester}*";
             }
             else
             {
-                await ctx.RespondAsync($"Added **{lavalinkLoadResult.Tracks.First().Title}** to the queue. " +
-                    $"Requested by *{ctx.Member.DisplayName}*");
+                responseString = $"Added **{lavalinkLoadResult.Tracks.First().Title}** to the queue. " +
+                    $"Requested by *{ctx.Member.DisplayName}*";
             }
+
+            if (lavalinkLoadResult.Tracks.Count() > 1)
+            {
+                responseString += "\nAnd also added " +
+                    $"**{lavalinkLoadResult.Tracks.Count()}** more songs to the queue.";
+            }
+
+            await ctx.RespondAsync(responseString);
         }
 
         [Command("skip")]
@@ -424,7 +434,35 @@ namespace Shimakaze
             }
         }
 
-        
+        [Command("shuffle")]
+        [Description("Shuffles the playlist")]
+        public async Task Shuffle(CommandContext ctx)
+        {
+            if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 2)
+            {
+                var message = await ctx.RespondAsync("Shuffling...");
+                for (int index = ShimakazeBot.playlists[ctx.Guild].songRequests.Count - 1; index > 1; index--)
+                {
+                    int randomIndex = ThreadSafeRandom.ThisThreadsRandom.Next(1, index + 1);
+                    if (randomIndex == index) continue;
+                    SongRequest randomSong = ShimakazeBot.playlists[ctx.Guild].songRequests[randomIndex];
+
+                    ShimakazeBot.playlists[ctx.Guild].songRequests[randomIndex] =
+                        ShimakazeBot.playlists[ctx.Guild].songRequests[index];
+
+                    ShimakazeBot.playlists[ctx.Guild].songRequests[index] = randomSong;
+                }
+                await message.ModifyAsync("Successfully shuffled " +
+                    $"**{ShimakazeBot.playlists[ctx.Guild].songRequests.Count - 1}** songs." +
+                    $"\nNext up is: **{ShimakazeBot.playlists[ctx.Guild].songRequests[1].track.Title}**" +
+                    $" Requested by *{ShimakazeBot.playlists[ctx.Guild].songRequests[1].requester}*");
+            }
+            else
+            {
+                await ctx.RespondAsync("Not enough songs to shuffle.");
+            }
+        }
+
 
         private Task PlayNextTrack(TrackFinishEventArgs e)
         {
