@@ -3,6 +3,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext;
 using System.Linq;
 using System.Threading.Tasks;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
@@ -35,6 +36,52 @@ namespace Shimakaze
                 " We will notify You when we're done with rewriting mainline Shimakaze and bring all of her functionality back up. At least " +
                 "the parts that were actively used, we will leave out some useless shit like cleverbot.",
                 false, botInfo.Build());
+        }
+
+        [Command("server-info")]
+        [Description("I'll tell you some information about the server you're currently in.")]
+        public async Task DisplayServerInfo(CommandContext ctx)
+        {
+            var textChannels = ctx.Guild.Channels.Values
+                .Aggregate("", (current, channel) =>
+                {
+                    if (channel.Type == ChannelType.Text)
+                    {
+                        current += $"{channel.Name}, ";
+                    }
+                    return current;
+                });
+            var voiceChannels = ctx.Guild.Channels.Values
+                .Aggregate("", (current, channel) =>
+                {
+                    if (channel.Type == ChannelType.Voice)
+                    {
+                        current += $"{channel.Name}, ";
+                    }
+                    return current;
+                });
+            var roles = ctx.Guild.Roles.Values.Aggregate("", (current, role) => current + $"{role.Name}, ");
+            var serverInfo = new DiscordEmbedBuilder()
+                .WithAuthor($"Information requested by {ctx.Message.Author.Username}", "",
+                    $"{ctx.Message.Author.AvatarUrl}")
+                .WithTimestamp(DateTime.Now)
+                .WithColor(new DiscordColor("#3498db"))
+                .AddField($"Server name", $"{ctx.Guild.Name} [{ctx.Guild.Id}]")
+                .AddField($"Owners", $@"{ctx.Client.CurrentApplication.Owners.Reverse()
+                    .Aggregate("", (current, owner) => current + $"{owner.Mention}\n")}")
+                .AddField($"Members", $"```{ctx.Guild.Members.Count}```", true)
+                .AddField($"Text Channels",
+                    $"```{ctx.Guild.Channels.Values.Count(chn => chn.Type == ChannelType.Text)}```", true)
+                .AddField($"Voice Channels",
+                    $"```{ctx.Guild.Channels.Values.Count(chn => chn.Type == ChannelType.Voice)}```", true)
+                .AddField($"Text Channels", $"```{textChannels.Remove(textChannels.Length - 2, 2)}```")
+                .AddField($"Voice Channels", $"```{voiceChannels.Remove(voiceChannels.Length - 2, 2)}```")
+                .AddField($"AFK-channel", $"```{ctx.Guild.AfkChannel.Name} [{ctx.Guild.AfkChannel.Id}]```")
+                .AddField($"Current Region", $"```{ctx.Guild.VoiceRegion.Name}```",true)
+                .AddField($"Total Roles", $"```{ctx.Guild.Roles.Count}```", true)
+                .AddField($"Roles", $"```{roles.Remove(roles.Length - 2, 2)}```")
+                .WithThumbnail($"{ctx.Guild.IconUrl}");
+            await ctx.RespondAsync("", false, serverInfo.Build());
         }
 
         [Command("prefix")]
