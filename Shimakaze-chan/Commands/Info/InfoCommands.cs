@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
+using Shimakaze.Attributes;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace Shimakaze
@@ -39,6 +40,7 @@ namespace Shimakaze
         }
 
         [Command("server-info")]
+        [CannotBeUsedInDM]
         [Description("I'll tell you some information about the server you're currently in.")]
         public async Task DisplayServerInfo(CommandContext ctx)
         {
@@ -67,8 +69,7 @@ namespace Shimakaze
                 .WithTimestamp(DateTime.Now)
                 .WithColor(new DiscordColor("#3498db"))
                 .AddField($"Server name", $"{ctx.Guild.Name} [{ctx.Guild.Id}]")
-                .AddField($"Owners", $@"{ctx.Client.CurrentApplication.Owners.Reverse()
-                    .Aggregate("", (current, owner) => current + $"{owner.Mention}\n")}")
+                .AddField($"Server owner", $@"{ctx.Guild.Owner.Mention} [{ctx.Guild.Owner.Id}]")
                 .AddField($"Members", $"```{ctx.Guild.Members.Count}```", true)
                 .AddField($"Text Channels",
                     $"```{ctx.Guild.Channels.Values.Count(chn => chn.Type == ChannelType.Text)}```", true)
@@ -77,7 +78,7 @@ namespace Shimakaze
                 .AddField($"Text Channels", $"```{textChannels.Remove(textChannels.Length - 2, 2)}```")
                 .AddField($"Voice Channels", $"```{voiceChannels.Remove(voiceChannels.Length - 2, 2)}```")
                 .AddField($"AFK-channel", $"```{ctx.Guild.AfkChannel.Name} [{ctx.Guild.AfkChannel.Id}]```")
-                .AddField($"Current Region", $"```{ctx.Guild.VoiceRegion.Name}```",true)
+                .AddField($"Current Region", $"```{ctx.Guild.VoiceRegion.Name}```", true)
                 .AddField($"Total Roles", $"```{ctx.Guild.Roles.Count}```", true)
                 .AddField($"Roles", $"```{roles.Remove(roles.Length - 2, 2)}```")
                 .WithThumbnail($"{ctx.Guild.IconUrl}");
