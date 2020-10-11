@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext;
 using System.Linq;
@@ -6,7 +7,6 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using Shimakaze.Attributes;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace Shimakaze
 {
@@ -84,6 +84,57 @@ namespace Shimakaze
                 .WithThumbnail($"{ctx.Guild.IconUrl}");
             await ctx.RespondAsync("", false, serverInfo.Build());
         }
+
+        [Command("userinfo")]
+        [Description("Displays information about specified user account or the sender")]
+        [CannotBeUsedInDM()]
+        public async Task DisplayUserInfo(CommandContext ctx, [RemainingText] string commandPayload )
+        {
+            var members = new List<DiscordMember>();
+            var uidList = Utils.GetIdListFromMessage(ctx.Message.MentionedUsers, commandPayload);
+            foreach (var id in uidList)
+            {
+                try
+                {
+                    members.Add(await ctx.Guild.GetMemberAsync(id));
+                }
+                catch (Exception ex)
+                {
+                    await ctx.RespondAsync($"Oi cunt something's fucked. {ex.Message} apparently. Fuck you too.");
+                    return;
+                }
+            }
+            if (members.Count == 0)
+            {
+                members.Add(ctx.Member);
+            }
+            if (members.Count > 0)
+            {
+                foreach (var member in members)
+                {
+                    var userLevel = UserLevels.GetLevel(member.Id, ctx.Guild.Id);
+                    var roles = member.Roles
+                        .Aggregate("", (current, role) => current + $"{role.Name}, ");
+                    var userInfo = new DiscordEmbedBuilder()
+                        .WithAuthor($"{member.Username}#{member.Discriminator} ({member.Id})",
+                            "", member.AvatarUrl)
+                        .WithTimestamp(DateTime.Now)
+                        .WithColor(new DiscordColor("#3498db"))
+                        .WithThumbnail(member.AvatarUrl)
+                        .WithUrl(member.AvatarUrl)
+                        .AddField($"Status", $"```\n {member.Presence.Status}```", true)
+                        .AddField($"Playing",
+                            $"```\n{member.Presence.Activity.Name ?? member.Presence.Activity.CustomStatus.ToString()}```", true)
+                        .AddField($"Account Creation",
+                            $"```\n {member.CreationTimestamp.UtcDateTime} UTC```", false)
+                        .AddField($"Joined at :", $"```\n{member.JoinedAt.UtcDateTime} UTC```")
+                        .AddField($"Access level", $"```\n {userLevel}```", false)
+                        .AddField($"Roles", $"```\n {roles.Remove(roles.Length - 2, 2)}```");
+                    await ctx.RespondAsync("", false, userInfo.Build());
+                }
+            }
+        }
+
 
         [Command("prefix")]
         [Description("Displays the current prefix, if you\'re that confused.")]
