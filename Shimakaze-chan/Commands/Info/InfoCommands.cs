@@ -113,6 +113,7 @@ namespace Shimakaze
                 foreach (var member in members)
                 {
                     var userLevel = UserLevels.GetLevel(member.Id, ctx.Guild.Id);
+                    var globalUserLevel = UserLevels.GetMemberLevel(member);
                     var roles = member.Roles
                         .Aggregate("", (current, role) => current + $"{role.Mention}, ");
                     var userInfo = new DiscordEmbedBuilder()
@@ -122,13 +123,20 @@ namespace Shimakaze
                         .WithColor(new DiscordColor("#3498db"))
                         .WithThumbnail(member.AvatarUrl)
                         .WithUrl(member.AvatarUrl)
-                        .AddField($"Status", $"```\n {member.Presence.Status}```", true)
+                        .AddField($"Status", $"```\n{member.Presence.Status}```", true)
                         .AddField($"Playing",
-                            $"```\n{member.Presence.Activity.Name ?? member.Presence.Activity.CustomStatus?.ToString() ?? "Nothing"}```", true)
+                            $@"```{member.Presence.Activity.Name ??
+                                         member.Presence.Activity.CustomStatus?.ToString() ??
+                                         "Nothing"}```",
+                            true)
                         .AddField($"Account Creation",
-                            $"```\n {member.CreationTimestamp.UtcDateTime} UTC```", false)
-                        .AddField($"Joined at :", $"```\n{member.JoinedAt.UtcDateTime} UTC```")
-                        .AddField($"Access level", $"```\n {userLevel}```", false)
+                            $"```\n{member.CreationTimestamp.UtcDateTime} UTC```", false)
+                        .AddField($"Joined on:", $"```\n{member.JoinedAt.UtcDateTime} UTC```")
+                        .AddField($"Server access level", 
+                            $"```\n{(userLevel is 1 ? "Default" : userLevel.ToString())}```", true)
+                        .AddField($"Global access level",
+                            $"```\n{(globalUserLevel is 1 ? "Default" : globalUserLevel.ToString())}```",
+                            true)
                         .AddField($"Roles", $"\n {roles.Remove(roles.Length - 2, 2)}");
                     await ctx.RespondAsync("", false, userInfo.Build());
                 }
