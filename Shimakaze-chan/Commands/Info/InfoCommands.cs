@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext;
@@ -94,15 +94,12 @@ namespace Shimakaze
             var uidList = Utils.GetIdListFromMessage(ctx.Message.MentionedUsers, commandPayload);
             foreach (var id in uidList)
             {
-                try
+                if (ctx.Guild.Members.ContainsKey(id))
                 {
-                    members.Add(await ctx.Guild.GetMemberAsync(id));
+                    members.Add(ctx.Guild.Members[id]);
                 }
-                catch (Exception ex)
-                {
-                    await ctx.RespondAsync($"Oi cunt something's fucked. {ex.Message} apparently. Fuck you too.");
-                    return;
-                }
+                await ctx.RespondAsync($"Unable to find user with ID {id} on the Guild member list");
+                return;
             }
             if (members.Count == 0)
             {
