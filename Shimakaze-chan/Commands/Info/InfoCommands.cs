@@ -98,8 +98,11 @@ namespace Shimakaze
                 {
                     members.Add(ctx.Guild.Members[id]);
                 }
-                await ctx.RespondAsync($"Unable to find user with ID {id} on the Guild member list");
-                return;
+                else
+                {
+                    await ctx.RespondAsync($"Unable to find user with ID {id} on the server");
+                    return;
+                }
             }
             if (members.Count == 0)
             {
@@ -111,7 +114,7 @@ namespace Shimakaze
                 {
                     var userLevel = UserLevels.GetLevel(member.Id, ctx.Guild.Id);
                     var roles = member.Roles
-                        .Aggregate("", (current, role) => current + $"{role.Name}, ");
+                        .Aggregate("", (current, role) => current + $"{role.Mention}, ");
                     var userInfo = new DiscordEmbedBuilder()
                         .WithAuthor($"{member.Username}#{member.Discriminator} ({member.Id})",
                             "", member.AvatarUrl)
@@ -121,12 +124,12 @@ namespace Shimakaze
                         .WithUrl(member.AvatarUrl)
                         .AddField($"Status", $"```\n {member.Presence.Status}```", true)
                         .AddField($"Playing",
-                            $"```\n{member.Presence.Activity.Name ?? member.Presence.Activity.CustomStatus.ToString()}```", true)
+                            $"```\n{member.Presence.Activity.Name ?? member.Presence.Activity.CustomStatus?.ToString() ?? "Nothing"}```", true)
                         .AddField($"Account Creation",
                             $"```\n {member.CreationTimestamp.UtcDateTime} UTC```", false)
                         .AddField($"Joined at :", $"```\n{member.JoinedAt.UtcDateTime} UTC```")
                         .AddField($"Access level", $"```\n {userLevel}```", false)
-                        .AddField($"Roles", $"```\n {roles.Remove(roles.Length - 2, 2)}```");
+                        .AddField($"Roles", $"\n {roles.Remove(roles.Length - 2, 2)}");
                     await ctx.RespondAsync("", false, userInfo.Build());
                 }
             }
