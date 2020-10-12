@@ -108,6 +108,7 @@ namespace Shimakaze
             {
                 members.Add(ctx.Member);
             }
+
             if (members.Count > 0)
             {
                 foreach (var member in members)
@@ -116,6 +117,21 @@ namespace Shimakaze
                     var globalUserLevel = UserLevels.GetMemberLevel(member);
                     var roles = member.Roles
                         .Aggregate("", (current, role) => current + $"{role.Mention}, ");
+                    string activity = null;
+                    if (member.Presence.Activity.ActivityType != ActivityType.Custom)
+                    {
+                        activity += member.Presence.Activity.Name;
+                    }
+                    string customStatus = null;
+                    if (member.Presence.Activity.CustomStatus?.Emoji != null)
+                    {
+                        customStatus += member.Presence.Activity.CustomStatus.Emoji + " ";
+                    }
+                    if (member.Presence.Activity.CustomStatus?.Name != null)
+                    {
+                        customStatus += member.Presence.Activity.CustomStatus.Name;
+                    }
+
                     var userInfo = new DiscordEmbedBuilder()
                         .WithAuthor($"{member.Username}#{member.Discriminator} ({member.Id})",
                             "", member.AvatarUrl)
@@ -124,20 +140,18 @@ namespace Shimakaze
                         .WithThumbnail(member.AvatarUrl)
                         .WithUrl(member.AvatarUrl)
                         .AddField($"Status", $"```\n{member.Presence.Status}```", true)
-                        .AddField($"Playing",
-                            $@"```{member.Presence.Activity.Name ??
-                                         member.Presence.Activity.CustomStatus?.ToString() ??
-                                         "Nothing"}```",
-                            true)
+                        .AddField($"Activity", $@"```{activity ?? "None"}```", true)
+                        .AddField($"Custom status",$"\n{customStatus ?? "No custom status set"}")
                         .AddField($"Account Creation",
                             $"```\n{member.CreationTimestamp.UtcDateTime} UTC```", false)
-                        .AddField($"Joined on:", $"```\n{member.JoinedAt.UtcDateTime} UTC```")
-                        .AddField($"Server access level", 
+                        .AddField($"Joined on", $"```\n{member.JoinedAt.UtcDateTime} UTC```")
+                        .AddField($"Server access level",
                             $"```\n{(userLevel is 1 ? "Default" : userLevel.ToString())}```", true)
                         .AddField($"Global access level",
                             $"```\n{(globalUserLevel is 1 ? "Default" : globalUserLevel.ToString())}```",
                             true)
                         .AddField($"Roles", $"\n {roles.Remove(roles.Length - 2, 2)}");
+
                     await ctx.RespondAsync("", false, userInfo.Build());
                 }
             }
