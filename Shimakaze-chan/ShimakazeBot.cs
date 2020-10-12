@@ -20,6 +20,7 @@ namespace Shimakaze
         }
 
         public const int GlobalLevelGuild = 0;
+        public const int MaxSongLoopCount = 100;
         public static readonly DateTime applicationStartTime = DateTime.Now;
     }
 

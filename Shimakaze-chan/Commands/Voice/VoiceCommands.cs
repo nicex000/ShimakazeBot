@@ -129,7 +129,7 @@ namespace Shimakaze
 
             debugResponse.AddWithDebug("Unable to get LavaLink", ctx, lv == null);
 
-            var lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
+            var lvc = ShimakazeBot.lvn?.GetConnection(ctx.Guild);
             if (ShimakazeBot.lvn == null || lvc == null)
             {
                 await ctx.RespondAsync($"{debugResponse}Not connected in this guild.");
@@ -210,7 +210,7 @@ namespace Shimakaze
                 if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 0)
                 {
                     int i = 0;
-                    var lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
+                    var lvc = ShimakazeBot.lvn?.GetConnection(ctx.Guild);
                     string msg = "";
                     foreach (var req in ShimakazeBot.playlists[ctx.Guild].songRequests)
                     {
@@ -230,6 +230,11 @@ namespace Shimakaze
                             msg += $"\n{i}. ";
                         }
                         msg += $"**{req.track.Title}** Requested by *{req.requester}*";
+                        if (i == 0 && ShimakazeBot.playlists[ctx.Guild].loopCount > 0)
+                        {
+                            msg += $" ({ShimakazeBot.playlists[ctx.Guild].loopCount} " +
+                                $"loop{(ShimakazeBot.playlists[ctx.Guild].loopCount > 1 ? "s" : "")} remaining)";
+                        }
                         i++;
                     }
 
@@ -248,24 +253,9 @@ namespace Shimakaze
         [Description("Pauses or resumes the music playback.")]
         public async Task Pause(CommandContext ctx)
         {
-
-            var lavaConnection = ShimakazeBot.lvn.GetConnection(ctx.Guild);
-
-            if (lavaConnection == null)
+            var lavaConnection = ShimakazeBot.lvn?.GetConnection(ctx.Guild);
+            if (!await CheckVoiceAndChannel(ctx, lavaConnection))
             {
-                await ctx.RespondAsync("Not connected in this guild.");
-                return;
-            }
-
-            var chn = ctx.Member?.VoiceState?.Channel;
-            if (chn == null)
-            {
-                await ctx.RespondAsync("You need to be in a voice channel.");
-                return;
-            }
-            if (chn != lavaConnection.Channel)
-            {
-                await ctx.RespondAsync("You need to be in the same voice channel.");
                 return;
             }
 
@@ -288,6 +278,13 @@ namespace Shimakaze
         [Description("Clears the playlist.")]
         public async Task ClearPlaylist(CommandContext ctx)
         {
+            var lavaConnection = ShimakazeBot.lvn?.GetConnection(ctx.Guild);
+            if (!await CheckVoiceAndChannel(ctx, lavaConnection))
+            {
+                return;
+            }
+
+            ShimakazeBot.playlists[ctx.Guild].loopCount = 0;
             ShimakazeBot.playlists[ctx.Guild].songRequests = new List<SongRequest> 
             {
                 ShimakazeBot.playlists[ctx.Guild].songRequests[0] 
@@ -304,22 +301,8 @@ namespace Shimakaze
             LavalinkTrack track;
             LavalinkLoadResult lavalinkLoadResult;
             var lavaConnection = ShimakazeBot.lvn?.GetConnection(ctx.Guild);
-
-            if (lavaConnection == null)
+            if (!await CheckVoiceAndChannel(ctx, lavaConnection))
             {
-                await ctx.RespondAsync("Not connected in this guild.");
-                return;
-            }
-
-            var chn = ctx.Member?.VoiceState?.Channel;
-            if (chn == null)
-            {
-                await ctx.RespondAsync("You need to be in a voice channel.");
-                return;
-            }
-            if (chn != lavaConnection.Channel)
-            {
-                await ctx.RespondAsync("You need to be in the same voice channel.");
                 return;
             }
 
@@ -366,40 +349,36 @@ namespace Shimakaze
                     throw new ArgumentOutOfRangeException();
             }
 
+            string responseString = "";
+
             if (lavaConnection.CurrentState.CurrentTrack == null)
             {
                 await lavaConnection.PlayAsync(ShimakazeBot.playlists[ctx.Guild].songRequests.First().track);
-                await ctx.RespondAsync($"Playing **{ShimakazeBot.playlists[ctx.Guild].songRequests.First().track.Title}** " +
-                    $"Requested by *{ShimakazeBot.playlists[ctx.Guild].songRequests.First().requester}*");
+                responseString = $"Playing **{ShimakazeBot.playlists[ctx.Guild].songRequests.First().track.Title}** " +
+                    $"Requested by *{ShimakazeBot.playlists[ctx.Guild].songRequests.First().requester}*";
             }
             else
             {
-                await ctx.RespondAsync($"Added **{lavalinkLoadResult.Tracks.First().Title}** to the queue. " +
-                    $"Requested by *{ctx.Member.DisplayName}*");
+                responseString = $"Added **{lavalinkLoadResult.Tracks.First().Title}** to the queue. " +
+                    $"Requested by *{ctx.Member.DisplayName}*";
             }
+
+            if (lavalinkLoadResult.Tracks.Count() > 1)
+            {
+                responseString += "\nAlso added " +
+                    $"**{lavalinkLoadResult.Tracks.Count() - 1}** more songs to the queue.";
+            }
+
+            await ctx.RespondAsync(responseString);
         }
 
         [Command("skip")]
         [Description("Skips the current song in the playlist.")]
         public async Task Skip(CommandContext ctx)
         {
-            var lavaConnection = ShimakazeBot.lvn.GetConnection(ctx.Guild);
-
-            if (lavaConnection == null)
+            var lavaConnection = ShimakazeBot.lvn?.GetConnection(ctx.Guild);
+            if (!await CheckVoiceAndChannel(ctx, lavaConnection))
             {
-                await ctx.RespondAsync("Not connected in this guild.");
-                return;
-            }
-
-            var chn = ctx.Member?.VoiceState?.Channel;
-            if (chn == null)
-            {
-                await ctx.RespondAsync("You need to be in a voice channel.");
-                return;
-            }
-            if (chn != lavaConnection.Channel)
-            {
-                await ctx.RespondAsync("You need to be in the same voice channel.");
                 return;
             }
 
@@ -411,20 +390,104 @@ namespace Shimakaze
 
             string title = ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title;
             ShimakazeBot.playlists[ctx.Guild].songRequests.RemoveAt(0);
+            bool wasLooping = false;
+            if (ShimakazeBot.playlists[ctx.Guild].loopCount > 0)
+            {
+                wasLooping = true;
+                ShimakazeBot.playlists[ctx.Guild].loopCount = 0;
+            }
 
             if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 0)
             {
                 await lavaConnection.PlayAsync(ShimakazeBot.playlists[ctx.Guild].songRequests.First().track);
-                await ctx.RespondAsync($"Skipped *{title}*.");
+                await ctx.RespondAsync($"Skipped *{title}*{(wasLooping ? " and stopped loop" : "")}.");
             }
             else
             {
                 await lavaConnection.StopAsync();
-                await ctx.RespondAsync($"Playlist ended with skip. (Skipped *{title}*)");
+                await ctx.RespondAsync($"Playlist ended with skip. (Skipped *{title}*" +
+                    $"{(wasLooping ? " and stopped loop" : "")})");
             }
         }
 
-        
+        [Command("shuffle")]
+        [Description("Shuffles the playlist")]
+        public async Task Shuffle(CommandContext ctx)
+        {
+            var lavaConnection = ShimakazeBot.lvn?.GetConnection(ctx.Guild);
+            if (!await CheckVoiceAndChannel(ctx, lavaConnection))
+            {
+                return;
+            }
+            if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 2)
+            {
+                var message = await ctx.RespondAsync("Shuffling...");
+                for (int index = ShimakazeBot.playlists[ctx.Guild].songRequests.Count - 1; index > 1; index--)
+                {
+                    int randomIndex = ThreadSafeRandom.ThisThreadsRandom.Next(1, index + 1);
+                    if (randomIndex == index) continue;
+                    SongRequest randomSong = ShimakazeBot.playlists[ctx.Guild].songRequests[randomIndex];
+
+                    ShimakazeBot.playlists[ctx.Guild].songRequests[randomIndex] =
+                        ShimakazeBot.playlists[ctx.Guild].songRequests[index];
+
+                    ShimakazeBot.playlists[ctx.Guild].songRequests[index] = randomSong;
+                }
+                await message.ModifyAsync("Successfully shuffled " +
+                    $"**{ShimakazeBot.playlists[ctx.Guild].songRequests.Count - 1}** songs." +
+                    $"\nNext up is: **{ShimakazeBot.playlists[ctx.Guild].songRequests[1].track.Title}**" +
+                    $" Requested by *{ShimakazeBot.playlists[ctx.Guild].songRequests[1].requester}*");
+            }
+            else
+            {
+                await ctx.RespondAsync("Not enough songs to shuffle.");
+            }
+        }
+
+        [Command("loop")]
+        [Description("loop the current song a specified number of times")]
+        public async Task Loop(CommandContext ctx, [RemainingText] string loopString)
+        {
+            var lavaConnection = ShimakazeBot.lvn?.GetConnection(ctx.Guild);
+            if (!await CheckVoiceAndChannel(ctx, lavaConnection))
+            {
+                return;
+            }
+
+            int loopCount = 0;
+            if (string.IsNullOrWhiteSpace(loopString))
+            {
+                loopCount = 1;
+            }
+            else if (!int.TryParse(loopString, out loopCount) || loopCount < 0 || loopCount > ShimaConsts.MaxSongLoopCount)
+            {
+                await ctx.RespondAsync($"Please type a number between **0** and **{ShimaConsts.MaxSongLoopCount}**");
+                return;
+            }
+            if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 0)
+            {
+                if (ShimakazeBot.playlists[ctx.Guild].loopCount > 0 && loopCount == 0)
+                {
+                    await ctx.RespondAsync($"**{ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title}** " +
+                        "will no longer loop.");
+                }
+                else if (loopCount > 0)
+                {
+                    await ctx.RespondAsync($"Set **{ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title}** " +
+                        $"to loop {loopCount} time{(loopCount > 1 ? "s" : "")}.");
+                }
+                else
+                {
+                    await ctx.RespondAsync("Playlist will continue to **not** loop.");
+                    return;
+                }
+                ShimakazeBot.playlists[ctx.Guild].loopCount = loopCount;
+            }
+            else
+            {
+                await ctx.RespondAsync("Playlist is empty, request a song first.");
+            }
+        }
 
         private Task PlayNextTrack(TrackFinishEventArgs e)
         {
@@ -471,6 +534,13 @@ namespace Shimakaze
                 return Task.CompletedTask;
             }
 
+            if (ShimakazeBot.playlists[e.Player.Guild].loopCount > 0)
+            {
+                ShimakazeBot.playlists[e.Player.Guild].loopCount--;
+                e.Player.PlayAsync(e.Track);
+                return Task.CompletedTask;
+            }
+
             ShimakazeBot.playlists[e.Player.Guild].songRequests.RemoveAt(0);
             ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
                 LogMessageSources.PLAYLIST_NEXT_EVENT,
@@ -502,6 +572,28 @@ namespace Shimakaze
             lvc.PlaybackFinished -= PlayNextTrack;
             await lvc.StopAsync();
             await lvc.DisconnectAsync();
+        }
+
+        private async Task<bool> CheckVoiceAndChannel(CommandContext ctx, LavalinkGuildConnection lvc)
+        {
+            if (lvc == null)
+            {
+                await ctx.RespondAsync("Not connected in this guild.");
+                return false;
+            }
+
+            var chn = ctx.Member?.VoiceState?.Channel;
+            if (chn == null)
+            {
+                await ctx.RespondAsync("You need to be in a voice channel.");
+                return false;
+            }
+            if (chn != lvc.Channel)
+            {
+                await ctx.RespondAsync("You need to be in the same voice channel.");
+                return false;
+            }
+            return true;
         }
 
 

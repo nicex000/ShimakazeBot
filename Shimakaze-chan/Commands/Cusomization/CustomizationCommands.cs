@@ -83,7 +83,7 @@ namespace Shimakaze
                 ShimakazeBot.StreamingEnabledGuilds.Add(ctx.Guild.Id, roleId);
                 await ShimakazeBot.DbCtx.StreamingGuild.AddAsync(
                     new StreamingGuild { GuildId = ctx.Guild.Id, RoleId = roleId });
-                await ctx.RespondAsync($"Streaming role configuration added with  role **{role.Name}**.");
+                await ctx.RespondAsync($"Streaming role configuration added with role **{role.Name}**.");
             }
             await ShimakazeBot.DbCtx.SaveChangesAsync();
         }

@@ -25,11 +25,13 @@ namespace Shimakaze
     {
         public List<SongRequest> songRequests;
         public bool isPaused;
+        public int loopCount;
 
         public GuildPlayer()
         {
             songRequests = new List<SongRequest>();
             isPaused = false;
+            loopCount = 0;
         }
     }
 }
