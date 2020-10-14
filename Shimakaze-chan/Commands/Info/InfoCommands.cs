@@ -118,10 +118,23 @@ namespace Shimakaze
                     var roles = member.Roles
                         .Aggregate("", (current, role) => current + $"{role.Mention}, ");
                     string activity = null;
-                    if (member.Presence.Activity.ActivityType != ActivityType.Custom)
+                    foreach (var act in member.Presence.Activities)
                     {
-                        activity += member.Presence.Activity.Name;
+                        if (act.ActivityType is ActivityType.Custom)
+                        {
+                            continue;
+                        }
+                        activity += $@"```{
+                            act.ActivityType switch
+                        {
+                            ActivityType.Watching => "Watching ",
+                            ActivityType.ListeningTo => "Listening to ",
+                            ActivityType.Playing => "Playing ",
+                            ActivityType.Streaming => "Streaming ",
+                            _ => ""
+                        }}" + act.Name + "```";
                     }
+
                     string customStatus = null;
                     if (member.Presence.Activity.CustomStatus?.Emoji != null)
                     {
@@ -146,11 +159,27 @@ namespace Shimakaze
                             $"```\n{member.CreationTimestamp.UtcDateTime} UTC```", false)
                         .AddField($"Joined on", $"```\n{member.JoinedAt.UtcDateTime} UTC```")
                         .AddField($"Server access level",
-                            $"```\n{(userLevel is 1 ? "Default" : userLevel.ToString())}```", true)
+                            $@"```{
+                                userLevel switch
+                                {
+                                    1 => "Default (1)",
+                                    4 => "Server owner (4)",
+                                    999 => "Bot owner",
+                                    _ => userLevel.ToString()
+                                }
+                                }```", true)
                         .AddField($"Global access level",
-                            $"```\n{(globalUserLevel is 1 ? "Default" : globalUserLevel.ToString())}```",
+                            $@"```{
+                                (globalUserLevel switch
+                                {
+                                    1 => "Default (1)",
+                                    999 => "Bot owner",
+                                    _ => globalUserLevel.ToString()
+                                })
+                                }```",
                             true)
                         .AddField($"Roles", $"\n {roles.Remove(roles.Length - 2, 2)}");
+
 
                     await ctx.RespondAsync("", false, userInfo.Build());
                 }
