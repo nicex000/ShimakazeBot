@@ -43,11 +43,11 @@ namespace Shimakaze
         /// This gets BOTH the mentioned users and parses the message for ulong Ids such as UIDs
         /// </summary>
         /// <param name="mentionedUsers">ctx.Message.MentionedUsers</param>
-        /// <param name="commandPayload">message string from [RemainingText]</param>
+        /// <param name="userIDsString">string containing the list of user IDs separated by spaces</param>
         /// <returns>List of ulong Ids</returns>
-        public static List<ulong> GetIdListFromMessage(IReadOnlyList<DiscordUser> mentionedUsers, string commandPayload)
+        public static List<ulong> GetIdListFromMessage(IReadOnlyList<DiscordUser> mentionedUsers, string userIDsString)
         {
-            string[] textArray = commandPayload?.Split(" ");
+            string[] textArray = userIDsString?.Split(" ");
             var idList = new List<ulong>();
             mentionedUsers.ToList().ForEach(user =>
             {
