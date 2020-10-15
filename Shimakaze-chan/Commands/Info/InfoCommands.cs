@@ -117,24 +117,6 @@ namespace Shimakaze
                     var globalUserLevel = UserLevels.GetMemberLevel(member);
                     var roles = member.Roles
                         .Aggregate("", (current, role) => current + $"{role.Mention}, ");
-                    string activity = null;
-                    foreach (var act in member.Presence.Activities)
-                    {
-                        if (act.ActivityType is ActivityType.Custom)
-                        {
-                            continue;
-                        }
-                        activity += $@"```{
-                            act.ActivityType switch
-                        {
-                            ActivityType.Watching => "Watching ",
-                            ActivityType.ListeningTo => "Listening to ",
-                            ActivityType.Playing => "Playing ",
-                            ActivityType.Streaming => "Streaming ",
-                            _ => ""
-                        }}" + act.Name + "```";
-                    }
-
                     string customStatus = null;
                     if (member.Presence.Activity.CustomStatus?.Emoji != null)
                     {
@@ -144,7 +126,7 @@ namespace Shimakaze
                     {
                         customStatus += member.Presence.Activity.CustomStatus.Name;
                     }
-
+                    // Header
                     var userInfo = new DiscordEmbedBuilder()
                         .WithAuthor($"{member.Username}#{member.Discriminator} ({member.Id})",
                             "", member.AvatarUrl)
@@ -152,8 +134,41 @@ namespace Shimakaze
                         .WithColor(new DiscordColor("#3498db"))
                         .WithThumbnail(member.AvatarUrl)
                         .WithUrl(member.AvatarUrl)
-                        .AddField($"Status", $"```\n{member.Presence.Status}```", true)
-                        .AddField($"Activity", $@"```{activity ?? "None"}```", true)
+                        .AddField($"Status", $"```\n{member.Presence.Status}```", true);
+                    // Activities
+                    string streams = null;
+                    string games = null;
+                    foreach (var act in member.Presence.Activities)
+                    {
+                        if (act.ActivityType is ActivityType.Custom)
+                        {
+                            continue;
+                        }
+                        // So basically, am very tiny. In case you really need to know i just need a matching type lol.
+                        // It's discarded anyway and a .ToString() still executes.
+                        // Should a C style switch not have this problem it could be more elegant, if verbose af.
+                        _ = act.ActivityType switch
+                        {
+                            ActivityType.Watching => userInfo
+                                .AddField($"Watching", $"```{act.Name}```").ToString(),
+                            ActivityType.ListeningTo => userInfo
+                                .AddField($"Listening to", $"```{act.Name}```").ToString(),
+                            ActivityType.Playing => games += $"```{act.Name}```",
+                            ActivityType.Streaming => streams += $"```{act.RichPresence.Details}```\n{act.StreamUrl}",
+                            _ => throw new NotImplementedException()
+                        };
+                    }
+                    if (games?.Length > 0)
+                    {
+                        userInfo.AddField($"Playing", $"{games} ");
+                    }
+
+                    if (streams?.Length > 0)
+                    {
+                        userInfo.AddField($"Streaming", $"{streams} ");
+                    }
+                    // Account info
+                    userInfo
                         .AddField($"Custom status",$"\n{customStatus ?? "No custom status set"}")
                         .AddField($"Account Creation",
                             $"```\n{member.CreationTimestamp.UtcDateTime} UTC```", false)
@@ -170,16 +185,15 @@ namespace Shimakaze
                                 }```", true)
                         .AddField($"Global access level",
                             $@"```{
-                                (globalUserLevel switch
+                                globalUserLevel switch
                                 {
                                     1 => "Default (1)",
                                     999 => "Bot owner",
                                     _ => globalUserLevel.ToString()
-                                })
+                                }
                                 }```",
                             true)
                         .AddField($"Roles", $"\n {roles.Remove(roles.Length - 2, 2)}");
-
 
                     await ctx.RespondAsync("", false, userInfo.Build());
                 }
