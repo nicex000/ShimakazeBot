@@ -1,4 +1,5 @@
 ﻿using DSharpPlus;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
@@ -8,9 +9,10 @@ using System.Threading.Tasks;
 
 namespace Shimakaze
 {
-    class Events
+    public class Events
     {
         private DateTime socketCloseTime = new DateTime(0);
+        private EventTimers timers = new EventTimers();
         public void LoadEvents()
         {
             ShimakazeBot.Client.Ready += DiscordReady;
@@ -20,8 +22,19 @@ namespace Shimakaze
 
             ShimakazeBot.Client.SocketClosed += SocketClosed;
             ShimakazeBot.Client.SocketErrored += SocketErrored;
+
+            timers.InitializeTimers();
         }
 
+        public async Task<int> AddTimerEvent(CommandContext ctx, EventType type, string message, DateTime eventTime)
+        {
+            return await timers.AddEvent(ctx, type, message, eventTime);
+        }
+
+        public async Task<bool> RemoveTimerEvent(int id)
+        {
+            return await timers.RemoveEvent(id);
+        }
 
         private Task SocketClosed(SocketCloseEventArgs e)
         {
