@@ -28,7 +28,7 @@ namespace Shimakaze
 
         public static EventInTimer MakeTimer(TimedEvent dbEvent)
         {
-            double millis = (DateTime.UtcNow - dbEvent.EventTime).TotalMilliseconds;
+            double millis = (dbEvent.EventTime - DateTime.UtcNow).TotalMilliseconds;
             if (millis > Int32.MaxValue)
             {
                 return null;
