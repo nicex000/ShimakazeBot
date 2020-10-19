@@ -128,7 +128,7 @@ namespace Shimakaze
                     ShimaConsts.TimeFormat,
                     null, System.Globalization.DateTimeStyles.None, out outParse))
                     {
-                        result.dateTime = result.dateTime
+                        result.dateTime = result.dateTime.Date
                             .AddHours(outParse.Hour)
                             .AddMinutes(outParse.Minute)
                             .AddSeconds(outParse.Second);
