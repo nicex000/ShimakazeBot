@@ -24,7 +24,7 @@ namespace Shimakaze
         public const string DbPressFKey = "PressF";
 
         public const string DateFormat = "d-M-y";
-        public const string TimeFormat = "h:m:s";
+        public const string TimeFormat = "H:m:s";
     }
 
     public static class ShimakazeBot

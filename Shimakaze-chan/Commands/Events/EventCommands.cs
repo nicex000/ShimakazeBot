@@ -13,8 +13,8 @@ namespace Shimakaze
         [Command("addreminder")]
         [Aliases("remindme", "reminder", "makereminder")]
         [Description("Usage: reminder <date> <time> <message>" +
-                     "\ndate format is d-M-y (or a single number for in x days)," +
-                     "\ntime format is h:m:s (or a single number for in x minutes).")]
+                     "\ndate format is `d-M-y` (or a single number for in x days)," +
+                     "\ntime format is `H:m:s` (or a single number for in x minutes).")]
         public async Task AddReminder(CommandContext ctx, [RemainingText] string suffix)
         {
             await AddEventAsync(ctx, suffix, EventType.REMINDER);
@@ -23,8 +23,8 @@ namespace Shimakaze
         [Command("addevent")]
         [Aliases("createevent", "newevent", "makeevent")]
         [Description("Usage: reminder <date> <time> <message>" +
-                    "\ndate format is d-M-y (or a single number for in x days)," +
-                    "\ntime format is h:m:s (or a single number for in x minutes).")]
+                     "\ndate format is `d-M-y` (or a single number for in x days)," +
+                     "\ntime format is `H:m:s` (or a single number for in x minutes).")]
         public async Task AddEvent(CommandContext ctx, [RemainingText] string suffix)
         {
             await AddEventAsync(ctx, suffix, EventType.EVENT);
