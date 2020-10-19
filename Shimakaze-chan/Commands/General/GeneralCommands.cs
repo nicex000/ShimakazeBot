@@ -35,6 +35,7 @@ namespace Shimakaze
                 DbItem.Value = totalFCount.ToString();
                 ShimakazeBot.DbCtx.ShimaGeneric.Update(DbItem);
             }
+            await ShimakazeBot.DbCtx.SaveChangesAsync();
         }
     }
 }

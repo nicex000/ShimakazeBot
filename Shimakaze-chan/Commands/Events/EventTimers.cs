@@ -31,6 +31,7 @@ namespace Shimakaze
                 ChannelId = ctx.Channel.Id
             };
             tEvent.Id = (await ShimakazeBot.DbCtx.TimedEvents.AddAsync(tEvent)).Entity.Id;
+            await ShimakazeBot.DbCtx.SaveChangesAsync();
 
             return AddAndStartEvent(EventInTimer.MakeTimer(tEvent), tEvent.Id) ? tEvent.Id : -1;
         }
