@@ -148,6 +148,249 @@ namespace Shimakaze
             await SetRole(ctx, roleString, false);
         }
 
+        [Command("purge")]
+        [Attributes.RequirePermissions(Permissions.ManageMessages)]
+        public async Task Purge(CommandContext ctx, [RemainingText] string suffix)
+        {
+            string[] suffixArray = suffix?.Split(" ");
+            List<ulong> usersToPurge = new List<ulong>();
+            string usersToPurgeString = "";
+            if (suffixArray.Length > 1 )
+            {
+                usersToPurge = Utils.GetIdListFromArray(ctx.Message.MentionedUsers, suffixArray.Skip(1).ToArray());
+
+
+                foreach (var id in usersToPurge)
+                {
+                    if (ctx.Guild.Members.ContainsKey(id))
+                    {
+                        usersToPurgeString += ctx.Guild.Members[id].DisplayName;
+                    }
+                    else
+                    {
+                        await ctx.RespondAsync($"Unable to find member with ID {id}");
+                        return;
+                    }
+                }
+            }
+
+            int purgeAmount;
+            if (!Int32.TryParse(suffixArray[0], out purgeAmount) || 
+                purgeAmount <= 0 || purgeAmount > 100)
+            {
+                await ctx.RespondAsync($"{suffixArray[0]} is not a valid number between 1 and 100.");
+                return;
+            }
+            
+            if (usersToPurge.Count > 0)
+            {
+                DiscordMessage earliestMessage = ctx.Message;
+                List<DiscordMessage> readMessages;
+                List<DiscordMessage> messagesToDelete = new List<DiscordMessage>();
+                do
+                {
+                    readMessages = (await ctx.Channel.GetMessagesBeforeAsync(earliestMessage.Id, 500)).ToList();
+                    for (int i = 0; i < readMessages.Count; i++)
+                    {
+                        if (usersToPurge.Contains(readMessages[i].Author.Id))
+                        {
+                            messagesToDelete.Add(readMessages[i]);
+                            if (messagesToDelete.Count == purgeAmount)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                } while (readMessages.Count == 500 && messagesToDelete.Count < purgeAmount);
+
+                await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
+            }
+            else
+            {
+                await ctx.Channel.DeleteMessagesAsync(
+                    await ctx.Channel.GetMessagesBeforeAsync(ctx.Message.Id, purgeAmount));
+            }
+
+            await ctx.RespondAsync($"Successfully purged {purgeAmount} messages" +
+                (usersToPurge.Count > 0 ? $"from {usersToPurgeString}" : ""));
+        }
+
+        [Command("warn")]
+        [RequireAdmin]
+        public async Task Warn(CommandContext ctx, [RemainingText] string suffix)
+        {
+            string[] suffixArray = suffix.Split(" ");
+
+            //get user to warn
+            List<ulong> userToWarnInList = 
+                Utils.GetIdListFromArray(ctx.Message.MentionedUsers, suffixArray.Take(1).ToArray());
+            if (userToWarnInList.Count == 0)
+            {
+                await ctx.RespondAsync("Please mention or type a user ID to warn.");
+                return;
+            }
+            ulong userToWarn = userToWarnInList[0];
+            if (!ctx.Guild.Members.ContainsKey(userToWarn))
+            {
+                await ctx.RespondAsync($"Unable to find member with ID {userToWarn}");
+                return;
+            }
+
+            //get message
+            string message = suffixArray.Length > 1 ? string.Join(" ", suffixArray.Skip(1)) : "";
+
+            //check warn structure
+            if (!ShimakazeBot.GuildWarns.ContainsKey(ctx.Guild.Id))
+            {
+                ShimakazeBot.GuildWarns.Add(ctx.Guild.Id, new GuildUsersWarns(new Dictionary<ulong, UserWarns>()));
+            }
+            if (!ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns.ContainsKey(userToWarn))
+            {
+                ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns.Add(
+                    userToWarn, new UserWarns(new Dictionary<int, WarnMessage>()));
+            }
+
+            //add warning and get id
+            int id = await ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns[userToWarn].AddWarning(
+                ctx.Guild.Id, userToWarn, message);
+
+            await ctx.RespondAsync($"Added new warning for {ctx.Guild.Members[userToWarn].DisplayName} " +
+                $"(warning ID #{id}\n*{message}*");
+
+        }
+
+        [Command("removewarn")]
+        [RequireAdmin]
+        public async Task RemoveWarn(CommandContext ctx, [RemainingText] string suffix)
+        {
+            List<ulong> userIds = Utils.GetIdListFromMessage(ctx.Message.MentionedUsers, suffix);
+            if (userIds.Count == 0)
+            {
+                await ctx.RespondAsync("Please mention, type a user ID or ID to warn.");
+                return;
+            }
+            if (ctx.Guild.Members.ContainsKey(userIds[0]))
+            {
+                if (ShimakazeBot.GuildWarns.ContainsKey(ctx.Guild.Id) &&
+                    ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns.ContainsKey(userIds[0]))
+                {
+                    ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns[userIds[0]].warningMessages.ToList().ForEach(
+                    async item =>
+                    await ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns[userIds[0]].RemoveWarning(item.Key)
+                    );
+                }
+
+                await ctx.RespondAsync("Successfully removed all warnsings for " +
+                    $"**{ctx.Guild.Members[userIds[0]].DisplayName}**.");
+            }
+            else
+            {
+                bool found = false;
+                int id = (int)userIds[0];
+                GuildWarn warn = await ShimakazeBot.DbCtx.GuildWarn.FindAsync(id);
+                if (warn != null)
+                {
+                    found = await ShimakazeBot.GuildWarns[warn.GuildId]?.userWarns[warn.UserId]?.RemoveWarning(warn.Id);
+                }
+                else
+                {
+                    foreach (var g in ShimakazeBot.GuildWarns.ToList())
+                    {
+                        foreach (var u in g.Value.userWarns.ToList())
+                        {
+                            foreach (var w in u.Value.warningMessages.ToList())
+                            {
+                                if (w.Key == id)
+                                {
+                                    found = await u.Value.RemoveWarning(id);
+                                    break;
+                                }
+                            }
+                            if (found) break;
+                        }
+                        if (found) break;
+                    }
+                }
+
+                if (found)
+                {
+                    await ctx.RespondAsync($"Successfully removed warning with ID {id}");
+                }
+                else
+                {
+                    await ctx.RespondAsync($"Unable to find member or ID {id}");
+                }
+            }
+        }
+
+        [Command("warns")]
+        [RequireAdmin]
+        public async Task Warns(CommandContext ctx, [RemainingText] string suffix)
+        {
+            List<ulong> userIds = string.IsNullOrWhiteSpace(suffix) ? 
+                new List<ulong>() { ctx.User.Id } :
+                Utils.GetIdListFromMessage(ctx.Message.MentionedUsers, suffix);
+            if (userIds.Count == 0)
+            {
+                await ctx.RespondAsync("Please mention or type a user ID.");
+                return;
+            }
+            if (ctx.Guild.Members.ContainsKey(userIds[0]))
+            {
+                string warnMessages = "";
+                if (ShimakazeBot.GuildWarns.ContainsKey(ctx.Guild.Id) && 
+                    ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns.ContainsKey(userIds[0]))
+                {
+                    ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns[userIds[0]].warningMessages.ToList().ForEach(
+                    item =>
+                    warnMessages += $"{item.Value.timeStamp} - {item.Value.message}\n"
+                    );
+                }
+
+                await ctx.RespondAsync(string.IsNullOrWhiteSpace(warnMessages) ? 
+                    $"{ctx.Guild.Members[userIds[0]].DisplayName} has no warnings."
+                    : warnMessages);
+            }
+            else
+            {
+                WarnMessage message = null;
+                int id = (int)userIds[0];
+                GuildWarn warn = await ShimakazeBot.DbCtx.GuildWarn.FindAsync(id);
+                if (warn != null)
+                {
+                    message = ShimakazeBot.GuildWarns[warn.GuildId]?.userWarns[warn.UserId]?.warningMessages[id];
+                }
+                else
+                {
+                    foreach (var g in ShimakazeBot.GuildWarns.ToList())
+                    {
+                        foreach (var u in g.Value.userWarns.ToList())
+                        {
+                            foreach (var w in u.Value.warningMessages.ToList())
+                            {
+                                if (w.Key == id)
+                                {
+                                    message = w.Value;
+                                    break;
+                                }
+                            }
+                            if (message != null) break;
+                        }
+                        if (message != null) break;
+                    }
+                }
+
+                if (message != null)
+                {
+                    await ctx.RespondAsync($"{message.timeStamp} - {message.message}");
+                }
+                else
+                {
+                    await ctx.RespondAsync($"Unable to find member or ID {id}");
+                }
+            }
+        }
+
         private async Task SetRole(CommandContext ctx, string roleString, bool assign = true)
         {
             int selfAssignLimit = 0;

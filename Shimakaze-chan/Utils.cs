@@ -38,6 +38,37 @@ namespace Shimakaze
             return false;
         }
 
+        public static List<ulong> GetIdListFromMessage(IReadOnlyList<DiscordUser> mentionedUsers, string userIDsString)
+        {
+            return GetIdListFromArray(mentionedUsers, userIDsString?.Split(" "));
+        }
+        public static List<ulong> GetIdListFromArray(IReadOnlyList<DiscordUser> mentionedUsers, string[] textArray)
+        {
+            var idList = new List<ulong>();
+            mentionedUsers.ToList().ForEach(user =>
+            {
+                if (!idList.Contains(user.Id))
+                {
+                    idList.Add(user.Id);
+                }
+            });
+            if (textArray == null)
+            {
+                return idList;
+            }
+            foreach (var userId in textArray)
+            {
+                if (ulong.TryParse(userId, out ulong idFromText) &&
+                    !idList.Contains(idFromText))
+                {
+                    idList.Add(idFromText);
+                }
+            }
+
+            return idList;
+        }
+
+
         public static List<DiscordRole> GetRolesFromString(DiscordGuild guild, string roleString)
         {
             List<DiscordRole> roles = new List<DiscordRole>();
