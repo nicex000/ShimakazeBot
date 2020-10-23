@@ -5,9 +5,36 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System;
+using System.Threading.Tasks;
 
 namespace Shimakaze
 {
+    class CTX
+    {
+        public static async Task<DiscordMessage> RespondSanitizedAsync(
+            CommandContext ctx, string content = null, bool isTTS = false, DiscordEmbed embed = null,
+            IEnumerable<IMention> mentions = null)
+        {
+            return await CTX.SendSanitizedMessageAsync(ctx.Channel, content, isTTS, embed, mentions);
+        }
+
+        public static async Task<DiscordMessage> SendSanitizedMessageAsync(
+            DiscordChannel channel, string content = null, bool isTTS = false, DiscordEmbed embed = null,
+            IEnumerable<IMention> mentions = null)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return null;
+            }
+
+            if (mentions == null)
+            {
+                mentions = new List<IMention>() { RoleMention.All, UserMention.All };
+            }
+
+            return await channel.SendMessageAsync(content, isTTS, embed, mentions);
+        }
+    }
     class DebugString
     {
         private string value = "";

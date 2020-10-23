@@ -23,7 +23,7 @@ namespace Shimakaze.Attributes
         {
             if (ctx.Guild == null)
             {
-                await ctx.RespondAsync("This command can't be used in DMs.");
+                await CTX.RespondSanitizedAsync(ctx, "This command can't be used in DMs.");
                 return false;
             }
 
@@ -50,7 +50,7 @@ namespace Shimakaze.Attributes
                 return true;
             }
 
-            if (!string.IsNullOrWhiteSpace(failMessage)) await ctx.RespondAsync(failMessage);
+            if (!string.IsNullOrWhiteSpace(failMessage)) await CTX.RespondSanitizedAsync(ctx, failMessage);
             {
                 return false;
             }

@@ -11,7 +11,7 @@ namespace Shimakaze
         [Description("Quick tooltip regarding the purpose of this bot.")]
         public async Task DisplayInfo(CommandContext ctx)
         {
-            await ctx.RespondAsync("This bot serves as a temporary hotfix compliment to the original Shimakaze's broken voicechat functions." +
+            await CTX.RespondSanitizedAsync(ctx, "This bot serves as a temporary hotfix compliment to the original Shimakaze's broken voicechat functions." +
                 " We will notify You when we're done with rewriting mainline Shimakaze and bring all of her functionality back up. At least " +
                 "the parts that were actively used, we will leave out some useless shit like cleverbot." +
                 $"\nRunning ShimaEngine v.{ShimaConsts.Version}");
@@ -24,7 +24,7 @@ namespace Shimakaze
             string prefix = ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) ?
                             ShimakazeBot.CustomPrefixes[ctx.Guild.Id] :
                             ShimakazeBot.DefaultPrefix;
-            await ctx.RespondAsync($"This server\'s prefix is: **{prefix}**" +
+            await CTX.RespondSanitizedAsync(ctx, $"This server\'s prefix is: **{prefix}**" +
                 "\n You can change the prefix with **cprefix**");
         }
 
@@ -32,9 +32,9 @@ namespace Shimakaze
         [Description("I'll reply to you with pong!")]
         public async Task Ping(CommandContext ctx)
         {
-            var message = await ctx.RespondAsync("Pong!");
+            var message = await CTX.RespondSanitizedAsync(ctx, "Pong!");
             await message.ModifyAsync("Pong! Time taken: " +
-                $"{(message.CreationTimestamp - ctx.Message.CreationTimestamp).TotalMilliseconds}ms.");            
+                $"{(message.CreationTimestamp - ctx.Message.CreationTimestamp).TotalMilliseconds}ms.");
         }
     }
 }
