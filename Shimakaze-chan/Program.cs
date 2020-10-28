@@ -57,7 +57,6 @@ namespace Shimakaze
             ShimakazeBot.FetchStreamingRoles();
             ShimakazeBot.FetchSelfAssignLimits();
             ShimakazeBot.FetchPermissionLevels();
-            ShimakazeBot.FetchGuildWarns();
 
             CommandsNextConfiguration commandConfig = new CommandsNextConfiguration
             {

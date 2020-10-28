@@ -239,23 +239,17 @@ namespace Shimakaze
             //get message
             string message = suffixArray.Length > 1 ? string.Join(" ", suffixArray.Skip(1)) : "";
 
-            //check warn structure
-            if (!ShimakazeBot.GuildWarns.ContainsKey(ctx.Guild.Id))
+            GuildWarn warn = (await ShimakazeBot.DbCtx.GuildWarn.AddAsync(new GuildWarn
             {
-                ShimakazeBot.GuildWarns.Add(ctx.Guild.Id, new GuildUsersWarns(new Dictionary<ulong, UserWarns>()));
-            }
-            if (!ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns.ContainsKey(userToWarn))
-            {
-                ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns.Add(
-                    userToWarn, new UserWarns(new Dictionary<int, WarnMessage>()));
-            }
-
-            //add warning and get id
-            int id = await ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns[userToWarn].AddWarning(
-                ctx.Guild.Id, userToWarn, message);
+                GuildId = ctx.Guild.Id,
+                UserId = ctx.User.Id,
+                WarnMessage = message,
+                TimeStamp = DateTime.UtcNow
+            })).Entity;
+            await ShimakazeBot.DbCtx.SaveChangesAsync();
 
             await ctx.RespondAsync($"Added new warning for {ctx.Guild.Members[userToWarn].DisplayName} " +
-                $"(warning ID #{id}\n*{message}*");
+                $"(warning ID #{warn.Id})\n*{message}*");
 
         }
 
@@ -271,49 +265,20 @@ namespace Shimakaze
             }
             if (ctx.Guild.Members.ContainsKey(userIds[0]))
             {
-                if (ShimakazeBot.GuildWarns.ContainsKey(ctx.Guild.Id) &&
-                    ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns.ContainsKey(userIds[0]))
-                {
-                    ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns[userIds[0]].warningMessages.ToList().ForEach(
-                    async item =>
-                    await ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns[userIds[0]].RemoveWarning(item.Key)
-                    );
-                }
+                ShimakazeBot.DbCtx.GuildWarn.RemoveRange(ShimakazeBot.DbCtx.GuildWarn.Where(g =>
+                g.UserId == userIds[0] && g.GuildId == ctx.Guild.Id));
 
                 await ctx.RespondAsync("Successfully removed all warnsings for " +
                     $"**{ctx.Guild.Members[userIds[0]].DisplayName}**.");
             }
             else
             {
-                bool found = false;
                 int id = (int)userIds[0];
                 GuildWarn warn = await ShimakazeBot.DbCtx.GuildWarn.FindAsync(id);
                 if (warn != null)
                 {
-                    found = await ShimakazeBot.GuildWarns[warn.GuildId]?.userWarns[warn.UserId]?.RemoveWarning(warn.Id);
-                }
-                else
-                {
-                    foreach (var g in ShimakazeBot.GuildWarns.ToList())
-                    {
-                        foreach (var u in g.Value.userWarns.ToList())
-                        {
-                            foreach (var w in u.Value.warningMessages.ToList())
-                            {
-                                if (w.Key == id)
-                                {
-                                    found = await u.Value.RemoveWarning(id);
-                                    break;
-                                }
-                            }
-                            if (found) break;
-                        }
-                        if (found) break;
-                    }
-                }
-
-                if (found)
-                {
+                    ShimakazeBot.DbCtx.GuildWarn.Remove(warn);
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
                     await ctx.RespondAsync($"Successfully removed warning with ID {id}");
                 }
                 else
@@ -324,7 +289,6 @@ namespace Shimakaze
         }
 
         [Command("warns")]
-        [RequireAdmin]
         public async Task Warns(CommandContext ctx, [RemainingText] string suffix)
         {
             List<ulong> userIds = string.IsNullOrWhiteSpace(suffix) ? 
@@ -337,15 +301,18 @@ namespace Shimakaze
             }
             if (ctx.Guild.Members.ContainsKey(userIds[0]))
             {
-                string warnMessages = "";
-                if (ShimakazeBot.GuildWarns.ContainsKey(ctx.Guild.Id) && 
-                    ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns.ContainsKey(userIds[0]))
+                RequireAdminAttribute adminCheck = 
+                    new RequireAdminAttribute("Only server admins are allowed to view warnings of other users.");
+                if (ctx.User.Id != userIds[0] && !await adminCheck.ExecuteCheckAsync(ctx, false))
                 {
-                    ShimakazeBot.GuildWarns[ctx.Guild.Id].userWarns[userIds[0]].warningMessages.ToList().ForEach(
-                    item =>
-                    warnMessages += $"{item.Value.timeStamp} - {item.Value.message}\n"
-                    );
+                    return;
                 }
+                string warnMessages = "";
+                ShimakazeBot.DbCtx.GuildWarn.Where(g =>
+                    g.UserId == userIds[0] && g.GuildId == ctx.Guild.Id
+                ).ToList().ForEach(item =>
+                    warnMessages += $"{item.TimeStamp} - {item.WarnMessage}\n"
+                );
 
                 await ctx.RespondAsync(string.IsNullOrWhiteSpace(warnMessages) ? 
                     $"{ctx.Guild.Members[userIds[0]].DisplayName} has no warnings."
@@ -353,36 +320,11 @@ namespace Shimakaze
             }
             else
             {
-                WarnMessage message = null;
                 int id = (int)userIds[0];
                 GuildWarn warn = await ShimakazeBot.DbCtx.GuildWarn.FindAsync(id);
                 if (warn != null)
                 {
-                    message = ShimakazeBot.GuildWarns[warn.GuildId]?.userWarns[warn.UserId]?.warningMessages[id];
-                }
-                else
-                {
-                    foreach (var g in ShimakazeBot.GuildWarns.ToList())
-                    {
-                        foreach (var u in g.Value.userWarns.ToList())
-                        {
-                            foreach (var w in u.Value.warningMessages.ToList())
-                            {
-                                if (w.Key == id)
-                                {
-                                    message = w.Value;
-                                    break;
-                                }
-                            }
-                            if (message != null) break;
-                        }
-                        if (message != null) break;
-                    }
-                }
-
-                if (message != null)
-                {
-                    await ctx.RespondAsync($"{message.timeStamp} - {message.message}");
+                    await ctx.RespondAsync($"{warn.TimeStamp} - {warn.WarnMessage}");
                 }
                 else
                 {
@@ -390,6 +332,8 @@ namespace Shimakaze
                 }
             }
         }
+
+
 
         private async Task SetRole(CommandContext ctx, string roleString, bool assign = true)
         {

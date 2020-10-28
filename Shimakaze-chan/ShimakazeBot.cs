@@ -31,7 +31,6 @@ namespace Shimakaze
         public static Dictionary<ulong, ulong> StreamingEnabledGuilds = new Dictionary<ulong, ulong>();
         public static Dictionary<ulong, ulong> SelfAssignRoleLimit = new Dictionary<ulong, ulong>();
         public static Dictionary<ulong, LevelListContainer> UserLevelList = new Dictionary<ulong, LevelListContainer>();
-        public static Dictionary<ulong, GuildUsersWarns> GuildWarns = new Dictionary<ulong, GuildUsersWarns>();
         public static string DefaultPrefix = "!";
         
         public static LavalinkNodeConnection lvn;
@@ -83,23 +82,7 @@ namespace Shimakaze
             });
         }
 
-        public static void FetchGuildWarns()
-        {
-            var dbWarns = DbCtx.GuildWarn.ToList();
-            dbWarns.ForEach(g =>
-            {
-                if (!GuildWarns.ContainsKey(g.GuildId))
-                {
-                    GuildWarns.Add(g.GuildId, new GuildUsersWarns(new Dictionary<ulong, UserWarns>()));
-                }
-                if (!GuildWarns[g.GuildId].userWarns.ContainsKey(g.UserId))
-                {
-                    GuildWarns[g.GuildId].userWarns.Add(g.UserId, new UserWarns(new Dictionary<int, WarnMessage>()));
-                }
-                GuildWarns[g.GuildId].userWarns[g.UserId].warningMessages.Add(g.Id, 
-                    new WarnMessage(g.WarnMessage, g.TimeStamp));
-            });
-        }
+        
 
         public static bool IsUserShimaTeam(ulong userId)
         {
