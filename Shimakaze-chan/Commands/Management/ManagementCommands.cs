@@ -242,7 +242,7 @@ namespace Shimakaze
             GuildWarn warn = (await ShimakazeBot.DbCtx.GuildWarn.AddAsync(new GuildWarn
             {
                 GuildId = ctx.Guild.Id,
-                UserId = ctx.User.Id,
+                UserId = userToWarn,
                 WarnMessage = message,
                 TimeStamp = DateTime.UtcNow
             })).Entity;
