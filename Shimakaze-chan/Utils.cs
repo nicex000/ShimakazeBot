@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System;
+using DSharpPlus.Net;
 
 namespace Shimakaze
 {
@@ -66,6 +67,57 @@ namespace Shimakaze
             }
 
             return idList;
+        }
+        
+        public static DiscordEmbed BaseEmbedBuilder(
+            CommandContext ctx, DiscordUser author = null, string title = null, DiscordColor? color = null,
+            string footer = null, DateTime? timestamp = null)
+        {
+            if (author != null)
+            {
+                if (color == null && ctx.Guild != null && ctx.Guild.Members.ContainsKey(author.Id))
+                {
+                    color = ctx.Guild.Members[author.Id].Color;
+                }
+                return BaseEmbedBuilder(ctx,
+                (ctx.Guild == null || !ctx.Guild.Members.ContainsKey(author.Id)) ?
+                        $"{author.Username}#{author.Discriminator} ({author.Id})" :
+                        $"{ctx.Guild.Members[author.Id].DisplayName} ({author.Id})",
+                author.AvatarUrl,
+                title, color, footer, timestamp);
+            }
+            else
+            {
+                return BaseEmbedBuilder(ctx, null, null, title, color, footer, timestamp);
+            }
+        }
+        public static DiscordEmbed BaseEmbedBuilder(
+            CommandContext ctx, string authorText = null, string authorUrl = null, string title = null,
+            DiscordColor? color = null, string footer = null, DateTime? timestamp = null)
+        {
+            if (timestamp == null)
+            {
+                timestamp = DateTime.Now;
+            }
+            if (color == null)
+            {
+                color = ctx.Guild == null ?
+                    new DiscordColor(ThreadSafeRandom.ThisThreadsRandom.Next(0, 16777216)) :
+                        ctx.Guild.Members[ShimakazeBot.Client.CurrentUser.Id].Color;
+            }
+
+            DiscordEmbed baseEmbed = new DiscordEmbedBuilder()
+              .WithTitle(title)
+              .WithColor(color.Value)
+              .WithFooter(footer)
+              .WithTimestamp(timestamp);
+
+            if (!string.IsNullOrWhiteSpace(authorText) || !string.IsNullOrWhiteSpace(authorUrl))
+            {
+                baseEmbed = new DiscordEmbedBuilder(baseEmbed).WithAuthor(authorText, null, authorUrl);
+            }
+
+            return baseEmbed;
         }
 
 

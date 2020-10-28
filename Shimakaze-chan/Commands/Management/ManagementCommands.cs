@@ -211,46 +211,29 @@ namespace Shimakaze
                     await ctx.Channel.GetMessagesBeforeAsync(ctx.Message.Id, purgeAmount));
             }
 
-            await ctx.RespondAsync($"Successfully purged {purgeAmount} messages" +
-                (usersToPurge.Count > 0 ? $"from {usersToPurgeString}" : ""));
+            await ctx.RespondAsync($"Successfully purged **{purgeAmount}** messages" +
+                (usersToPurge.Count > 0 ? $"from **{usersToPurgeString}**" : ""));
         }
 
         [Command("warn")]
         [RequireAdmin]
         public async Task Warn(CommandContext ctx, [RemainingText] string suffix)
         {
-            string[] suffixArray = suffix.Split(" ");
+            await ModerateUser(ctx, suffix, ShimaConsts.ModerationType.WARN);
+        }
 
-            //get user to warn
-            List<ulong> userToWarnInList = 
-                Utils.GetIdListFromArray(ctx.Message.MentionedUsers, suffixArray.Take(1).ToArray());
-            if (userToWarnInList.Count == 0)
-            {
-                await ctx.RespondAsync("Please mention or type a user ID to warn.");
-                return;
-            }
-            ulong userToWarn = userToWarnInList[0];
-            if (!ctx.Guild.Members.ContainsKey(userToWarn))
-            {
-                await ctx.RespondAsync($"Unable to find member with ID {userToWarn}");
-                return;
-            }
+        [Command("kick")]
+        [RequireAdmin]
+        public async Task Kick(CommandContext ctx, [RemainingText] string suffix)
+        {
+            await ModerateUser(ctx, suffix, ShimaConsts.ModerationType.KICK);
+        }
 
-            //get message
-            string message = suffixArray.Length > 1 ? string.Join(" ", suffixArray.Skip(1)) : "";
-
-            GuildWarn warn = (await ShimakazeBot.DbCtx.GuildWarn.AddAsync(new GuildWarn
-            {
-                GuildId = ctx.Guild.Id,
-                UserId = userToWarn,
-                WarnMessage = message,
-                TimeStamp = DateTime.UtcNow
-            })).Entity;
-            await ShimakazeBot.DbCtx.SaveChangesAsync();
-
-            await ctx.RespondAsync($"Added new warning for {ctx.Guild.Members[userToWarn].DisplayName} " +
-                $"(warning ID #{warn.Id})\n*{message}*");
-
+        [Command("ban")]
+        [RequireAdmin]
+        public async Task Ban(CommandContext ctx, [RemainingText] string suffix)
+        {
+            await ModerateUser(ctx, suffix, ShimaConsts.ModerationType.BAN);
         }
 
         [Command("removewarn")]
@@ -279,11 +262,11 @@ namespace Shimakaze
                 {
                     ShimakazeBot.DbCtx.GuildWarn.Remove(warn);
                     await ShimakazeBot.DbCtx.SaveChangesAsync();
-                    await ctx.RespondAsync($"Successfully removed warning with ID {id}");
+                    await ctx.RespondAsync($"Successfully removed warning with ID **{id}**");
                 }
                 else
                 {
-                    await ctx.RespondAsync($"Unable to find member or ID {id}");
+                    await ctx.RespondAsync($"Unable to find member or ID **{id}**");
                 }
             }
         }
@@ -307,16 +290,29 @@ namespace Shimakaze
                 {
                     return;
                 }
-                string warnMessages = "";
-                ShimakazeBot.DbCtx.GuildWarn.Where(g =>
-                    g.UserId == userIds[0] && g.GuildId == ctx.Guild.Id
-                ).ToList().ForEach(item =>
-                    warnMessages += $"{item.TimeStamp} - {item.WarnMessage}\n"
-                );
+                DiscordEmbed warnEmbed = Utils.BaseEmbedBuilder(ctx,
+                    $"Warnings for {ctx.Guild.Members[userIds[0]].DisplayName} ({userIds[0]})",
+                    ctx.Guild.Members[userIds[0]].AvatarUrl,
+                    null, ctx.Guild.Members[userIds[0]].Color);
 
-                await ctx.RespondAsync(string.IsNullOrWhiteSpace(warnMessages) ? 
-                    $"{ctx.Guild.Members[userIds[0]].DisplayName} has no warnings."
-                    : warnMessages);
+                var warns = ShimakazeBot.DbCtx.GuildWarn.Where(g =>
+                        g.UserId == userIds[0] && g.GuildId == ctx.Guild.Id
+                    ).ToList();
+
+                if (warns.Count() == 0)
+                {
+                    warnEmbed = new DiscordEmbedBuilder(warnEmbed)
+                        .WithDescription($"{ctx.Guild.Members[userIds[0]].DisplayName} has no warnings.");
+                }
+                else
+                {
+                    warns.ForEach(item =>
+                        warnEmbed = new DiscordEmbedBuilder(warnEmbed).AddField(item.TimeStamp.ToString(),
+                            item.WarnMessage)
+                    );
+                }
+
+                await ctx.RespondAsync(null, false, warnEmbed);
             }
             else
             {
@@ -328,12 +324,10 @@ namespace Shimakaze
                 }
                 else
                 {
-                    await ctx.RespondAsync($"Unable to find member or ID {id}");
+                    await ctx.RespondAsync($"Unable to find member or ID **{id}**");
                 }
             }
         }
-
-
 
         private async Task SetRole(CommandContext ctx, string roleString, bool assign = true)
         {
@@ -407,6 +401,99 @@ namespace Shimakaze
             }
 
             await ctx.RespondAsync(responseString);
+        }
+
+        private async Task ModerateUser(CommandContext ctx, string suffix, ShimaConsts.ModerationType type)
+        {
+            string[] suffixArray = string.IsNullOrWhiteSpace(suffix) ? new string[] { } : suffix.Split(" ");
+
+            //get user to moderate
+            List<ulong> userToModerateInList =
+                Utils.GetIdListFromArray(ctx.Message.MentionedUsers, suffixArray.Take(1).ToArray());
+            if (userToModerateInList.Count == 0)
+            {
+                await ctx.RespondAsync($"Please mention or type a user ID to {type.ToString().ToLower()}.");
+                return;
+            }
+            ulong userToModerate = userToModerateInList[0];
+            
+            if (!ctx.Guild.Members.ContainsKey(userToModerate))
+            {
+                await ctx.RespondAsync($"Unable to find member with ID **{userToModerate}**");
+                return;
+            }
+
+            DiscordMember exMember = ctx.Guild.Members[userToModerate];
+
+            //get message
+            string message = suffixArray.Length > 1 ? string.Join(" ", suffixArray.Skip(1)) : "";
+            DiscordEmbed embed;
+            //moderate
+            switch (type)
+            {
+                case ShimaConsts.ModerationType.WARN:
+                    GuildWarn warn = (await ShimakazeBot.DbCtx.GuildWarn.AddAsync(new GuildWarn
+                    {
+                        GuildId = ctx.Guild.Id,
+                        UserId = userToModerate,
+                        WarnMessage = message,
+                        TimeStamp = DateTime.UtcNow
+                    })).Entity;
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
+
+                    embed = Utils.BaseEmbedBuilder(ctx,
+                            $"Added new warning for {exMember.DisplayName} ({userToModerate})",
+                            exMember.AvatarUrl,
+                            null, exMember.Color, $"warning ID: {warn.Id}");
+                    if (!string.IsNullOrWhiteSpace(message))
+                    {
+                        embed = new DiscordEmbedBuilder(embed).AddField("Message", message);
+                    }
+
+                    await ctx.RespondAsync(null, false, embed);
+                    break;
+                case ShimaConsts.ModerationType.KICK:
+                    try
+                    {
+                        await exMember.RemoveAsync(message);
+
+                        embed = Utils.BaseEmbedBuilder(ctx,
+                            $"Kicked {exMember.DisplayName} ({userToModerate})",
+                            exMember.AvatarUrl, null, exMember.Color);
+                        if (!string.IsNullOrWhiteSpace(message))
+                        {
+                            embed = new DiscordEmbedBuilder(embed).AddField("Reason", message);
+                        }
+
+                        await ctx.RespondAsync("Do you think they'll learn their lesson?", false, embed);
+                    }
+                    catch
+                    {
+                        await ctx.RespondAsync($"Failed to kick **{exMember.DisplayName}** ({userToModerate})");
+                    }
+                    break;
+                case ShimaConsts.ModerationType.BAN:
+                    try
+                    {
+                        await exMember.BanAsync(0, message);
+
+                        embed = Utils.BaseEmbedBuilder(ctx,
+                               $"Banned {exMember.DisplayName} ({userToModerate})",
+                               exMember.AvatarUrl, null, exMember.Color);
+                        if (!string.IsNullOrWhiteSpace(message))
+                        {
+                            embed = new DiscordEmbedBuilder(embed).AddField("Reason", message);
+                        }
+
+                        await ctx.RespondAsync("Good riddance.", false, embed);
+                    }
+                    catch
+                    {
+                        await ctx.RespondAsync($"Failed to ban **{exMember.DisplayName}** ({userToModerate})");
+                    }
+                    break;
+            }
+
         }
     }
 }

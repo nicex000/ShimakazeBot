@@ -18,6 +18,13 @@ namespace Shimakaze
             SHIMA_TEAM = 999
         }
 
+        public enum ModerationType
+        {
+            WARN,
+            KICK,
+            BAN
+        }
+
         public const int GlobalLevelGuild = 0;
         public const int MaxSongLoopCount = 100;
     }
