@@ -6,7 +6,7 @@ using DSharpPlus.CommandsNext.Attributes;
 namespace Shimakaze.Attributes
 {
         [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-        class CannotBeUsedInDMAttribute :  CheckBaseAttribute
+        class CannotBeUsedInDMAttribute : CheckBaseAttribute
         {
             public string failMessage;
 

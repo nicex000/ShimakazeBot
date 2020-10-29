@@ -62,8 +62,7 @@ namespace Shimakaze
             }
             foreach (var userId in textArray)
             {
-                if (ulong.TryParse(userId, out ulong idFromText) &&
-                    !idList.Contains(idFromText))
+                if (ulong.TryParse(userId, out ulong idFromText) && !idList.Contains(idFromText))
                 {
                     idList.Add(idFromText);
                 }
