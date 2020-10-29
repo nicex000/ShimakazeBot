@@ -87,7 +87,7 @@ namespace Shimakaze
         }
 
         [Command("userinfo")]
-        [Description("Displays information about specified user account or the sender")]
+        [Description("Displays information about the specified user account or the sender")]
         [CannotBeUsedInDM()]
         public async Task DisplayUserInfo(CommandContext ctx, [RemainingText] string commandPayload )
         {
@@ -105,13 +105,8 @@ namespace Shimakaze
                     return;
                 }
             }
-            if (members.Count == 0)
-            {
-                members.Add(ctx.Member);
-            }
 
-            if (members.Count > 0)
-            {
+            if(members.Count is 0) members.Add(ctx.Member);
                 foreach (var member in members)
                 {
                     var userLevel = UserLevels.GetLevel(member.Id, ctx.Guild.Id);
@@ -137,10 +132,7 @@ namespace Shimakaze
                     string games = null;
                     foreach (var act in member.Presence.Activities)
                     {
-                        if (act.ActivityType is ActivityType.Custom)
-                        {
-                            continue;
-                        }
+                    if (act.ActivityType is ActivityType.Custom) continue;
                         // So basically, am very tiny. In case you really need to know i just need a matching type lol.
                         // It's discarded anyway and a .ToString() still executes.
                         // Should a C style switch not have this problem it could be more elegant, if verbose af.
@@ -155,15 +147,10 @@ namespace Shimakaze
                             _ => throw new NotImplementedException()
                         };
                     }
-                    if (games?.Length > 0)
-                    {
-                        userInfo.AddField($"Playing", $"{games} ");
-                    }
 
-                    if (streams?.Length > 0)
-                    {
-                        userInfo.AddField($"Streaming", $"{streams} ");
-                    }
+                if (games?.Length > 0) userInfo.AddField($"Playing", $"{games} ");
+
+                if (streams?.Length > 0) userInfo.AddField($"Streaming", $"{streams} ");
                     // Account info
                     userInfo
                     .AddField($"Custom status", $"\n{customStatus ?? "No custom status set"}")
@@ -195,7 +182,6 @@ namespace Shimakaze
                     await ctx.RespondAsync("", false, userInfo.Build());
                 }
             }
-        }
 
         [Command("prefix")]
         [Description("Displays the current prefix, if you\'re that confused.")]
