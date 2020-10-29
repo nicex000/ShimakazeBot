@@ -20,6 +20,9 @@ namespace Shimakaze
 
         public const int GlobalLevelGuild = 0;
         public const int MaxSongLoopCount = 100;
+
+        public const ulong GoodMorningEmojiId = 771418872804278303;
+        public const ulong GoodNightEmojiId = 771418873239961630;
     }
 
     public static class ShimakazeBot

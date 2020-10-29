@@ -75,6 +75,8 @@ namespace Shimakaze
             CommandsNextExtension commandsNextExtension = ShimakazeBot.Client.UseCommandsNext(commandConfig);
             commandsNextExtension.RegisterCommands<DebugCommands>();
             commandsNextExtension.RegisterCommands<InfoCommands>();
+            commandsNextExtension.RegisterCommands<GeneralCommands>();
+            commandsNextExtension.RegisterCommands<FunCommands>();
             commandsNextExtension.RegisterCommands<VoiceCommands>();
             commandsNextExtension.RegisterCommands<CustomizationCommands>();
             commandsNextExtension.RegisterCommands<ManagementCommands>();
