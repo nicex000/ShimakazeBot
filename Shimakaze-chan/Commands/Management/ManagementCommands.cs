@@ -21,7 +21,7 @@ namespace Shimakaze
         {
             if (fullMessage.Length == 0)
             {
-                await ctx.RespondAsync("Please write the guild, channel and text");
+                await CTX.RespondSanitizedAsync(ctx, "Please write the guild, channel and text");
                 return;
             }
             string[] idArray = fullMessage.Split(" ");
@@ -37,7 +37,7 @@ namespace Shimakaze
             {
                 if (channelIndex <= 0)
                 {
-                    await ctx.RespondAsync("Please **ALSO** write the channel and text, or use IDs for both guild and channel.");
+                    await CTX.RespondSanitizedAsync(ctx, "Please **ALSO** write the channel and text, or use IDs for both guild and channel.");
                     return;
                 }
 
@@ -50,7 +50,7 @@ namespace Shimakaze
                 guild = ShimakazeBot.Client.Guilds.Values.ToList().FirstOrDefault(item => item.Name == guildName);
                 if (guild == null)
                 {
-                    await ctx.RespondAsync($"Guild **{guildName}** not found!");
+                    await CTX.RespondSanitizedAsync(ctx, $"Guild **{guildName}** not found!");
                     return;
                 }
             }
@@ -58,7 +58,7 @@ namespace Shimakaze
             {
                 if (guildId == 0)
                 {
-                    await ctx.RespondAsync($"Guild ID **{guildId}** is not a valid ID!");
+                    await CTX.RespondSanitizedAsync(ctx, $"Guild ID **{guildId}** is not a valid ID!");
                     return;
                 }
                 else
@@ -66,7 +66,7 @@ namespace Shimakaze
                     guild = ShimakazeBot.Client.Guilds.Values.ToList().FirstOrDefault(item => item.Id == guildId);
                     if (guild == null)
                     {
-                        await ctx.RespondAsync($"Guild with ID **{guildId}** not found!");
+                        await CTX.RespondSanitizedAsync(ctx, $"Guild with ID **{guildId}** not found!");
                         return;
                     }
                 }
@@ -94,7 +94,7 @@ namespace Shimakaze
                 channel = guild.Channels.Values.ToList().FirstOrDefault(item => item.Name == idArray[0]);
                 if (channel == null)
                 {
-                    await ctx.RespondAsync($"Channel **{idArray[0]}** not found in **{guild.Name}**!");
+                    await CTX.RespondSanitizedAsync(ctx, $"Channel **{idArray[0]}** not found in **{guild.Name}**!");
                     return;
                 }
             }
@@ -102,7 +102,7 @@ namespace Shimakaze
             {
                 if (channelId == 0)
                 {
-                    await ctx.RespondAsync($"Channel ID **{channelId}** is not a valid ID!");
+                    await CTX.RespondSanitizedAsync(ctx, $"Channel ID **{channelId}** is not a valid ID!");
                     return;
                 }
                 else
@@ -110,7 +110,7 @@ namespace Shimakaze
                     channel = guild.Channels.Values.ToList().FirstOrDefault(item => item.Id == channelId);
                     if (channel == null)
                     {
-                        await ctx.RespondAsync($"Channel with ID **{channelId}** not found in **{guild.Name}**!");
+                        await CTX.RespondSanitizedAsync(ctx, $"Channel with ID **{channelId}** not found in **{guild.Name}**!");
                         return;
                     }
                 }
@@ -120,7 +120,7 @@ namespace Shimakaze
             idArray = idArray.Skip(1).ToArray();
             if (idArray.Length == 0)
             {
-                await ctx.RespondAsync("Please **ALSO** write the text");
+                await CTX.RespondSanitizedAsync(ctx, "Please **ALSO** write the text");
                 return;
             }
 
@@ -128,8 +128,8 @@ namespace Shimakaze
             string message = string.Join(" ", idArray);
 
             // send message
-            await ShimakazeBot.Client.SendMessageAsync(channel, message);
-            await ctx.RespondAsync($"_{message}_ sent to **{channel.Name}** in **{guild.Name}**");
+            await CTX.SendSanitizedMessageAsync(channel, message);
+            await CTX.RespondSanitizedAsync(ctx, $"_{message}_ sent to **{channel.Name}** in **{guild.Name}**");
         }
 
         [Command("addrole")]
@@ -168,7 +168,7 @@ namespace Shimakaze
                     }
                     else
                     {
-                        await ctx.RespondAsync($"Unable to find member with ID {id}");
+                        await CTX.RespondSanitizedAsync(ctx, $"Unable to find member with ID {id}");
                         return;
                     }
                 }
@@ -178,7 +178,7 @@ namespace Shimakaze
             if (!Int32.TryParse(suffixArray[0], out purgeAmount) || 
                 purgeAmount <= 0 || purgeAmount > 100)
             {
-                await ctx.RespondAsync($"{suffixArray[0]} is not a valid number between 1 and 100.");
+                await CTX.RespondSanitizedAsync(ctx, $"{suffixArray[0]} is not a valid number between 1 and 100.");
                 return;
             }
             
@@ -211,7 +211,7 @@ namespace Shimakaze
                     await ctx.Channel.GetMessagesBeforeAsync(ctx.Message.Id, purgeAmount));
             }
 
-            await ctx.RespondAsync($"Successfully purged **{purgeAmount}** messages" +
+            await CTX.RespondSanitizedAsync(ctx, $"Successfully purged **{purgeAmount}** messages" +
                 (usersToPurge.Count > 0 ? $"from **{usersToPurgeString}**" : ""));
         }
 
@@ -243,7 +243,7 @@ namespace Shimakaze
             List<ulong> userIds = Utils.GetIdListFromMessage(ctx.Message.MentionedUsers, suffix);
             if (userIds.Count == 0)
             {
-                await ctx.RespondAsync("Please mention, type a user ID or ID to warn.");
+                await CTX.RespondSanitizedAsync(ctx, "Please mention, type a user ID or ID to warn.");
                 return;
             }
             if (ctx.Guild.Members.ContainsKey(userIds[0]))
@@ -251,7 +251,7 @@ namespace Shimakaze
                 ShimakazeBot.DbCtx.GuildWarn.RemoveRange(ShimakazeBot.DbCtx.GuildWarn.Where(g =>
                 g.UserId == userIds[0] && g.GuildId == ctx.Guild.Id));
 
-                await ctx.RespondAsync("Successfully removed all warnsings for " +
+                await CTX.RespondSanitizedAsync(ctx, "Successfully removed all warnsings for " +
                     $"**{ctx.Guild.Members[userIds[0]].DisplayName}**.");
             }
             else
@@ -262,11 +262,11 @@ namespace Shimakaze
                 {
                     ShimakazeBot.DbCtx.GuildWarn.Remove(warn);
                     await ShimakazeBot.DbCtx.SaveChangesAsync();
-                    await ctx.RespondAsync($"Successfully removed warning with ID **{id}**");
+                    await CTX.RespondSanitizedAsync(ctx, $"Successfully removed warning with ID **{id}**");
                 }
                 else
                 {
-                    await ctx.RespondAsync($"Unable to find member or ID **{id}**");
+                    await CTX.RespondSanitizedAsync(ctx, $"Unable to find member or ID **{id}**");
                 }
             }
         }
@@ -279,7 +279,7 @@ namespace Shimakaze
                 Utils.GetIdListFromMessage(ctx.Message.MentionedUsers, suffix);
             if (userIds.Count == 0)
             {
-                await ctx.RespondAsync("Please mention or type a user ID.");
+                await CTX.RespondSanitizedAsync(ctx, "Please mention or type a user ID.");
                 return;
             }
             if (ctx.Guild.Members.ContainsKey(userIds[0]))
@@ -312,7 +312,7 @@ namespace Shimakaze
                     );
                 }
 
-                await ctx.RespondAsync(null, false, warnEmbed);
+                await CTX.RespondSanitizedAsync(ctx, null, false, warnEmbed);
             }
             else
             {
@@ -320,11 +320,11 @@ namespace Shimakaze
                 GuildWarn warn = await ShimakazeBot.DbCtx.GuildWarn.FindAsync(id);
                 if (warn != null)
                 {
-                    await ctx.RespondAsync($"{warn.TimeStamp} - {warn.WarnMessage}");
+                    await CTX.RespondSanitizedAsync(ctx, $"{warn.TimeStamp} - {warn.WarnMessage}");
                 }
                 else
                 {
-                    await ctx.RespondAsync($"Unable to find member or ID **{id}**");
+                    await CTX.RespondSanitizedAsync(ctx, $"Unable to find member or ID **{id}**");
                 }
             }
         }
@@ -344,7 +344,7 @@ namespace Shimakaze
                 }
                 else
                 {
-                    await ctx.RespondAsync("Self assignable role isn't properly set up. " +
+                    await CTX.RespondSanitizedAsync(ctx, "Self assignable role isn't properly set up. " +
                         "Please contact an Admin to reset it in the customization command.");
                     return;
                 }
@@ -352,7 +352,7 @@ namespace Shimakaze
 
             if (selfAssignLimit == -1)
             {
-                await ctx.RespondAsync($"I am not allowed to {(assign ? "assign" : "unassign")} roles on this server. " +
+                await CTX.RespondSanitizedAsync(ctx, $"I am not allowed to {(assign ? "assign" : "unassign")} roles on this server. " +
                     $"Please contact an Admin to {(assign ? "add" : "remove")} your role.");
                 return;
             }
@@ -400,7 +400,7 @@ namespace Shimakaze
                 }
             }
 
-            await ctx.RespondAsync(responseString);
+            await CTX.RespondSanitizedAsync(ctx, responseString);
         }
 
         private async Task ModerateUser(CommandContext ctx, string suffix, ShimaConsts.ModerationType type)
@@ -412,14 +412,14 @@ namespace Shimakaze
                 Utils.GetIdListFromArray(ctx.Message.MentionedUsers, suffixArray.Take(1).ToArray());
             if (userToModerateInList.Count == 0)
             {
-                await ctx.RespondAsync($"Please mention or type a user ID to {type.ToString().ToLower()}.");
+                await CTX.RespondSanitizedAsync(ctx, $"Please mention or type a user ID to {type.ToString().ToLower()}.");
                 return;
             }
             ulong userToModerate = userToModerateInList[0];
             
             if (!ctx.Guild.Members.ContainsKey(userToModerate))
             {
-                await ctx.RespondAsync($"Unable to find member with ID **{userToModerate}**");
+                await CTX.RespondSanitizedAsync(ctx, $"Unable to find member with ID **{userToModerate}**");
                 return;
             }
 
@@ -450,7 +450,7 @@ namespace Shimakaze
                         embed = new DiscordEmbedBuilder(embed).AddField("Message", message);
                     }
 
-                    await ctx.RespondAsync(null, false, embed);
+                    await CTX.RespondSanitizedAsync(ctx, null, false, embed);
                     break;
                 case ShimaConsts.ModerationType.KICK:
                     try
@@ -465,11 +465,11 @@ namespace Shimakaze
                             embed = new DiscordEmbedBuilder(embed).AddField("Reason", message);
                         }
 
-                        await ctx.RespondAsync("Do you think they'll learn their lesson?", false, embed);
+                        await CTX.RespondSanitizedAsync(ctx, "Do you think they'll learn their lesson?", false, embed);
                     }
                     catch
                     {
-                        await ctx.RespondAsync($"Failed to kick **{exMember.DisplayName}** ({userToModerate})");
+                        await CTX.RespondSanitizedAsync(ctx, $"Failed to kick **{exMember.DisplayName}** ({userToModerate})");
                     }
                     break;
                 case ShimaConsts.ModerationType.BAN:
@@ -485,11 +485,11 @@ namespace Shimakaze
                             embed = new DiscordEmbedBuilder(embed).AddField("Reason", message);
                         }
 
-                        await ctx.RespondAsync("Good riddance.", false, embed);
+                        await CTX.RespondSanitizedAsync(ctx, "Good riddance.", false, embed);
                     }
                     catch
                     {
-                        await ctx.RespondAsync($"Failed to ban **{exMember.DisplayName}** ({userToModerate})");
+                        await CTX.RespondSanitizedAsync(ctx, $"Failed to ban **{exMember.DisplayName}** ({userToModerate})");
                     }
                     break;
             }
