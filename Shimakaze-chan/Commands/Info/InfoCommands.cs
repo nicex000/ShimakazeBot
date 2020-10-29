@@ -161,9 +161,11 @@ namespace Shimakaze
                             $@"```{
                                 userLevel switch
                                 {
-                                    1 => "Default (1)",
-                                    4 => "Server owner (4)",
-                                    999 => "Bot owner",
+                                    (int)ShimaConsts.UserPermissionLevel.DEFAULT => 
+                                        $"Default ({(int)ShimaConsts.UserPermissionLevel.DEFAULT})",
+                                    (int)ShimaConsts.UserPermissionLevel.DEFAULT_SERVER_OWNER => 
+                                        $"Server owner ({(int)ShimaConsts.UserPermissionLevel.DEFAULT_SERVER_OWNER})",
+                                    (int)ShimaConsts.UserPermissionLevel.SHIMA_TEAM => "Bot owner",
                                     _ => userLevel.ToString()
                                 }
                                 }```", true)
@@ -171,8 +173,9 @@ namespace Shimakaze
                             $@"```{
                                 globalUserLevel switch
                                 {
-                                    1 => "Default (1)",
-                                    999 => "Bot owner",
+                                    (int)ShimaConsts.UserPermissionLevel.DEFAULT =>
+                                        $"Default ({(int)ShimaConsts.UserPermissionLevel.DEFAULT})",
+                                    (int)ShimaConsts.UserPermissionLevel.SHIMA_TEAM => "Bot owner",
                                     _ => globalUserLevel.ToString()
                                 }
                                 }```",
