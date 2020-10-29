@@ -28,8 +28,9 @@ namespace Shimakaze
                 .AddField($"Channels connected", 
                     $"```{ctx.Client.Guilds.Sum(guild => guild.Value.Channels.Count)}```",true)
                 .AddField($"Private channels", $"```{ctx.Client.PrivateChannels.Count}```",true)
-                .AddField($"Owners", $@"{ctx.Client.CurrentApplication.Owners.Reverse()
-                    .Aggregate("", (current, owner) => current + $"{owner.Mention}\n")}", true)
+                .AddField($"Owners", $@"{string.Join("\n", 
+                    from owner in ctx.Client.CurrentApplication.Owners.Reverse()
+                    select owner.Mention)}", true)
                 .WithFooter($"Online for {(DateTime.Now - ShimaConsts.applicationStartTime).Days} days, " +
                             $"{uptime.Hours} {(uptime.Hours is 1 ? "hour, " : "hours, ")}" +
                             $"{uptime.Minutes} {(uptime.Minutes is 1 ? "minute, " : "minutes, ")}" +
@@ -45,25 +46,23 @@ namespace Shimakaze
         [Description("I'll tell you some information about the server you're currently in.")]
         public async Task DisplayServerInfo(CommandContext ctx)
         {
-            var textChannels = ctx.Guild.Channels.Values
-                .Aggregate("", (current, channel) =>
-                {
-                    if (channel.Type == ChannelType.Text)
-                    {
-                        current += $"{channel.Name}, ";
-                    }
-                    return current;
-                });
-            var voiceChannels = ctx.Guild.Channels.Values
-                .Aggregate("", (current, channel) =>
-                {
-                    if (channel.Type == ChannelType.Voice)
-                    {
-                        current += $"{channel.Name}, ";
-                    }
-                    return current;
-                });
-            var roles = ctx.Guild.Roles.Values.Aggregate("", (current, role) => current + $"{role.Name}, ");
+            var textChannels = string.Join(", ", 
+                from channel in ctx.Guild.Channels.Values 
+                where channel.Type is ChannelType.Text 
+                select channel.Name);
+            if (textChannels.Length > 1018)
+                textChannels = "Too many to list!";
+            var voiceChannels = string.Join(", ",
+                from channel in ctx.Guild.Channels.Values
+                where channel.Type is ChannelType.Voice
+                select channel.Name);
+            if (voiceChannels.Length > 1018)
+                voiceChannels = "Too many to list!";
+            var roles = string.Join(", ", 
+                from role in ctx.Guild.Roles.Values 
+                select role.Name);
+            if (roles.Length > 1018)
+                roles = "Too many to list!";
             var serverInfo = new DiscordEmbedBuilder()
                 .WithAuthor($"Information requested by {ctx.Message.Author.Username}", "",
                     $"{ctx.Message.Author.AvatarUrl}")
@@ -76,13 +75,14 @@ namespace Shimakaze
                     $"```{ctx.Guild.Channels.Values.Count(chn => chn.Type == ChannelType.Text)}```", true)
                 .AddField($"Voice Channels",
                     $"```{ctx.Guild.Channels.Values.Count(chn => chn.Type == ChannelType.Voice)}```", true)
-                .AddField($"Text Channels", $"```{textChannels.Remove(textChannels.Length - 2, 2)}```")
-                .AddField($"Voice Channels", $"```{voiceChannels.Remove(voiceChannels.Length - 2, 2)}```")
+                    .AddField($"Text Channels", $"```{textChannels}```")
+                    .AddField($"Voice Channels", $"```{voiceChannels}```")
                 .AddField($"AFK-channel", $"```{ctx.Guild.AfkChannel.Name} [{ctx.Guild.AfkChannel.Id}]```")
                 .AddField($"Current Region", $"```{ctx.Guild.VoiceRegion.Name}```", true)
                 .AddField($"Total Roles", $"```{ctx.Guild.Roles.Count}```", true)
-                .AddField($"Roles", $"```{roles.Remove(roles.Length - 2, 2)}```")
+                    .AddField($"Roles", $"```{roles}```")
                 .WithThumbnail($"{ctx.Guild.IconUrl}");
+           
             await ctx.RespondAsync("", false, serverInfo.Build());
         }
 
@@ -116,17 +116,13 @@ namespace Shimakaze
                 {
                     var userLevel = UserLevels.GetLevel(member.Id, ctx.Guild.Id);
                     var globalUserLevel = UserLevels.GetMemberLevel(member);
-                    var roles = member.Roles
-                        .Aggregate("", (current, role) => current + $"{role.Mention}, ");
-                    string customStatus = null;
-                    if (member.Presence.Activity.CustomStatus?.Emoji != null)
-                    {
-                        customStatus += member.Presence.Activity.CustomStatus.Emoji + " ";
-                    }
-                    if (member.Presence.Activity.CustomStatus?.Name != null)
-                    {
-                        customStatus += member.Presence.Activity.CustomStatus.Name;
-                    }
+                var roles = string.Join(", ",
+                    from role in member.Roles
+                    select role.Mention);
+                var customStatus = string.Concat(
+                    member.Presence.Activity.CustomStatus?.Emoji ?? "",
+                    member.Presence.Activity.CustomStatus?.Name  ?? "");
+                if (string.IsNullOrEmpty(customStatus)) customStatus = null;
                     // Header
                     var userInfo = new DiscordEmbedBuilder()
                         .WithAuthor($"{member.Username}#{member.Discriminator} ({member.Id})",
@@ -170,7 +166,7 @@ namespace Shimakaze
                     }
                     // Account info
                     userInfo
-                        .AddField($"Custom status",$"\n{customStatus ?? "No custom status set"}")
+                    .AddField($"Custom status", $"\n{customStatus ?? "No custom status set"}")
                         .AddField($"Account Creation",
                             $"```\n{member.CreationTimestamp.UtcDateTime} UTC```", false)
                         .AddField($"Joined on", $"```\n{member.JoinedAt.UtcDateTime} UTC```")
@@ -194,7 +190,7 @@ namespace Shimakaze
                                 }
                                 }```",
                             true)
-                        .AddField($"Roles", $"\n {roles.Remove(roles.Length - 2, 2)}");
+                    .AddField($"Roles", $"\n {roles}");
 
                     await ctx.RespondAsync("", false, userInfo.Build());
                 }
