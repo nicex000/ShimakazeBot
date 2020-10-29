@@ -36,7 +36,7 @@ namespace Shimakaze
                 (ShimakazeBot.Config.settings.liveToken == null &&
                 ShimakazeBot.Config.settings.testToken == null))
             {
-                throw new System.ArgumentNullException("","Config ain't set up properly (:");
+                throw new System.ArgumentNullException("", "Config ain't set up properly (:");
             }
 
             ShimakazeBot.Client = new DiscordClient(new DiscordConfiguration

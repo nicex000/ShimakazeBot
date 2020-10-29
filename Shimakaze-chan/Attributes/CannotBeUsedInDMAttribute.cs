@@ -17,8 +17,11 @@ namespace Shimakaze.Attributes
 
             public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
             {
-                if (!(ctx.Guild is null)) return true;
-                await ctx.RespondAsync(failMessage);
+                if (!(ctx.Guild is null))
+                {
+                    return true;
+                }
+                await CTX.RespondSanitizedAsync(ctx, failMessage);
                 return false;
             }
         }
