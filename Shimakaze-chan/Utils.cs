@@ -22,7 +22,7 @@ namespace Shimakaze
             DiscordChannel channel, string content = null, bool isTTS = false, DiscordEmbed embed = null,
             IEnumerable<IMention> mentions = null)
         {
-            if (string.IsNullOrWhiteSpace(content))
+            if (string.IsNullOrWhiteSpace(content) && embed == null)
             {
                 return null;
             }
