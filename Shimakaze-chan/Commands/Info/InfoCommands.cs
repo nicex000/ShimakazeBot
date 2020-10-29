@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext;
@@ -16,6 +16,7 @@ namespace Shimakaze
         [Description("Quick tooltip regarding the purpose of this bot.")]
         public async Task DisplayInfo(CommandContext ctx)
         {
+            var uptime = (DateTime.Now - ShimaConsts.applicationStartTime);
             var botInfo = new DiscordEmbedBuilder()
                 .WithAuthor($"Shimakaze-chan", "", $"{ctx.Client.CurrentUser.AvatarUrl}")
                 .WithColor(new DiscordColor("#3498db"))
@@ -30,9 +31,9 @@ namespace Shimakaze
                 .AddField($"Owners", $@"{ctx.Client.CurrentApplication.Owners.Reverse()
                     .Aggregate("", (current, owner) => current + $"{owner.Mention}\n")}", true)
                 .WithFooter($"Online for {(DateTime.Now - ShimaConsts.applicationStartTime).Days} days, " +
-                            $"{(DateTime.Now - ShimaConsts.applicationStartTime).Hours} hours, " +
-                            $"{(DateTime.Now - ShimaConsts.applicationStartTime).Minutes} minutes, " +
-                            $"{(DateTime.Now - ShimaConsts.applicationStartTime).Seconds} seconds.");
+                            $"{uptime.Hours} {(uptime.Hours is 1 ? "hour, " : "hours, ")}" +
+                            $"{uptime.Minutes} {(uptime.Minutes is 1 ? "minute, " : "minutes, ")}" +
+                            $"{uptime.Hours} {(uptime.Seconds is 1 ? "second." : "seconds.")}");
             await ctx.RespondAsync("This bot serves as a temporary hotfix compliment to the original Shimakaze's broken voicechat functions." +
                 " We will notify You when we're done with rewriting mainline Shimakaze and bring all of her functionality back up. At least " +
                 "the parts that were actively used, we will leave out some useless shit like cleverbot.",
