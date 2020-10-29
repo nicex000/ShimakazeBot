@@ -45,7 +45,7 @@ namespace Shimakaze.Attributes
             {
                 if (!string.IsNullOrWhiteSpace(failMessage))
                 {
-                    await ctx.RespondAsync(failMessage);
+                    await CTX.RespondSanitizedAsync(ctx, failMessage);
                 }
                 return false;
             }

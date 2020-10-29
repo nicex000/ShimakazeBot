@@ -54,21 +54,21 @@ namespace Shimakaze
                 }
                 catch (Exception e)
                 {
-                    await ctx.RespondAsync(e.ToString());
+                    await CTX.RespondSanitizedAsync(ctx, e.ToString());
                 }
 
             var lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
             debugResponse.AddWithDebug("LVC status: " + (lvc != null).ToString(), ctx);
             if (lvc != null)
             {
-                await ctx.RespondAsync($"{debugResponse}Already connected in this guild.");
+                await CTX.RespondSanitizedAsync(ctx, $"{debugResponse}Already connected in this guild.");
                 return;
             }
 
             var chn = ctx.Member?.VoiceState?.Channel;
             if (chn == null)
             {
-                await ctx.RespondAsync($"{debugResponse}You need to be in a voice channel.");
+                await CTX.RespondSanitizedAsync(ctx, $"{debugResponse}You need to be in a voice channel.");
                 return;
             }
 
@@ -76,7 +76,7 @@ namespace Shimakaze
             {
                 if (ShimakazeBot.CheckDebugMode(ctx.Guild.Id))
                 {
-                    await ctx.RespondAsync("attempting connectAsync to " + chn.Name);
+                    await CTX.RespondSanitizedAsync(ctx, "attempting connectAsync to " + chn.Name);
                 }
                 await ShimakazeBot.lvn.ConnectAsync(chn).ConfigureAwait(false);
                 debugResponse.AddWithDebug("Connection status after: " 
@@ -91,7 +91,7 @@ namespace Shimakaze
             }
             catch (Exception e)
             {
-                await ctx.RespondAsync(debugResponse + e.ToString());
+                await CTX.RespondSanitizedAsync(ctx, debugResponse + e.ToString());
                 throw;
             }
 
@@ -114,7 +114,7 @@ namespace Shimakaze
             ShimakazeBot.lvn.GetConnection(ctx.Guild).DiscordWebSocketClosed += DiscordSocketClosed;
 
 
-            await ctx.RespondAsync(debugResponse + "Joined");
+            await CTX.RespondSanitizedAsync(ctx, debugResponse + "Joined");
         }
 
         [Command("leave")]
@@ -132,7 +132,7 @@ namespace Shimakaze
             var lvc = ShimakazeBot.lvn?.GetConnection(ctx.Guild);
             if (ShimakazeBot.lvn == null || lvc == null)
             {
-                await ctx.RespondAsync($"{debugResponse}Not connected in this guild.");
+                await CTX.RespondSanitizedAsync(ctx, $"{debugResponse}Not connected in this guild.");
                 return;
             }
 
@@ -146,12 +146,12 @@ namespace Shimakaze
             var chn = ctx.Member?.VoiceState?.Channel;
             if (chn == null)
             {
-                await ctx.RespondAsync($"{debugResponse}You need to be in a voice channel.");
+                await CTX.RespondSanitizedAsync(ctx, $"{debugResponse}You need to be in a voice channel.");
                 return;
             }
             if (chn != lvc.Channel)
             {
-                await ctx.RespondAsync($"{debugResponse}You need to be in the same voice channel.");
+                await CTX.RespondSanitizedAsync(ctx, $"{debugResponse}You need to be in the same voice channel.");
                 return;
             }
 
@@ -192,7 +192,7 @@ namespace Shimakaze
                             ctx);
                     }
                 }
-                await ctx.RespondAsync(debugResponse + "Attempted leave.");
+                await CTX.RespondSanitizedAsync(ctx, debugResponse + "Attempted leave.");
             }
         }
 
@@ -203,7 +203,7 @@ namespace Shimakaze
         {
             if (!ShimakazeBot.playlists.ContainsKey(ctx.Guild))
             {
-                await ctx.RespondAsync("No playlist. Try making Shima join voice first.");
+                await CTX.RespondSanitizedAsync(ctx, "No playlist. Try making Shima join voice first.");
             }
             else
             {
@@ -238,11 +238,11 @@ namespace Shimakaze
                         i++;
                     }
 
-                    await ctx.RespondAsync(msg);
+                    await CTX.RespondSanitizedAsync(ctx, msg);
                 }
                 else
                 {
-                    await ctx.RespondAsync("Playlist is empty.");
+                    await CTX.RespondSanitizedAsync(ctx, "Playlist is empty.");
                 }
             }
 
@@ -263,13 +263,13 @@ namespace Shimakaze
             {
                 await lavaConnection.ResumeAsync();
                 ShimakazeBot.playlists[ctx.Guild].isPaused = false;
-                await ctx.RespondAsync("Music resumed.");
+                await CTX.RespondSanitizedAsync(ctx, "Music resumed.");
             }
             else
             {
                 await lavaConnection.PauseAsync();
                 ShimakazeBot.playlists[ctx.Guild].isPaused = true;
-                await ctx.RespondAsync("Music paused.");
+                await CTX.RespondSanitizedAsync(ctx, "Music paused.");
             }
         }
 
@@ -289,7 +289,7 @@ namespace Shimakaze
             {
                 ShimakazeBot.playlists[ctx.Guild].songRequests[0] 
             };
-            await ctx.RespondAsync("Playlist cleared.");
+            await CTX.RespondSanitizedAsync(ctx, "Playlist cleared.");
         }
 
         [Command("play")]
@@ -310,7 +310,7 @@ namespace Shimakaze
             {
                 await lavaConnection.ResumeAsync();
                 ShimakazeBot.playlists[ctx.Guild].isPaused = false;
-                await ctx.RespondAsync("Music resumed.");
+                await CTX.RespondSanitizedAsync(ctx, "Music resumed.");
                 return;
             }
 
@@ -318,7 +318,7 @@ namespace Shimakaze
 
             if (songName.StartsWith("local"))
             {
-                await ctx.RespondAsync(songName.Substring(songName.IndexOf("local ") + 6));
+                await CTX.RespondSanitizedAsync(ctx, songName.Substring(songName.IndexOf("local ") + 6));
             }
 
             lavalinkLoadResult = songName.StartsWith("http")
@@ -340,10 +340,10 @@ namespace Shimakaze
                         ctx.Member.DisplayName, ctx.Member, ctx.Channel, t)));
                     break;
                 case LavalinkLoadResultType.NoMatches:
-                    await ctx.RespondAsync("No matches found.");
+                    await CTX.RespondSanitizedAsync(ctx, "No matches found.");
                     break;
                 case LavalinkLoadResultType.LoadFailed:
-                    await ctx.RespondAsync("Load failed.");
+                    await CTX.RespondSanitizedAsync(ctx, "Load failed.");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -369,7 +369,7 @@ namespace Shimakaze
                     $"**{lavalinkLoadResult.Tracks.Count() - 1}** more songs to the queue.";
             }
 
-            await ctx.RespondAsync(responseString);
+            await CTX.RespondSanitizedAsync(ctx, responseString);
         }
 
         [Command("skip")]
@@ -384,7 +384,7 @@ namespace Shimakaze
 
             if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count == 0)
             {
-                await ctx.RespondAsync("Playlist is empty.");
+                await CTX.RespondSanitizedAsync(ctx, "Playlist is empty.");
                 return;
             }
 
@@ -400,12 +400,12 @@ namespace Shimakaze
             if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 0)
             {
                 await lavaConnection.PlayAsync(ShimakazeBot.playlists[ctx.Guild].songRequests.First().track);
-                await ctx.RespondAsync($"Skipped *{title}*{(wasLooping ? " and stopped loop" : "")}.");
+                await CTX.RespondSanitizedAsync(ctx, $"Skipped *{title}*{(wasLooping ? " and stopped loop" : "")}.");
             }
             else
             {
                 await lavaConnection.StopAsync();
-                await ctx.RespondAsync($"Playlist ended with skip. (Skipped *{title}*" +
+                await CTX.RespondSanitizedAsync(ctx, $"Playlist ended with skip. (Skipped *{title}*" +
                     $"{(wasLooping ? " and stopped loop" : "")})");
             }
         }
@@ -421,7 +421,7 @@ namespace Shimakaze
             }
             if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 2)
             {
-                var message = await ctx.RespondAsync("Shuffling...");
+                var message = await CTX.RespondSanitizedAsync(ctx, "Shuffling...");
                 for (int index = ShimakazeBot.playlists[ctx.Guild].songRequests.Count - 1; index > 1; index--)
                 {
                     int randomIndex = ThreadSafeRandom.ThisThreadsRandom.Next(1, index + 1);
@@ -440,7 +440,7 @@ namespace Shimakaze
             }
             else
             {
-                await ctx.RespondAsync("Not enough songs to shuffle.");
+                await CTX.RespondSanitizedAsync(ctx, "Not enough songs to shuffle.");
             }
         }
 
@@ -461,31 +461,31 @@ namespace Shimakaze
             }
             else if (!int.TryParse(loopString, out loopCount) || loopCount < 0 || loopCount > ShimaConsts.MaxSongLoopCount)
             {
-                await ctx.RespondAsync($"Please type a number between **0** and **{ShimaConsts.MaxSongLoopCount}**");
+                await CTX.RespondSanitizedAsync(ctx, $"Please type a number between **0** and **{ShimaConsts.MaxSongLoopCount}**");
                 return;
             }
             if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 0)
             {
                 if (ShimakazeBot.playlists[ctx.Guild].loopCount > 0 && loopCount == 0)
                 {
-                    await ctx.RespondAsync($"**{ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title}** " +
+                    await CTX.RespondSanitizedAsync(ctx, $"**{ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title}** " +
                         "will no longer loop.");
                 }
                 else if (loopCount > 0)
                 {
-                    await ctx.RespondAsync($"Set **{ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title}** " +
+                    await CTX.RespondSanitizedAsync(ctx, $"Set **{ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title}** " +
                         $"to loop {loopCount} time{(loopCount > 1 ? "s" : "")}.");
                 }
                 else
                 {
-                    await ctx.RespondAsync("Playlist will continue to **not** loop.");
+                    await CTX.RespondSanitizedAsync(ctx, "Playlist will continue to **not** loop.");
                     return;
                 }
                 ShimakazeBot.playlists[ctx.Guild].loopCount = loopCount;
             }
             else
             {
-                await ctx.RespondAsync("Playlist is empty, request a song first.");
+                await CTX.RespondSanitizedAsync(ctx, "Playlist is empty, request a song first.");
             }
         }
 
@@ -578,19 +578,19 @@ namespace Shimakaze
         {
             if (lvc == null)
             {
-                await ctx.RespondAsync("Not connected in this guild.");
+                await CTX.RespondSanitizedAsync(ctx, "Not connected in this guild.");
                 return false;
             }
 
             var chn = ctx.Member?.VoiceState?.Channel;
             if (chn == null)
             {
-                await ctx.RespondAsync("You need to be in a voice channel.");
+                await CTX.RespondSanitizedAsync(ctx, "You need to be in a voice channel.");
                 return false;
             }
             if (chn != lvc.Channel)
             {
-                await ctx.RespondAsync("You need to be in the same voice channel.");
+                await CTX.RespondSanitizedAsync(ctx, "You need to be in the same voice channel.");
                 return false;
             }
             return true;

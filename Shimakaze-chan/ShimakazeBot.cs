@@ -97,7 +97,7 @@ namespace Shimakaze
         public async static void SendToDebugRoom(string text)
         {
             var channel = await Client.GetChannelAsync(Config.settings.debugRoom);
-            await channel.SendMessageAsync(text, true);
+            await CTX.SendSanitizedMessageAsync(channel, text);
         }
     }
 }

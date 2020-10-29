@@ -29,7 +29,7 @@ namespace Shimakaze
             }
             else ShimakazeBot.guildDebugMode.Add(ctx.Guild.Id);
 
-            await ctx.RespondAsync("スーパーデバッグモード" + 
+            await CTX.RespondSanitizedAsync(ctx, "スーパーデバッグモード" + 
                 $" **{(!toRemove ? "enabled" : "disabled")}**" +
                 $" for {ctx.Guild.Name} ({ctx.Guild.Id})") ;
         }
@@ -40,7 +40,7 @@ namespace Shimakaze
         public async Task DebugChannelFlag(CommandContext ctx)
         {
             ShimakazeBot.shouldSendToDebugRoom = !ShimakazeBot.shouldSendToDebugRoom;
-            await ctx.RespondAsync("Shima debug channel **" +
+            await CTX.RespondSanitizedAsync(ctx, "Shima debug channel **" +
                 $"{(ShimakazeBot.shouldSendToDebugRoom ? "enabled" : "disabled")}**");
         }
 
@@ -106,7 +106,7 @@ namespace Shimakaze
                 ShimakazeBot.playlists[ctx.Guild].songRequests.Count().ToString() :
                 "**no playlist**");
 
-            await ctx.RespondAsync(responseString);
+            await CTX.RespondSanitizedAsync(ctx, responseString);
         }
     }
 }

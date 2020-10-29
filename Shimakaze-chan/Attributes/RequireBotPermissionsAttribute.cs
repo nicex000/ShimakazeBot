@@ -25,7 +25,7 @@ namespace Shimakaze.Attributes
         {
             if (ctx.Guild == null)
             {
-                await ctx.RespondAsync("This command can't be used in DMs.");
+                await CTX.RespondSanitizedAsync(ctx, "This command can't be used in DMs.");
                 return false;
             }
 
@@ -44,7 +44,7 @@ namespace Shimakaze.Attributes
                 failMessage = $"**Permissions missing for {bot.DisplayName}:** {((pBot & permissions) ^ permissions).ToPermissionString()}";
             }
 
-            if (!botSuccess) await ctx.RespondAsync(failMessage);
+            if (!botSuccess) await CTX.RespondSanitizedAsync(ctx, failMessage);
             return botSuccess;
         }
     }

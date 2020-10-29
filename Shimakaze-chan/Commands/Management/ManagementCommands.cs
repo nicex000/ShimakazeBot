@@ -21,7 +21,7 @@ namespace Shimakaze
         {
             if (fullMessage.Length == 0)
             {
-                await ctx.RespondAsync("Please write the guild, channel and text");
+                await CTX.RespondSanitizedAsync(ctx, "Please write the guild, channel and text");
                 return;
             }
             string[] idArray = fullMessage.Split(" ");
@@ -37,7 +37,7 @@ namespace Shimakaze
             {
                 if (channelIndex <= 0)
                 {
-                    await ctx.RespondAsync("Please **ALSO** write the channel and text, or use IDs for both guild and channel.");
+                    await CTX.RespondSanitizedAsync(ctx, "Please **ALSO** write the channel and text, or use IDs for both guild and channel.");
                     return;
                 }
 
@@ -50,7 +50,7 @@ namespace Shimakaze
                 guild = ShimakazeBot.Client.Guilds.Values.ToList().FirstOrDefault(item => item.Name == guildName);
                 if (guild == null)
                 {
-                    await ctx.RespondAsync($"Guild **{guildName}** not found!");
+                    await CTX.RespondSanitizedAsync(ctx, $"Guild **{guildName}** not found!");
                     return;
                 }
             }
@@ -58,7 +58,7 @@ namespace Shimakaze
             {
                 if (guildId == 0)
                 {
-                    await ctx.RespondAsync($"Guild ID **{guildId}** is not a valid ID!");
+                    await CTX.RespondSanitizedAsync(ctx, $"Guild ID **{guildId}** is not a valid ID!");
                     return;
                 }
                 else
@@ -66,7 +66,7 @@ namespace Shimakaze
                     guild = ShimakazeBot.Client.Guilds.Values.ToList().FirstOrDefault(item => item.Id == guildId);
                     if (guild == null)
                     {
-                        await ctx.RespondAsync($"Guild with ID **{guildId}** not found!");
+                        await CTX.RespondSanitizedAsync(ctx, $"Guild with ID **{guildId}** not found!");
                         return;
                     }
                 }
@@ -94,7 +94,7 @@ namespace Shimakaze
                 channel = guild.Channels.Values.ToList().FirstOrDefault(item => item.Name == idArray[0]);
                 if (channel == null)
                 {
-                    await ctx.RespondAsync($"Channel **{idArray[0]}** not found in **{guild.Name}**!");
+                    await CTX.RespondSanitizedAsync(ctx, $"Channel **{idArray[0]}** not found in **{guild.Name}**!");
                     return;
                 }
             }
@@ -102,7 +102,7 @@ namespace Shimakaze
             {
                 if (channelId == 0)
                 {
-                    await ctx.RespondAsync($"Channel ID **{channelId}** is not a valid ID!");
+                    await CTX.RespondSanitizedAsync(ctx, $"Channel ID **{channelId}** is not a valid ID!");
                     return;
                 }
                 else
@@ -110,7 +110,7 @@ namespace Shimakaze
                     channel = guild.Channels.Values.ToList().FirstOrDefault(item => item.Id == channelId);
                     if (channel == null)
                     {
-                        await ctx.RespondAsync($"Channel with ID **{channelId}** not found in **{guild.Name}**!");
+                        await CTX.RespondSanitizedAsync(ctx, $"Channel with ID **{channelId}** not found in **{guild.Name}**!");
                         return;
                     }
                 }
@@ -120,7 +120,7 @@ namespace Shimakaze
             idArray = idArray.Skip(1).ToArray();
             if (idArray.Length == 0)
             {
-                await ctx.RespondAsync("Please **ALSO** write the text");
+                await CTX.RespondSanitizedAsync(ctx, "Please **ALSO** write the text");
                 return;
             }
 
@@ -128,8 +128,8 @@ namespace Shimakaze
             string message = string.Join(" ", idArray);
 
             // send message
-            await ShimakazeBot.Client.SendMessageAsync(channel, message);
-            await ctx.RespondAsync($"_{message}_ sent to **{channel.Name}** in **{guild.Name}**");
+            await CTX.SendSanitizedMessageAsync(channel, message);
+            await CTX.RespondSanitizedAsync(ctx, $"_{message}_ sent to **{channel.Name}** in **{guild.Name}**");
         }
 
         [Command("addrole")]
@@ -163,7 +163,7 @@ namespace Shimakaze
                 }
                 else
                 {
-                    await ctx.RespondAsync("Self assignable role isn't properly set up. " +
+                    await CTX.RespondSanitizedAsync(ctx, "Self assignable role isn't properly set up. " +
                         "Please contact an Admin to reset it in the customization command.");
                     return;
                 }
@@ -171,7 +171,7 @@ namespace Shimakaze
 
             if (selfAssignLimit == -1)
             {
-                await ctx.RespondAsync($"I am not allowed to {(assign ? "assign" : "unassign")} roles on this server. " +
+                await CTX.RespondSanitizedAsync(ctx, $"I am not allowed to {(assign ? "assign" : "unassign")} roles on this server. " +
                     $"Please contact an Admin to {(assign ? "add" : "remove")} your role.");
                 return;
             }
@@ -219,7 +219,7 @@ namespace Shimakaze
                 }
             }
 
-            await ctx.RespondAsync(responseString);
+            await CTX.RespondSanitizedAsync(ctx, responseString);
         }
     }
 }

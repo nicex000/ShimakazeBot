@@ -154,11 +154,11 @@ namespace Shimakaze
                     // Account info
                     userInfo
                     .AddField($"Custom status", $"\n{customStatus ?? "No custom status set"}")
-                        .AddField($"Account Creation",
-                            $"```\n{member.CreationTimestamp.UtcDateTime} UTC```", false)
-                        .AddField($"Joined on", $"```\n{member.JoinedAt.UtcDateTime} UTC```")
-                        .AddField($"Server access level",
-                            $@"```{
+                    .AddField($"Account Creation",
+                        $"```\n{member.CreationTimestamp.UtcDateTime} UTC```", false)
+                    .AddField($"Joined on", $"```\n{member.JoinedAt.UtcDateTime} UTC```")
+                    .AddField($"Server access level",
+                        $@"```{
                                 userLevel switch
                                 {
                                     (int)ShimaConsts.UserPermissionLevel.DEFAULT => 
@@ -193,7 +193,7 @@ namespace Shimakaze
             string prefix = ShimakazeBot.CustomPrefixes.ContainsKey(ctx.Guild.Id) ?
                             ShimakazeBot.CustomPrefixes[ctx.Guild.Id] :
                             ShimakazeBot.DefaultPrefix;
-            await ctx.RespondAsync($"This server\'s prefix is: **{prefix}**" +
+            await CTX.RespondSanitizedAsync(ctx, $"This server\'s prefix is: **{prefix}**" +
                 "\n You can change the prefix with **cprefix**");
         }
 
@@ -201,9 +201,9 @@ namespace Shimakaze
         [Description("I'll reply to you with pong!")]
         public async Task Ping(CommandContext ctx)
         {
-            var message = await ctx.RespondAsync("Pong!");
+            var message = await CTX.RespondSanitizedAsync(ctx, "Pong!");
             await message.ModifyAsync("Pong! Time taken: " +
-                $"{(message.CreationTimestamp - ctx.Message.CreationTimestamp).TotalMilliseconds}ms.");            
+                $"{(message.CreationTimestamp - ctx.Message.CreationTimestamp).TotalMilliseconds}ms.");
         }
     }
 }

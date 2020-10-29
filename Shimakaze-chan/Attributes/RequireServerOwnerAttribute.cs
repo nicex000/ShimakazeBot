@@ -26,7 +26,7 @@ namespace Shimakaze.Attributes
                 bool success = ctx.Member == ctx.Guild.Owner || app.Owners.Any(x => x.Id == ctx.User.Id);
                 if (!success && !string.IsNullOrWhiteSpace(failMessage))
                 {
-                    await ctx.RespondAsync(failMessage);
+                    await CTX.RespondSanitizedAsync(ctx, failMessage);
                 }
 
                 return success;
