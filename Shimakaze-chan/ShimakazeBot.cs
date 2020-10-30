@@ -89,8 +89,6 @@ namespace Shimakaze
             });
         }
 
-        
-
         public static bool IsUserShimaTeam(ulong userId)
         {
             return Client.CurrentApplication.Owners.Any(user => user.Id == userId);
