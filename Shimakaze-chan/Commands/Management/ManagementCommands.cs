@@ -292,7 +292,7 @@ namespace Shimakaze
                 {
                     return;
                 }
-                DiscordEmbed warnEmbed = Utils.BaseEmbedBuilder(ctx,
+                DiscordEmbedBuilder warnEmbed = Utils.BaseEmbedBuilder(ctx,
                     $"Warnings for {ctx.Guild.Members[userIds[0]].DisplayName} ({userIds[0]})",
                     ctx.Guild.Members[userIds[0]].AvatarUrl,
                     null, ctx.Guild.Members[userIds[0]].Color);
@@ -303,15 +303,11 @@ namespace Shimakaze
 
                 if (warns.Count() == 0)
                 {
-                    warnEmbed = new DiscordEmbedBuilder(warnEmbed)
-                        .WithDescription($"{ctx.Guild.Members[userIds[0]].DisplayName} has no warnings.");
+                    warnEmbed.WithDescription($"{ctx.Guild.Members[userIds[0]].DisplayName} has no warnings.");
                 }
                 else
                 {
-                    warns.ForEach(item =>
-                        warnEmbed = new DiscordEmbedBuilder(warnEmbed).AddField(item.TimeStamp.ToString(),
-                            item.WarnMessage)
-                    );
+                    warns.ForEach(item => warnEmbed.AddField(item.TimeStamp.ToString(), item.WarnMessage));
                 }
 
                 await CTX.RespondSanitizedAsync(ctx, null, false, warnEmbed);
@@ -431,7 +427,7 @@ namespace Shimakaze
 
             //get message
             string message = suffixArray.Length > 1 ? string.Join(" ", suffixArray.Skip(1)) : "";
-            DiscordEmbed embed;
+            DiscordEmbedBuilder embed;
             //moderate
             switch (type)
             {
@@ -451,7 +447,7 @@ namespace Shimakaze
                             null, exMember.Color, $"warning ID: {warn.Id}");
                     if (!string.IsNullOrWhiteSpace(message))
                     {
-                        embed = new DiscordEmbedBuilder(embed).AddField("Message", message);
+                        embed.AddField("Message", message);
                     }
 
                     await CTX.RespondSanitizedAsync(ctx, null, false, embed);
@@ -466,7 +462,7 @@ namespace Shimakaze
                             exMember.AvatarUrl, null, exMember.Color);
                         if (!string.IsNullOrWhiteSpace(message))
                         {
-                            embed = new DiscordEmbedBuilder(embed).AddField("Reason", message);
+                            embed.AddField("Reason", message);
                         }
 
                         await CTX.RespondSanitizedAsync(ctx, "Do you think they'll learn their lesson?", false, embed);
@@ -487,7 +483,7 @@ namespace Shimakaze
                                exMember.AvatarUrl, null, exMember.Color);
                         if (!string.IsNullOrWhiteSpace(message))
                         {
-                            embed = new DiscordEmbedBuilder(embed).AddField("Reason", message);
+                            embed.AddField("Reason", message);
                         }
 
                         await CTX.RespondSanitizedAsync(ctx, "Good riddance.", false, embed);

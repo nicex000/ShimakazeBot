@@ -97,7 +97,7 @@ namespace Shimakaze
             return idList;
         }
         
-        public static DiscordEmbed BaseEmbedBuilder(
+        public static DiscordEmbedBuilder BaseEmbedBuilder(
             CommandContext ctx, DiscordUser author = null, string title = null, DiscordColor? color = null,
             string footer = null, DateTime? timestamp = null)
         {
@@ -119,8 +119,8 @@ namespace Shimakaze
                 return BaseEmbedBuilder(ctx, null, null, title, color, footer, timestamp);
             }
         }
-        public static DiscordEmbed BaseEmbedBuilder(
 
+        public static DiscordEmbedBuilder BaseEmbedBuilder(
             CommandContext ctx, string authorText = null, string authorUrl = null, string title = null,
             DiscordColor? color = null, string footer = null, DateTime? timestamp = null)
         {
@@ -135,7 +135,7 @@ namespace Shimakaze
                         ctx.Guild.Members[ShimakazeBot.Client.CurrentUser.Id].Color;
             }
 
-            DiscordEmbed baseEmbed = new DiscordEmbedBuilder()
+            DiscordEmbedBuilder baseEmbedBuilder = new DiscordEmbedBuilder()
               .WithTitle(title)
               .WithColor(color.Value)
               .WithFooter(footer)
@@ -143,10 +143,10 @@ namespace Shimakaze
 
             if (!string.IsNullOrWhiteSpace(authorText) || !string.IsNullOrWhiteSpace(authorUrl))
             {
-                baseEmbed = new DiscordEmbedBuilder(baseEmbed).WithAuthor(authorText, null, authorUrl);
+                baseEmbedBuilder.WithAuthor(authorText, null, authorUrl);
             }
 
-            return baseEmbed;
+            return baseEmbedBuilder;
         }
 
         public static List<DiscordRole> GetRolesFromString(DiscordGuild guild, string roleString)
