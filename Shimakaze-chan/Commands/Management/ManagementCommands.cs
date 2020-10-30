@@ -37,7 +37,8 @@ namespace Shimakaze
             {
                 if (channelIndex <= 0)
                 {
-                    await CTX.RespondSanitizedAsync(ctx, "Please **ALSO** write the channel and text, or use IDs for both guild and channel.");
+                    await CTX.RespondSanitizedAsync(ctx,
+                        "Please **ALSO** write the channel and text, or use IDs for both guild and channel.");
                     return;
                 }
 
@@ -110,7 +111,8 @@ namespace Shimakaze
                     channel = guild.Channels.Values.ToList().FirstOrDefault(item => item.Id == channelId);
                     if (channel == null)
                     {
-                        await CTX.RespondSanitizedAsync(ctx, $"Channel with ID **{channelId}** not found in **{guild.Name}**!");
+                        await CTX.RespondSanitizedAsync(ctx,
+                            $"Channel with ID **{channelId}** not found in **{guild.Name}**!");
                         return;
                     }
                 }
@@ -352,7 +354,8 @@ namespace Shimakaze
 
             if (selfAssignLimit == -1)
             {
-                await CTX.RespondSanitizedAsync(ctx, $"I am not allowed to {(assign ? "assign" : "unassign")} roles on this server. " +
+                await CTX.RespondSanitizedAsync(ctx,
+                    $"I am not allowed to {(assign ? "assign" : "unassign")} roles on this server. " +
                     $"Please contact an Admin to {(assign ? "add" : "remove")} your role.");
                 return;
             }
@@ -412,7 +415,8 @@ namespace Shimakaze
                 Utils.GetIdListFromArray(ctx.Message.MentionedUsers, suffixArray.Take(1).ToArray());
             if (userToModerateInList.Count == 0)
             {
-                await CTX.RespondSanitizedAsync(ctx, $"Please mention or type a user ID to {type.ToString().ToLower()}.");
+                await CTX.RespondSanitizedAsync(ctx,
+                    $"Please mention or type a user ID to {type.ToString().ToLower()}.");
                 return;
             }
             ulong userToModerate = userToModerateInList[0];
@@ -469,7 +473,8 @@ namespace Shimakaze
                     }
                     catch
                     {
-                        await CTX.RespondSanitizedAsync(ctx, $"Failed to kick **{exMember.DisplayName}** ({userToModerate})");
+                        await CTX.RespondSanitizedAsync(ctx,
+                            $"Failed to kick **{exMember.DisplayName}** ({userToModerate})");
                     }
                     break;
                 case ShimaConsts.ModerationType.BAN:
@@ -489,11 +494,11 @@ namespace Shimakaze
                     }
                     catch
                     {
-                        await CTX.RespondSanitizedAsync(ctx, $"Failed to ban **{exMember.DisplayName}** ({userToModerate})");
+                        await CTX.RespondSanitizedAsync(ctx,
+                            $"Failed to ban **{exMember.DisplayName}** ({userToModerate})");
                     }
                     break;
             }
-
         }
     }
 }

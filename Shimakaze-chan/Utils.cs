@@ -70,6 +70,7 @@ namespace Shimakaze
         {
             return GetIdListFromArray(mentionedUsers, userIDsString?.Split(" "));
         }
+
         public static List<ulong> GetIdListFromArray(IReadOnlyList<DiscordUser> mentionedUsers, string[] textArray)
         {
             var idList = new List<ulong>();
@@ -119,6 +120,7 @@ namespace Shimakaze
             }
         }
         public static DiscordEmbed BaseEmbedBuilder(
+
             CommandContext ctx, string authorText = null, string authorUrl = null, string title = null,
             DiscordColor? color = null, string footer = null, DateTime? timestamp = null)
         {
@@ -146,7 +148,6 @@ namespace Shimakaze
 
             return baseEmbed;
         }
-
 
         public static List<DiscordRole> GetRolesFromString(DiscordGuild guild, string roleString)
         {
