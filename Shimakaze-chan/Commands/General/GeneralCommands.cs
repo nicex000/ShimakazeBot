@@ -102,5 +102,38 @@ namespace Shimakaze
 
             await CTX.RespondSanitizedAsync(ctx, $"Go sleep already! You're so slow! {goodNightEmoji}/");
         }
+
+        [Command("hug")]
+        [Description("I guess i can give you a friendly hug...")]
+        public async Task Hug(CommandContext ctx)
+        {
+            if (ctx.User.Id == 155038222794227712)
+            {
+                await CTX.RespondSanitizedAsync(ctx, $"*hugs {ctx.User.Mention} with lots of love ♥♥♥*");
+            }
+            else
+            {
+                await CTX.RespondSanitizedAsync(ctx, $"*hugs {ctx.User.Mention} in a friendly manner*");
+            }
+        }
+
+        [Command("kiss")]
+        [Description("I'll kiss my loved one ♥")]
+        public async Task Kiss(CommandContext ctx)
+        {
+            if (ctx.User.Id == 155038222794227712)
+            {
+                await CTX.RespondSanitizedAsync(ctx, $"*gives {ctx.User.Mention} a lovers kiss ♥♥♥*");
+            }
+            else if (ThreadSafeRandom.ThisThreadsRandom.Next(0, 1000) < 5)
+            {
+                await CTX.RespondSanitizedAsync(ctx, $"{ctx.User.Mention} you Baka!" +
+                    "\n*gives him a small kiss on the cheek ♥*");
+            }
+            else
+            {
+                await CTX.RespondSanitizedAsync(ctx, "I'm not going to kiss you!");
+            }
+        }
     }
 }
