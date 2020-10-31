@@ -152,6 +152,7 @@ namespace Shimakaze
 
         [Command("purge")]
         [Attributes.RequirePermissions(Permissions.ManageMessages)]
+        [Description("Usage: purge amount <[user]>")]
         public async Task Purge(CommandContext ctx, [RemainingText] string suffix)
         {
             string[] suffixArray = suffix?.Split(" ");
@@ -178,12 +179,17 @@ namespace Shimakaze
 
             int purgeAmount;
             if (!Int32.TryParse(suffixArray[0], out purgeAmount) || 
-                purgeAmount <= 0 || purgeAmount > 100)
+                purgeAmount <= 0)
             {
                 await CTX.RespondSanitizedAsync(ctx, $"{suffixArray[0]} is not a valid number between 1 and 100.");
                 return;
             }
-            
+            else if (purgeAmount > 100)
+            {
+                await CTX.RespondSanitizedAsync(ctx, "I can only remove up to 100 messages at a time.");
+                return;
+            }
+
             if (usersToPurge.Count > 0)
             {
                 DiscordMessage earliestMessage = ctx.Message;
@@ -191,7 +197,11 @@ namespace Shimakaze
                 List<DiscordMessage> messagesToDelete = new List<DiscordMessage>();
                 do
                 {
-                    readMessages = (await ctx.Channel.GetMessagesBeforeAsync(earliestMessage.Id, 500)).ToList();
+                    readMessages = (await ctx.Channel.GetMessagesBeforeAsync(earliestMessage.Id, 2)).ToList();
+                    if (readMessages.Count > 0)
+                    {
+                        earliestMessage = readMessages.Last();
+                    }
                     for (int i = 0; i < readMessages.Count; i++)
                     {
                         if (usersToPurge.Contains(readMessages[i].Author.Id))
@@ -203,18 +213,34 @@ namespace Shimakaze
                             }
                         }
                     }
-                } while (readMessages.Count == 500 && messagesToDelete.Count < purgeAmount);
+                } while (readMessages.Count == 2 && messagesToDelete.Count < purgeAmount);
 
-                await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
+                try
+                {
+                    await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
+                }
+                catch (Exception ex)
+                {
+                    await CTX.RespondSanitizedAsync(ctx, $"Failed to delete the messages, reason:\n{ex.Message}");
+                    return;
+                }
             }
             else
             {
-                await ctx.Channel.DeleteMessagesAsync(
-                    await ctx.Channel.GetMessagesBeforeAsync(ctx.Message.Id, purgeAmount));
+               try
+                {
+                   await ctx.Channel.DeleteMessagesAsync(
+                        await ctx.Channel.GetMessagesBeforeAsync(ctx.Message.Id, purgeAmount));
+                }
+                catch (Exception ex)
+                {
+                    await CTX.RespondSanitizedAsync(ctx, $"Failed to delete the messages, reason:\n{ex.Message}");
+                    return;
+                }
             }
 
             await CTX.RespondSanitizedAsync(ctx, $"Successfully purged **{purgeAmount}** messages" +
-                (usersToPurge.Count > 0 ? $"from **{usersToPurgeString}**" : ""));
+                (usersToPurge.Count > 0 ? $" from **{usersToPurgeString}**" : ""));
         }
 
         [Command("warn")]
@@ -245,7 +271,7 @@ namespace Shimakaze
             List<ulong> userIds = Utils.GetIdListFromMessage(ctx.Message.MentionedUsers, suffix);
             if (userIds.Count == 0)
             {
-                await CTX.RespondSanitizedAsync(ctx, "Please mention, type a user ID or ID to warn.");
+                await CTX.RespondSanitizedAsync(ctx, "Please mention, type a user ID or a warn ID.");
                 return;
             }
             if (ctx.Guild.Members.ContainsKey(userIds[0]))
@@ -307,7 +333,8 @@ namespace Shimakaze
                 }
                 else
                 {
-                    warns.ForEach(item => warnEmbed.AddField(item.TimeStamp.ToString(), item.WarnMessage));
+                    warns.ForEach(item => warnEmbed.AddField(item.TimeStamp.ToString(), 
+                        item.WarnMessage.Length > 1024 ? $"{item.WarnMessage.Take(1021)}..." : item.WarnMessage));
                 }
 
                 await CTX.RespondSanitizedAsync(ctx, null, false, warnEmbed);
@@ -391,7 +418,7 @@ namespace Shimakaze
                         responseString += $"**{role.Name}** was successfully " +
                             $"{(assign ? "assigned to" : "removed from")} **{ctx.Member.DisplayName}**";
                     }
-                    catch (UnauthorizedException ex)
+                    catch
                     {
                         responseString += $"Failed to {(assign ? "assign" : "remove")} role **{role.Name}** " +
                             $"{(assign ? "to" : "from")} **{ctx.Member.DisplayName}**";
@@ -404,11 +431,12 @@ namespace Shimakaze
 
         private async Task ModerateUser(CommandContext ctx, string suffix, ShimaConsts.ModerationType type)
         {
-            string[] suffixArray = string.IsNullOrWhiteSpace(suffix) ? new string[] { } : suffix.Split(" ");
+            int userIndex = string.IsNullOrWhiteSpace(suffix) ? -1 : suffix.IndexOf(" ");
+            string userIdString = userIndex > 0 ? suffix.Substring(0, userIndex) : suffix;
 
             //get user to moderate
             List<ulong> userToModerateInList =
-                Utils.GetIdListFromArray(ctx.Message.MentionedUsers, suffixArray.Take(1).ToArray());
+                Utils.GetIdListFromArray(ctx.Message.MentionedUsers, new string[] { userIdString });
             if (userToModerateInList.Count == 0)
             {
                 await CTX.RespondSanitizedAsync(ctx,
@@ -426,12 +454,18 @@ namespace Shimakaze
             DiscordMember exMember = ctx.Guild.Members[userToModerate];
 
             //get message
-            string message = suffixArray.Length > 1 ? string.Join(" ", suffixArray.Skip(1)) : "";
+            string message = userIndex > 0 ? suffix.Substring(userIndex).TrimStart() : "";
             DiscordEmbedBuilder embed;
             //moderate
             switch (type)
             {
                 case ShimaConsts.ModerationType.WARN:
+                    if (message.Length > 1024)
+                    {
+                        await CTX.RespondSanitizedAsync(ctx, "Warning message must be under 1024 characters.");
+                        return;
+                    }
+
                     GuildWarn warn = (await ShimakazeBot.DbCtx.GuildWarn.AddAsync(new GuildWarn
                     {
                         GuildId = ctx.Guild.Id,

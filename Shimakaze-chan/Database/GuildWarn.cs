@@ -9,6 +9,7 @@ public class GuildWarn
     public int Id { get; set; }
     public ulong GuildId { get; set; }
     public ulong UserId { get; set; }
+    [MaxLength(2000)]
     public string WarnMessage { get; set; }
     public DateTime TimeStamp { get; set; }
 }
