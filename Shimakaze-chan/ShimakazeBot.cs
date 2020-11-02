@@ -27,6 +27,7 @@ namespace Shimakaze
 
         public const int GlobalLevelGuild = 0;
         public const int MaxSongLoopCount = 100;
+        public const int MaxMessageHistoryLoadCount = 500;
     }
 
     public static class ShimakazeBot

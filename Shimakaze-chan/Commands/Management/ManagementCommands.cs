@@ -197,7 +197,8 @@ namespace Shimakaze
                 List<DiscordMessage> messagesToDelete = new List<DiscordMessage>();
                 do
                 {
-                    readMessages = (await ctx.Channel.GetMessagesBeforeAsync(earliestMessage.Id, 2)).ToList();
+                    readMessages = (await ctx.Channel.GetMessagesBeforeAsync(
+                        earliestMessage.Id, ShimaConsts.MaxMessageHistoryLoadCount)).ToList();
                     if (readMessages.Count > 0)
                     {
                         earliestMessage = readMessages.Last();
@@ -213,7 +214,8 @@ namespace Shimakaze
                             }
                         }
                     }
-                } while (readMessages.Count == 2 && messagesToDelete.Count < purgeAmount);
+                } while (readMessages.Count == ShimaConsts.MaxMessageHistoryLoadCount &&
+                        messagesToDelete.Count < purgeAmount);
 
                 try
                 {
