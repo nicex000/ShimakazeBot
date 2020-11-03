@@ -67,7 +67,7 @@ namespace Shimakaze
             return false;
         }
 
-		/// <summary>
+        /// <summary>
         /// This gets BOTH the mentioned users and parses the message for ulong Ids such as UIDs
         /// </summary>
         /// <param name="mentionedUsers">ctx.Message.MentionedUsers</param>
@@ -78,7 +78,7 @@ namespace Shimakaze
             return GetIdListFromArray(mentionedUsers, userIDsString?.Split(" "));
         }
 
-		/// <summary>
+        /// <summary>
         /// This gets BOTH the mentioned users and parses the message for ulong Ids such as UIDs
         /// </summary>
         /// <param name="mentionedUsers">ctx.Message.MentionedUsers</param>

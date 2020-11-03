@@ -203,15 +203,12 @@ namespace Shimakaze
                     {
                         earliestMessage = readMessages.Last();
                     }
-                    for (int i = 0; i < readMessages.Count; i++)
+                    foreach (var message in readMessages.Where(message => usersToPurge.Contains(message.Author.Id)))
                     {
-                        if (usersToPurge.Contains(readMessages[i].Author.Id))
+                        messagesToDelete.Add(message);
+                        if (messagesToDelete.Count == purgeAmount)
                         {
-                            messagesToDelete.Add(readMessages[i]);
-                            if (messagesToDelete.Count == purgeAmount)
-                            {
-                                break;
-                            }
+                            break;
                         }
                     }
                 } while (readMessages.Count == ShimaConsts.MaxMessageHistoryLoadCount &&
