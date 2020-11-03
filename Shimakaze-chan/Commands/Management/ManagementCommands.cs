@@ -305,7 +305,7 @@ namespace Shimakaze
         [CannotBeUsedInDM]
         public async Task Warns(CommandContext ctx, [RemainingText] string suffix)
         {
-            List<ulong> userIds = string.IsNullOrWhiteSpace(suffix) ? 
+            List<ulong> userIds = string.IsNullOrWhiteSpace(suffix) ?
                 new List<ulong>() { ctx.User.Id } :
                 Utils.GetIdListFromMessage(ctx.Message.MentionedUsers, suffix);
             if (userIds.Count == 0)
@@ -315,7 +315,7 @@ namespace Shimakaze
             }
             if (ctx.Guild.Members.ContainsKey(userIds[0]))
             {
-                RequireAdminAttribute adminCheck = 
+                RequireAdminAttribute adminCheck =
                     new RequireAdminAttribute("Only server admins are allowed to view warnings of other users.");
                 if (ctx.User.Id != userIds[0] && !await adminCheck.ExecuteCheckAsync(ctx, false))
                 {
@@ -336,7 +336,7 @@ namespace Shimakaze
                 }
                 else
                 {
-                    warns.ForEach(item => warnEmbed.AddField(item.TimeStamp.ToString(), 
+                    warns.ForEach(item => warnEmbed.AddField(item.TimeStamp.ToString(),
                         item.WarnMessage.Length > 1024 ? $"{item.WarnMessage.Take(1021)}..." : item.WarnMessage));
                 }
 
