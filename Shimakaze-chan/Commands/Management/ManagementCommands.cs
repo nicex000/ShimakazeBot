@@ -357,6 +357,34 @@ namespace Shimakaze
             }
         }
 
+        [Command("setnickname")]
+        [Attributes.RequireBotPermissions(Permissions.ChangeNickname,
+            "The server won't let me change my nickname :(")]
+        [RequireAdmin("Only a server admin can use this command.", true)]
+        [Aliases("setnick", "changenickname", "changenick")]
+        public async Task SetNickname(CommandContext ctx, [RemainingText] string nickname)
+        {
+            var bot = await ctx.Guild.GetMemberAsync(ctx.Client.CurrentUser.Id).ConfigureAwait(false);
+            await bot.ModifyAsync((member) => member.Nickname = nickname);
+            await CTX.RespondSanitizedAsync(ctx, "Nickname " + (string.IsNullOrWhiteSpace(nickname) ?
+                $"removed.": $"changed to **{nickname}**."));
+        }
+        
+        [Command("leave-server")]
+        [RequireAdmin]
+        [Aliases("leaveserver")]
+        public async Task LeaveServer(CommandContext ctx)
+        {
+            if (!ShimakazeBot.Client.CurrentApplication.Owners.Contains(ctx.User))
+            {
+                await CTX.RespondSanitizedAsync(ctx, "Ok, I understand... I'm no longer wanted here. I'm sorry 😢\n*Runs away*");
+            }
+            ShimakazeBot.SendToDebugRoom(
+                    $"Left **{ctx.Guild.Name}** ({ctx.Guild.Id}). Triggered by **{ctx.User.Username}** ({ctx.User.Id})");
+
+            await ctx.Guild.LeaveAsync();
+        }
+
         private async Task SetRole(CommandContext ctx, string roleString, bool assign = true)
         {
             int selfAssignLimit = 0;

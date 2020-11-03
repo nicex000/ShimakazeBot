@@ -227,5 +227,14 @@ namespace Shimakaze
             await message.ModifyAsync("Pong! Time taken: " +
                 $"{(message.CreationTimestamp - ctx.Message.CreationTimestamp).TotalMilliseconds}ms.");            
         }
+
+        [Command("join-server")]
+        [Aliases("joinserver", "invite", "invite-link", "invitelink")]
+        public async Task JoinServer(CommandContext ctx)
+        {
+            await CTX.RespondSanitizedAsync(ctx, $"Here's an invite link: {ShimakazeBot.Config.settings.oauth}\n" +
+                "An admin of the server will need to use this link to let me join the server.\n" +
+                "*Can't wait to join a new server~~*  **Hurry up!**");
+        }
     }
 }
