@@ -302,6 +302,7 @@ namespace Shimakaze
         }
 
         [Command("warns")]
+        [CannotBeUsedInDM]
         public async Task Warns(CommandContext ctx, [RemainingText] string suffix)
         {
             List<ulong> userIds = string.IsNullOrWhiteSpace(suffix) ? 
