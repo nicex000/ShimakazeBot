@@ -1,4 +1,5 @@
-﻿using DSharpPlus.Entities;
+using System;
+using DSharpPlus.Entities;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using System.Collections.Generic;
@@ -66,11 +67,23 @@ namespace Shimakaze
             return false;
         }
 
+		/// <summary>
+        /// This gets BOTH the mentioned users and parses the message for ulong Ids such as UIDs
+        /// </summary>
+        /// <param name="mentionedUsers">ctx.Message.MentionedUsers</param>
+        /// <param name="userIDsString">string containing the list of user IDs separated by spaces</param>
+        /// <returns>List of ulong Ids</returns>
         public static List<ulong> GetIdListFromMessage(IReadOnlyList<DiscordUser> mentionedUsers, string userIDsString)
         {
             return GetIdListFromArray(mentionedUsers, userIDsString?.Split(" "));
         }
 
+		/// <summary>
+        /// This gets BOTH the mentioned users and parses the message for ulong Ids such as UIDs
+        /// </summary>
+        /// <param name="mentionedUsers">ctx.Message.MentionedUsers</param>
+        /// <param name="textArray">Array containing the list of user IDs as strings</param>
+        /// <returns>List of ulong Ids</returns>
         public static List<ulong> GetIdListFromArray(IReadOnlyList<DiscordUser> mentionedUsers, string[] textArray)
         {
             var idList = new List<ulong>();
