@@ -13,17 +13,21 @@ namespace Shimakaze.Attributes
     class RequireAdminAttribute : CheckBaseAttribute
     {
         public string failMessage;
+        public bool skipDMMessage;
 
-        public RequireAdminAttribute(string failMessage = "Only a server admin can use this command.")
+        public RequireAdminAttribute(string failMessage = "Only a server admin can use this command.",
+            bool skipDMMessage = false)
         {
             this.failMessage = failMessage;
+            this.skipDMMessage = skipDMMessage;
         }
 
         public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
         {
-            if (ctx.Guild == null)
+            CannotBeUsedInDMAttribute checkDM =
+                skipDMMessage ? new CannotBeUsedInDMAttribute("") : new CannotBeUsedInDMAttribute();
+            if (!await checkDM.ExecuteCheckAsync(ctx, help))
             {
-                await CTX.RespondSanitizedAsync(ctx, "This command can't be used in DMs.");
                 return false;
             }
 

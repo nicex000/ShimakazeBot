@@ -23,9 +23,9 @@ namespace Shimakaze.Attributes
 
         public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
         {
-            if (ctx.Guild == null)
+            CannotBeUsedInDMAttribute checkDM = new CannotBeUsedInDMAttribute();
+            if (!await checkDM.ExecuteCheckAsync(ctx, help))
             {
-                await CTX.RespondSanitizedAsync(ctx, "This command can't be used in DMs.");
                 return false;
             }
 
