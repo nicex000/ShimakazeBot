@@ -45,6 +45,11 @@ namespace Shimakaze
             }
             tEvent.Elapsed -= EventEnded;
             tEvent.Stop();
+            
+            if (events.Count() > 0)
+            {
+                events.Remove(tEvent);
+            }
 
             ShimakazeBot.DbCtx.TimedEvents.RemoveRange(
               ShimakazeBot.DbCtx.TimedEvents.Where(tE => tE.Id == id));
@@ -114,7 +119,10 @@ namespace Shimakaze
             tEvent.Elapsed -= EventEnded;
             tEvent.Stop();
 
-            events.Remove(tEvent);
+            if (events.Count() > 0)
+            {
+                events.Remove(tEvent);
+            }
 
             if (tEvent.dbEvent == null)
             {

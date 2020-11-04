@@ -1,4 +1,4 @@
-?¿using System;
+using System;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
