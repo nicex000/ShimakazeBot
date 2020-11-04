@@ -21,9 +21,9 @@ namespace Shimakaze.Attributes
 
         public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
         {
-            if (ctx.Guild == null)
+            CannotBeUsedInDMAttribute checkDM = new CannotBeUsedInDMAttribute();
+            if (!await checkDM.ExecuteCheckAsync(ctx, help))
             {
-                await ctx.RespondAsync("This command can't be used in DMs.");
                 return false;
             }
 
@@ -56,7 +56,7 @@ namespace Shimakaze.Attributes
                 failMessage += $"**Permissions missing for {bot.DisplayName}:** {((pBot & permissions) ^ permissions).ToPermissionString()}";
             }
 
-            if (!string.IsNullOrWhiteSpace(failMessage)) await ctx.RespondAsync(failMessage);
+            if (!string.IsNullOrWhiteSpace(failMessage)) await CTX.RespondSanitizedAsync(ctx, failMessage);
             return userSuccess && botSuccess;
         }
     }

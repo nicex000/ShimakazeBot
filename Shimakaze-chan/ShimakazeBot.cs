@@ -1,4 +1,5 @@
-ï»¿using DSharpPlus;
+?¿using System;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
@@ -18,13 +19,23 @@ namespace Shimakaze
             SHIMA_TEAM = 999
         }
 
+        public enum ModerationType
+        {
+            WARN,
+            KICK,
+            BAN
+        }
+
         public const int GlobalLevelGuild = 0;
         public const int MaxSongLoopCount = 100;
+        public const int MaxMessageHistoryLoadCount = 500;
+        public static readonly DateTime applicationStartTime = DateTime.Now;
 
         public const string DbPressFKey = "PressF";
 
         public const string DateFormat = "d-M-y";
         public const string TimeFormat = "H:m:s";
+        
     }
 
     public static class ShimakazeBot
@@ -104,7 +115,7 @@ namespace Shimakaze
         public async static void SendToDebugRoom(string text)
         {
             var channel = await Client.GetChannelAsync(Config.settings.debugRoom);
-            await channel.SendMessageAsync(text, true);
+            await CTX.SendSanitizedMessageAsync(channel, text);
         }
     }
 }

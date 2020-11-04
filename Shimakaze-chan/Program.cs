@@ -18,7 +18,7 @@ namespace Shimakaze
             ShimakazeBot.Client.DebugLogger.LogMessage(
                 LogLevel.Info,
                 LogMessageSources.COMMAND_EXECUTION_EVENT,
-                $"Executing {ctx.Message.Content} from {ctx.User.Username} in {ctx.Guild.Name}",
+                $"Executing {ctx.Message.Content} from {ctx.User.Username} in {ctx.Guild?.Name ?? "DM"}",
                 ctx.Message.Timestamp.DateTime);
             return Task.CompletedTask;
         }
@@ -36,7 +36,7 @@ namespace Shimakaze
                 (ShimakazeBot.Config.settings.liveToken == null &&
                 ShimakazeBot.Config.settings.testToken == null))
             {
-                throw new System.ArgumentNullException("Config ain't set up properly (:");
+                throw new System.ArgumentNullException("", "Config ain't set up properly (:");
             }
 
             ShimakazeBot.Client = new DiscordClient(new DiscordConfiguration
@@ -65,6 +65,10 @@ namespace Shimakaze
                     return Task.Run(() =>
                     {
                         var guild = msg.Channel.Guild;
+                        if (guild is null)
+                        {
+                            return msg.GetStringPrefixLength(ShimakazeBot.DefaultPrefix);
+                        }
                         return msg.GetStringPrefixLength(ShimakazeBot.CustomPrefixes.ContainsKey(guild.Id)
                             ? ShimakazeBot.CustomPrefixes[guild.Id]
                             : ShimakazeBot.DefaultPrefix);

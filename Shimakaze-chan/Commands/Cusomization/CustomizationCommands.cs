@@ -25,11 +25,11 @@ namespace Shimakaze
                     ShimakazeBot.DbCtx.StreamingGuild.RemoveRange(
                         ShimakazeBot.DbCtx.StreamingGuild.Where(g => g.GuildId == ctx.Guild.Id));
                     await ShimakazeBot.DbCtx.SaveChangesAsync();
-                    await ctx.RespondAsync("Streaming role configuration removed.");
+                    await CTX.RespondSanitizedAsync(ctx, "Streaming role configuration removed.");
                 }
                 else
                 {
-                    await ctx.RespondAsync("No configuration to remove.");
+                    await CTX.RespondSanitizedAsync(ctx, "No configuration to remove.");
                 }
             }
 
@@ -39,7 +39,7 @@ namespace Shimakaze
             {
                 if (ctx.Message.MentionedRoles.Count() > 1)
                 {
-                    await ctx.RespondAsync("Please mention only 1 role.");
+                    await CTX.RespondSanitizedAsync(ctx, "Please mention only 1 role.");
                     return;
                 }
                 else
@@ -55,7 +55,7 @@ namespace Shimakaze
                 }
                 else
                 {
-                    await ctx.RespondAsync($"Unable to find role with ID **{roleId}**");
+                    await CTX.RespondSanitizedAsync(ctx, $"Unable to find role with ID **{roleId}**");
                     return;
                 }
             }
@@ -66,7 +66,7 @@ namespace Shimakaze
 
             if (role == null)
             {
-                await ctx.RespondAsync($"Unable to find role **{roleName}**");
+                await CTX.RespondSanitizedAsync(ctx, $"Unable to find role **{roleName}**");
                 return;
             }
 
@@ -76,14 +76,14 @@ namespace Shimakaze
                 var streamingGuild = ShimakazeBot.DbCtx.StreamingGuild.First(g => g.GuildId == ctx.Guild.Id);
                 streamingGuild.RoleId = roleId;
                 ShimakazeBot.DbCtx.StreamingGuild.Update(streamingGuild);
-                await ctx.RespondAsync($"Streaming role configuration updated with role **{role.Name}**.");
+                await CTX.RespondSanitizedAsync(ctx, $"Streaming role configuration updated with role **{role.Name}**.");
             }
             else
             {
                 ShimakazeBot.StreamingEnabledGuilds.Add(ctx.Guild.Id, roleId);
                 await ShimakazeBot.DbCtx.StreamingGuild.AddAsync(
                     new StreamingGuild { GuildId = ctx.Guild.Id, RoleId = roleId });
-                await ctx.RespondAsync($"Streaming role configuration added with role **{role.Name}**.");
+                await CTX.RespondSanitizedAsync(ctx, $"Streaming role configuration added with role **{role.Name}**.");
             }
             await ShimakazeBot.DbCtx.SaveChangesAsync();
         }
@@ -100,7 +100,7 @@ namespace Shimakaze
                     ShimakazeBot.CustomPrefixes.Remove(ctx.Guild.Id);
                     ShimakazeBot.DbCtx.GuildPrefix.RemoveRange(ShimakazeBot.DbCtx.GuildPrefix.Where(p => p.GuildId == ctx.Guild.Id));
                     await ShimakazeBot.DbCtx.SaveChangesAsync();
-                    await ctx.RespondAsync($"Prefix reset to default: **{ShimakazeBot.DefaultPrefix}**");
+                    await CTX.RespondSanitizedAsync(ctx, $"Prefix reset to default: **{ShimakazeBot.DefaultPrefix}**");
                 }
                 else
                 {
@@ -109,21 +109,21 @@ namespace Shimakaze
                     guildPrefix.Prefix = newPrefix;
                     ShimakazeBot.DbCtx.GuildPrefix.Update(guildPrefix);
                     await ShimakazeBot.DbCtx.SaveChangesAsync();
-                    await ctx.RespondAsync($"Prefix updated to: **{newPrefix}**");
+                    await CTX.RespondSanitizedAsync(ctx, $"Prefix updated to: **{newPrefix}**");
                 }
             }
             else
             {
                 if (string.IsNullOrWhiteSpace(newPrefix))
                 {
-                    await ctx.RespondAsync($"Default prefix is: **{ShimakazeBot.DefaultPrefix}**\nProvide a prefix to change it.");
+                    await CTX.RespondSanitizedAsync(ctx, $"Default prefix is: **{ShimakazeBot.DefaultPrefix}**\nProvide a prefix to change it.");
                 }
                 else
                 {
                     ShimakazeBot.CustomPrefixes.Add(ctx.Guild.Id, newPrefix);
                     await ShimakazeBot.DbCtx.GuildPrefix.AddAsync(new GuildPrefix { GuildId = ctx.Guild.Id, Prefix = newPrefix });
                     await ShimakazeBot.DbCtx.SaveChangesAsync();
-                    await ctx.RespondAsync($"Prefix updated to: **{newPrefix}**");
+                    await CTX.RespondSanitizedAsync(ctx, $"Prefix updated to: **{newPrefix}**");
                 }
             }
         }
@@ -141,13 +141,13 @@ namespace Shimakaze
             int level;
             if (!Int32.TryParse(textArray[0], out level))
             {
-                await ctx.RespondAsync($"{textArray[0]} is not a valid level.");
+                await CTX.RespondSanitizedAsync(ctx, $"{textArray[0]} is not a valid level.");
                 return;
             }
 
             if (level >= requesterLevel)
             {
-                await ctx.RespondAsync("You cannot assign a level higher than your own");
+                await CTX.RespondSanitizedAsync(ctx, "You cannot assign a level higher than your own");
                 return;
             }
 
@@ -171,7 +171,7 @@ namespace Shimakaze
             int level;
             if (!Int32.TryParse(textArray[0], out level))
             {
-                await ctx.RespondAsync($"{textArray[0]} is not a valid level.");
+                await CTX.RespondSanitizedAsync(ctx, $"{textArray[0]} is not a valid level.");
                 return;
             }
 
@@ -195,11 +195,11 @@ namespace Shimakaze
                     ShimakazeBot.DbCtx.GuildSelfAssign.RemoveRange(
                         ShimakazeBot.DbCtx.GuildSelfAssign.Where(p => p.GuildId == ctx.Guild.Id));
                     await ShimakazeBot.DbCtx.SaveChangesAsync();
-                    await ctx.RespondAsync("Successfully removed the configuration.");
+                    await CTX.RespondSanitizedAsync(ctx, "Successfully removed the configuration.");
                 }
                 else
                 {
-                    await ctx.RespondAsync("No configuration to remove.");
+                    await CTX.RespondSanitizedAsync(ctx, "No configuration to remove.");
                 }
                 return;
             }
@@ -210,7 +210,7 @@ namespace Shimakaze
             {
                 if (ctx.Message.MentionedRoles.Count() > 1)
                 {
-                    await ctx.RespondAsync("Please mention only 1 role.");
+                    await CTX.RespondSanitizedAsync(ctx, "Please mention only 1 role.");
                     return;
                 }
                 else
@@ -226,7 +226,7 @@ namespace Shimakaze
                 }
                 else
                 {
-                    await ctx.RespondAsync($"Unable to find role with ID **{roleId}**");
+                    await CTX.RespondSanitizedAsync(ctx, $"Unable to find role with ID **{roleId}**");
                     return;
                 }
             }
@@ -237,7 +237,7 @@ namespace Shimakaze
 
             if (role == null)
             {
-                await ctx.RespondAsync($"Unable to find role **{roleName}**");
+                await CTX.RespondSanitizedAsync(ctx, $"Unable to find role **{roleName}**");
                 return;
             }
 
@@ -247,14 +247,14 @@ namespace Shimakaze
                 var guildSelfAssign = ShimakazeBot.DbCtx.GuildSelfAssign.First(p => p.GuildId == ctx.Guild.Id);
                 guildSelfAssign.RoleId = role.Id;
                 ShimakazeBot.DbCtx.GuildSelfAssign.Update(guildSelfAssign);
-                await ctx.RespondAsync($"Successfully updated the configuration to use role **{role.Name}**.");
+                await CTX.RespondSanitizedAsync(ctx, $"Successfully updated the configuration to use role **{role.Name}**.");
             }
             else
             {
                 ShimakazeBot.SelfAssignRoleLimit.Add(ctx.Guild.Id, role.Id);
                 await ShimakazeBot.DbCtx.GuildSelfAssign.AddAsync(
                     new GuildSelfAssign { GuildId = ctx.Guild.Id, RoleId = role.Id });
-                await ctx.RespondAsync($"Successfully added the configuration with role **{role.Name}**.");
+                await CTX.RespondSanitizedAsync(ctx, $"Successfully added the configuration with role **{role.Name}**.");
             }
             await ShimakazeBot.DbCtx.SaveChangesAsync();
         }
@@ -304,7 +304,7 @@ namespace Shimakaze
                 response += $"\nFailed to assign level to: {String.Join(", ", failedIDs)}";
             }
 
-            await ctx.RespondAsync(response);
+            await CTX.RespondSanitizedAsync(ctx, response);
         }
     }
 }
