@@ -59,7 +59,8 @@ namespace Shimakaze
 
             if (!string.IsNullOrWhiteSpace(message))
             {
-                await CTX.RespondSanitizedAsync(ctx, $"{goodMorningEmoji}/ {message}!");
+                await CTX.RespondSanitizedAsync(ctx, $"{goodMorningEmoji}/ {message}!", false, null,
+                    new List<IMention> { });
                 return;
             }
 
@@ -89,7 +90,8 @@ namespace Shimakaze
 
             if (!string.IsNullOrWhiteSpace(message))
             {
-                await CTX.RespondSanitizedAsync(ctx, $"{goodNightEmoji}/ {message}!");
+                await CTX.RespondSanitizedAsync(ctx, $"{goodNightEmoji}/ {message}!", false, null,
+                    new List<IMention> { });
                 return;
             }
 
