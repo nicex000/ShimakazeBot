@@ -7,6 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\20201105171657_MentionIDsForEvents.cs" />
+    <Compile Remove="Migrations\20201105171657_MentionIDsForEvents.Designer.cs" />
+    <Compile Remove="Migrations\20201105171854_MentionIDsForEvents.cs" />
+    <Compile Remove="Migrations\20201105171854_MentionIDsForEvents.Designer.cs" />
+    <Compile Remove="Migrations\20201105180322_MentionIDsForEvents.cs" />
+    <Compile Remove="Migrations\20201105180322_MentionIDsForEvents.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="libaacs.dll" />
     <None Remove="libbdplus.dll" />
     <None Remove="NewFile1.txt" />

@@ -22,8 +22,6 @@ namespace Shimakaze
 
             ShimakazeBot.Client.SocketClosed += SocketClosed;
             ShimakazeBot.Client.SocketErrored += SocketErrored;
-
-            timers.InitializeTimers();
         }
 
         public async Task<int> AddTimerEvent(CommandContext ctx, EventType type, string message, DateTime eventTime)
@@ -60,6 +58,8 @@ namespace Shimakaze
                 new DiscordActivity("out for abyssals with Rensouhou-chan",
                 ActivityType.Watching),
                 UserStatus.Online);
+
+            timers.InitializeTimers();
         }
 
         private Task DiscordResumed(ReadyEventArgs e)

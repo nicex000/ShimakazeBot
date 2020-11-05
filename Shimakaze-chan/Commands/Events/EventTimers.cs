@@ -23,16 +23,30 @@ namespace Shimakaze
 
         public async Task<int> AddEvent(CommandContext ctx, EventType type, string message, DateTime eventTime)
         {
+            List<ulong> mentionedUserIds = new List<ulong>();
+            List<ulong> mentionedRoleIds = new List<ulong>();
+            ctx.Message.MentionedUsers.ToList().ForEach(user => mentionedUserIds.Add(user.Id));
+            ctx.Message.MentionedRoles.ToList().ForEach(user => mentionedRoleIds.Add(user.Id));
             TimedEvent tEvent = new TimedEvent
             {
                 Type = type,
                 Message = message,
                 EventTime = eventTime,
                 UserId = ctx.User.Id,
-                ChannelId = ctx.Channel.Id
+                ChannelId = ctx.Channel.Id,
+                MentionUserIdList = mentionedUserIds.ToArray(),
+                MentionRoleIdList = mentionedRoleIds.ToArray()
             };
+
             tEvent.Id = (await ShimakazeBot.DbCtx.TimedEvents.AddAsync(tEvent)).Entity.Id;
-            await ShimakazeBot.DbCtx.SaveChangesAsync();
+            try
+            {
+                await ShimakazeBot.DbCtx.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                await ctx.RespondAsync(e.Message);
+            }
 
             return AddAndStartEvent(EventInTimer.MakeTimer(tEvent), tEvent.Id) ? tEvent.Id : -1;
         }
@@ -148,10 +162,17 @@ namespace Shimakaze
                 embedBuilder.AddField("Created by", $"<@{tEvent.dbEvent.UserId}>");
             }
 
-            await CTX.SendSanitizedMessageAsync(channel,
-                tEvent.dbEvent.Type == EventType.REMINDER ? $"<@{tEvent.dbEvent.UserId}>" : null,
-                false,
-                embedBuilder);
+            List<ulong> mentionUserIds = tEvent.dbEvent.MentionUserIdList.ToList();
+            List<ulong> mentionRoleIds = tEvent.dbEvent.MentionRoleIdList.ToList();
+            if (tEvent.dbEvent.Type == EventType.REMINDER)
+            {
+                mentionUserIds.Insert(0, tEvent.dbEvent.UserId);
+            }
+            string mentionString =
+                (mentionUserIds.Count() > 0 ? $"<@{ string.Join("> <@", mentionUserIds)}> " : "") +
+                (mentionRoleIds.Count() > 0 ? $" <@&{ string.Join("> <@&", mentionRoleIds)}> " : "");
+
+            await CTX.SendSanitizedMessageAsync(channel, mentionString, false, embedBuilder);
 
             ShimakazeBot.DbCtx.TimedEvents.RemoveRange(
                ShimakazeBot.DbCtx.TimedEvents.Where(tE => tE.Id == tEvent.dbEvent.Id));
