@@ -12,7 +12,7 @@ namespace Shimakaze
     {
         [Command("addreminder")]
         [Aliases("remindme", "reminder", "makereminder")]
-        [Description("Usage: reminder <date> <time> <message>" +
+        [Description("Usage: reminder date <time> <message>" +
                      "\ndate format is `d-M-y` (or a single number for in x days)," +
                      "\ntime format is `H:m:s` (or a single number for in x minutes).")]
         public async Task AddReminder(CommandContext ctx, [RemainingText] string suffix)
@@ -22,7 +22,7 @@ namespace Shimakaze
 
         [Command("addevent")]
         [Aliases("createevent", "newevent", "makeevent")]
-        [Description("Usage: reminder <date> <time> <message>" +
+        [Description("Usage: reminder date <time> <channel> <message>" +
                      "\ndate format is `d-M-y` (or a single number for in x days)," +
                      "\ntime format is `H:m:s` (or a single number for in x minutes).")]
         public async Task AddEvent(CommandContext ctx, [RemainingText] string suffix)
@@ -53,14 +53,14 @@ namespace Shimakaze
 
         private async Task AddEventAsync(CommandContext ctx, string suffix, EventType type)
         {
-            DateTimeWithMessage formattedData = await ExtractDateTimeAndMessageAsync(ctx, suffix);
+            DateTimeWithMessage formattedData = await ExtractDateTimeAndMessageAsync(ctx, suffix, type);
             if (formattedData == null)
             {
                 return;
             }
 
             int id = await ShimakazeBot.events.AddTimerEvent(
-                ctx, type, formattedData.message, formattedData.dateTime);
+                ctx, type, formattedData.message, formattedData.dateTime, formattedData.channelId);
             if (id < 0)
             {
                 await CTX.RespondSanitizedAsync(ctx, 
@@ -68,11 +68,13 @@ namespace Shimakaze
                     $" was probably created but good luck removing it now.");
                 return;
             }
-            await CTX.RespondSanitizedAsync(ctx, $"{(type == EventType.EVENT ? "Event" : "Reminder")} created with id #{id}");
+            await CTX.RespondSanitizedAsync(ctx,
+                $"{(type == EventType.EVENT ? "Event" : "Reminder")} created with id #{id}");
         }
 
 
-        private async Task<DateTimeWithMessage> ExtractDateTimeAndMessageAsync(CommandContext ctx, string suffix)
+        private async Task<DateTimeWithMessage> ExtractDateTimeAndMessageAsync(CommandContext ctx, string suffix,
+            EventType type)
         {
             var suffixArray = suffix.Split(" ").ToList();
             DateTimeWithMessage result = new DateTimeWithMessage();
@@ -146,6 +148,22 @@ namespace Shimakaze
                     return null;
                 }
 
+            }
+
+            //channel for event
+            if (type == EventType.EVENT && suffixArray.Count > 0 && suffixArray[0].Length > 15)
+            {
+                ulong channelId;
+                if (!ulong.TryParse(suffixArray[0], out channelId) && suffixArray[0].StartsWith("<#"))
+                {
+                    //[2..^1] substrings away the first 2 and last 1 chara
+                    ulong.TryParse(suffixArray[0][2..^1], out channelId);
+                }
+                if (channelId > 0 && ctx.Guild.Channels.ContainsKey(channelId))
+                {
+                    result.channelId = channelId;
+                    suffixArray.RemoveAt(0);
+                }
             }
 
             result.message = string.Join(" ", suffixArray);

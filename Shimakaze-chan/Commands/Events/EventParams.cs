@@ -15,6 +15,7 @@ namespace Shimakaze
     {
         public DateTime dateTime { get; set; }
         public string message { get; set; }
+        public ulong channelId { get; set; }
     }
 
     class EventInTimer : Timer

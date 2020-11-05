@@ -24,9 +24,10 @@ namespace Shimakaze
             ShimakazeBot.Client.SocketErrored += SocketErrored;
         }
 
-        public async Task<int> AddTimerEvent(CommandContext ctx, EventType type, string message, DateTime eventTime)
+        public async Task<int> AddTimerEvent(CommandContext ctx, EventType type, string message, DateTime eventTime,
+            ulong channelId = 0)
         {
-            return await timers.AddEvent(ctx, type, message, eventTime);
+            return await timers.AddEvent(ctx, type, message, eventTime, channelId);
         }
 
         public async Task<bool> RemoveTimerEvent(int id)

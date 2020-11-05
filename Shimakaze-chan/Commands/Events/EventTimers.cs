@@ -21,7 +21,8 @@ namespace Shimakaze
             SetEventTimers();
         }
 
-        public async Task<int> AddEvent(CommandContext ctx, EventType type, string message, DateTime eventTime)
+        public async Task<int> AddEvent(CommandContext ctx, EventType type, string message, DateTime eventTime,
+            ulong channelId = 0)
         {
             List<ulong> mentionedUserIds = new List<ulong>();
             List<ulong> mentionedRoleIds = new List<ulong>();
@@ -33,7 +34,7 @@ namespace Shimakaze
                 Message = message,
                 EventTime = eventTime,
                 UserId = ctx.User.Id,
-                ChannelId = ctx.Channel.Id,
+                ChannelId = channelId > 0 ? channelId : ctx.Channel.Id,
                 MentionUserIdList = mentionedUserIds.ToArray(),
                 MentionRoleIdList = mentionedRoleIds.ToArray()
             };
