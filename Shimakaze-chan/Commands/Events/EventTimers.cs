@@ -1,4 +1,5 @@
 ﻿using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -127,12 +128,30 @@ namespace Shimakaze
             if (tEvent.dbEvent == null)
             {
                 ShimakazeBot.Client.DebugLogger.LogMessage(DSharpPlus.LogLevel.Error,
-                    LogMessageSources.TIMER_EVENT_EVENT, "Timer had no event attached", DateTime.Now);
+                    LogMessageSources.TIMER_EVENT_EVENT,"Timer had no event attached", DateTime.Now);
                 return;
             }
 
             var channel = await ShimakazeBot.Client.GetChannelAsync(tEvent.dbEvent.ChannelId);
-            await channel.SendMessageAsync(tEvent.dbEvent.Message);
+            var eType = tEvent.dbEvent.Type;
+            DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
+                .WithAuthor(ShimakazeBot.Client.CurrentUser.Username, null, ShimakazeBot.Client.CurrentUser.AvatarUrl)
+                .WithColor(eType == EventType.REMINDER ? DiscordColor.Purple : DiscordColor.HotPink)
+                .WithTimestamp(tEvent.dbEvent.EventTime)
+                .WithTitle(eType == EventType.REMINDER ? 
+                    "Here's your reminder~~" : "Event Time! - イベント　タイム！")
+                .WithFooter($"Event #{tEvent.dbEvent.Id}")
+                .WithDescription((string.IsNullOrWhiteSpace(tEvent.dbEvent.Message) ?
+                    "*No message.*" : tEvent.dbEvent.Message));
+            if (eType == EventType.EVENT)
+            {
+                embedBuilder.AddField("Created by", $"<@{tEvent.dbEvent.UserId}>");
+            }
+
+            await CTX.SendSanitizedMessageAsync(channel,
+                tEvent.dbEvent.Type == EventType.REMINDER ? $"<@{tEvent.dbEvent.UserId}>" : null,
+                false,
+                embedBuilder);
 
             ShimakazeBot.DbCtx.TimedEvents.RemoveRange(
                ShimakazeBot.DbCtx.TimedEvents.Where(tE => tE.Id == tEvent.dbEvent.Id));

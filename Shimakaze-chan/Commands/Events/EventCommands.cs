@@ -37,17 +37,17 @@ namespace Shimakaze
             int id;
             if (!Int32.TryParse(idString, out id))
             {
-                await ctx.RespondAsync($"invalid event ID. {idString} is not a proper id number.");
+                await CTX.RespondSanitizedAsync(ctx, $"invalid event ID. {idString} is not a proper id number.");
                 return;
             }
 
             if (await ShimakazeBot.events.RemoveTimerEvent(id))
             {
-                await ctx.RespondAsync($"Sucessfully stopped and removed the event with ID #{id}.");
+                await CTX.RespondSanitizedAsync(ctx, $"Sucessfully stopped and removed the event with ID #{id}.");
             }
             else
             {
-                await ctx.RespondAsync($"No event was found that matched ID #{id}.");
+                await CTX.RespondSanitizedAsync(ctx, $"No event was found that matched ID #{id}.");
             }
         }
 
@@ -63,12 +63,12 @@ namespace Shimakaze
                 ctx, type, formattedData.message, formattedData.dateTime);
             if (id < 0)
             {
-                await ctx.RespondAsync(
+                await CTX.RespondSanitizedAsync(ctx, 
                     $"Database didn't make an ID, the {(type == EventType.EVENT ? "event" : "reminder")}" +
                     $" was probably created but good luck removing it now.");
                 return;
             }
-            await ctx.RespondAsync($"{(type == EventType.EVENT ? "Event" : "Reminder")} created with id #{id}");
+            await CTX.RespondSanitizedAsync(ctx, $"{(type == EventType.EVENT ? "Event" : "Reminder")} created with id #{id}");
         }
 
 
@@ -103,7 +103,7 @@ namespace Shimakaze
                     }
                     else
                     {
-                        await ctx.RespondAsync("Invalid date format");
+                        await CTX.RespondSanitizedAsync(ctx, "Invalid date format");
                         return null;
                     }
                 }
@@ -136,13 +136,13 @@ namespace Shimakaze
                     }
                     else
                     {
-                        await ctx.RespondAsync("Invalid time format");
+                        await CTX.RespondSanitizedAsync(ctx, "Invalid time format");
                         return null;
                     }
                 }
                 else if (noDate)
                 {
-                    await ctx.RespondAsync("No date or time provided");
+                    await CTX.RespondSanitizedAsync(ctx, "No date or time provided");
                     return null;
                 }
 

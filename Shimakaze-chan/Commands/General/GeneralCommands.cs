@@ -1,5 +1,6 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,7 +12,7 @@ namespace Shimakaze
     {
         [Command("f")]
         [Aliases("pressf")]
-        public async Task PressF(CommandContext ctx)
+        public async Task PressF(CommandContext ctx, [RemainingText] string unusedSuffix)
         {
             var DbItem = await ShimakazeBot.DbCtx.ShimaGeneric.FindAsync(ShimaConsts.DbPressFKey);
             int totalFCount;
@@ -19,8 +20,14 @@ namespace Shimakaze
             {
                 totalFCount = 0;
             }
+            DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
+                .WithTitle("🇫")
+                .WithAuthor($"{(ctx.Guild == null ? ctx.User.Username : ctx.Member.DisplayName)}" +
+                " has paid their respects.", null, ctx.User.AvatarUrl)
+                .WithDescription($"Today: **{++ShimakazeBot.DailyFCount}**" +
+                $"\nTotal: **{++totalFCount}**");
 
-            await ctx.RespondAsync($"total: {++totalFCount} - daily: {++ShimakazeBot.DailyFCount}");
+            await CTX.RespondSanitizedAsync(ctx, null, false, embedBuilder);
 
             if (DbItem == null)
             {
