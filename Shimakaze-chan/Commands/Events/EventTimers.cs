@@ -52,6 +52,11 @@ namespace Shimakaze
             return AddAndStartEvent(EventInTimer.MakeTimer(tEvent), tEvent.Id) ? tEvent.Id : -1;
         }
 
+        public async Task<EventInTimer> GetEvent(int id)
+        {
+            return events.Find(eT => eT.dbEvent != null && eT.dbEvent.Id == id);
+        }
+
         public async Task<bool> RemoveEvent(int id)
         {
             var tEvent = events.Find(eT => eT.dbEvent != null && eT.dbEvent.Id == id);

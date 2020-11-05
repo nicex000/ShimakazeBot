@@ -1,5 +1,6 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,14 +42,32 @@ namespace Shimakaze
                 return;
             }
 
-            if (await ShimakazeBot.events.RemoveTimerEvent(id))
+            var tEvent = await ShimakazeBot.events.GetTimerEvent(id);
+
+            if (tEvent != null)
             {
-                await CTX.RespondSanitizedAsync(ctx, $"Sucessfully stopped and removed the event with ID #{id}.");
+                if (tEvent.dbEvent.UserId != ctx.User.Id &&
+                   !ShimakazeBot.Client.CurrentApplication.Owners.ToList().Any(user => user.Id == ctx.User.Id))
+                {
+                    await CTX.RespondSanitizedAsync(ctx,
+                        "You're not allowed to remove" +
+                        $" {(tEvent.dbEvent.Type == EventType.EVENT ? "events" : "reminders")} that you didn't create." +
+                        (tEvent.dbEvent.Type == EventType.EVENT ?
+                            $"\n<@{tEvent.dbEvent.UserId}> created this event." : ""),
+                        false,
+                        null,
+                        new List<IMention>() { });
+                    return;
+                }
+
+                if (await ShimakazeBot.events.RemoveTimerEvent(id))
+                {
+                    await CTX.RespondSanitizedAsync(ctx, $"Sucessfully stopped and removed the event with ID #{id}.");
+                    return;
+                }
             }
-            else
-            {
-                await CTX.RespondSanitizedAsync(ctx, $"No event was found that matched ID #{id}.");
-            }
+
+            await CTX.RespondSanitizedAsync(ctx, $"No event was found that matched ID #{id}.");
         }
 
         private async Task AddEventAsync(CommandContext ctx, string suffix, EventType type)

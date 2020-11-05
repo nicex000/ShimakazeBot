@@ -18,7 +18,7 @@ namespace Shimakaze
         public ulong channelId { get; set; }
     }
 
-    class EventInTimer : Timer
+    public class EventInTimer : Timer
     {
         public TimedEvent dbEvent { get; private set; }
 

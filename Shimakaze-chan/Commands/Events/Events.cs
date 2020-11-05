@@ -29,6 +29,11 @@ namespace Shimakaze
         {
             return await timers.AddEvent(ctx, type, message, eventTime, channelId);
         }
+ 
+        public async Task<EventInTimer> GetTimerEvent(int id)
+        {
+            return await timers.GetEvent(id);
+        }
 
         public async Task<bool> RemoveTimerEvent(int id)
         {
