@@ -372,10 +372,11 @@ namespace Shimakaze
         {
             if (!ShimakazeBot.Client.CurrentApplication.Owners.Contains(ctx.User))
             {
-                await CTX.RespondSanitizedAsync(ctx, "Ok, I understand... I'm no longer wanted here. I'm sorry 😢\n*Runs away*");
+                await CTX.RespondSanitizedAsync(ctx,
+                    "Ok, I understand... I'm no longer wanted here. I'm sorry 😢\n*Runs away*");
             }
             ShimakazeBot.SendToDebugRoom(
-                    $"Left **{ctx.Guild.Name}** ({ctx.Guild.Id}). Triggered by **{ctx.User.Username}** ({ctx.User.Id})");
+                $"Left **{ctx.Guild.Name}** ({ctx.Guild.Id}). Triggered by **{ctx.User.Username}** ({ctx.User.Id})");
 
             await ctx.Guild.LeaveAsync();
         }
