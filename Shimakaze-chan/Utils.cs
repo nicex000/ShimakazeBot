@@ -127,10 +127,8 @@ namespace Shimakaze
                 author.AvatarUrl,
                 title, color, footer, timestamp);
             }
-            else
-            {
-                return BaseEmbedBuilder(ctx, null, null, title, color, footer, timestamp);
-            }
+
+            return BaseEmbedBuilder(ctx, null, null, title, color, footer, timestamp);
         }
 
         public static DiscordEmbedBuilder BaseEmbedBuilder(
