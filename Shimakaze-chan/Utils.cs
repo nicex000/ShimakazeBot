@@ -114,23 +114,21 @@ namespace Shimakaze
             CommandContext ctx, DiscordUser author = null, string title = null, DiscordColor? color = null,
             string footer = null, DateTime? timestamp = null)
         {
-            if (author != null)
+            if (author == null)
             {
-                if (color == null && ctx.Guild != null && ctx.Guild.Members.ContainsKey(author.Id))
-                {
-                    color = ctx.Guild.Members[author.Id].Color;
-                }
-                return BaseEmbedBuilder(ctx,
+                return BaseEmbedBuilder(ctx, null, null, title, color, footer, timestamp);
+            }
+
+            if (color == null && ctx.Guild != null && ctx.Guild.Members.ContainsKey(author.Id))
+            {
+                color = ctx.Guild.Members[author.Id].Color;
+            }
+            return BaseEmbedBuilder(ctx,
                 (ctx.Guild == null || !ctx.Guild.Members.ContainsKey(author.Id)) ?
                         $"{author.Username}#{author.Discriminator} ({author.Id})" :
                         $"{ctx.Guild.Members[author.Id].DisplayName} ({author.Id})",
                 author.AvatarUrl,
                 title, color, footer, timestamp);
-            }
-            else
-            {
-                return BaseEmbedBuilder(ctx, null, null, title, color, footer, timestamp);
-            }
         }
 
         public static DiscordEmbedBuilder BaseEmbedBuilder(

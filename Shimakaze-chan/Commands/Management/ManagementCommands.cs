@@ -158,10 +158,9 @@ namespace Shimakaze
             string[] suffixArray = suffix?.Split(" ");
             List<ulong> usersToPurge = new List<ulong>();
             string usersToPurgeString = "";
-            if (suffixArray.Length > 1 )
+            if (suffixArray.Length > 1)
             {
                 usersToPurge = Utils.GetIdListFromArray(ctx.Message.MentionedUsers, suffixArray.Skip(1).ToArray());
-
 
                 foreach (var id in usersToPurge)
                 {
@@ -178,8 +177,7 @@ namespace Shimakaze
             }
 
             int purgeAmount;
-            if (!Int32.TryParse(suffixArray[0], out purgeAmount) || 
-                purgeAmount <= 0)
+            if (!Int32.TryParse(suffixArray[0], out purgeAmount) || purgeAmount <= 0)
             {
                 await CTX.RespondSanitizedAsync(ctx, $"{suffixArray[0]} is not a valid number between 1 and 100.");
                 return;
@@ -276,7 +274,7 @@ namespace Shimakaze
             if (ctx.Guild.Members.ContainsKey(userIds[0]))
             {
                 ShimakazeBot.DbCtx.GuildWarn.RemoveRange(ShimakazeBot.DbCtx.GuildWarn.Where(g =>
-                g.UserId == userIds[0] && g.GuildId == ctx.Guild.Id));
+                    g.UserId == userIds[0] && g.GuildId == ctx.Guild.Id));
 
                 await CTX.RespondSanitizedAsync(ctx, "Successfully removed all warnsings for " +
                     $"**{ctx.Guild.Members[userIds[0]].DisplayName}**.");
@@ -361,7 +359,7 @@ namespace Shimakaze
         [Aliases("setnick", "changenickname", "changenick")]
         public async Task SetNickname(CommandContext ctx, [RemainingText] string nickname)
         {
-            var bot = await ctx.Guild.GetMemberAsync(ctx.Client.CurrentUser.Id).ConfigureAwait(false);
+            var bot = await ctx.Guild.GetMemberAsync(ctx.Client.CurrentUser.Id);
             await bot.ModifyAsync((member) => member.Nickname = nickname);
             await CTX.RespondSanitizedAsync(ctx, "Nickname " + (string.IsNullOrWhiteSpace(nickname) ?
                 $"removed.": $"changed to **{nickname}**."));
@@ -374,10 +372,11 @@ namespace Shimakaze
         {
             if (!ShimakazeBot.Client.CurrentApplication.Owners.Contains(ctx.User))
             {
-                await CTX.RespondSanitizedAsync(ctx, "Ok, I understand... I'm no longer wanted here. I'm sorry 😢\n*Runs away*");
+                await CTX.RespondSanitizedAsync(ctx,
+                    "Ok, I understand... I'm no longer wanted here. I'm sorry 😢\n*Runs away*");
             }
             ShimakazeBot.SendToDebugRoom(
-                    $"Left **{ctx.Guild.Name}** ({ctx.Guild.Id}). Triggered by **{ctx.User.Username}** ({ctx.User.Id})");
+                $"Left **{ctx.Guild.Name}** ({ctx.Guild.Id}). Triggered by **{ctx.User.Username}** ({ctx.User.Id})");
 
             await ctx.Guild.LeaveAsync();
         }
