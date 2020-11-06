@@ -51,10 +51,22 @@ namespace Shimakaze
                             ShimakazeBot.Config.lavalink.port),
 
                     }).ConfigureAwait(false);
+
+                    ShimakazeBot.lvn.Disconnected += LavalinkDisconnected;
+                    ShimakazeBot.lvn.LavalinkSocketErrored += LavalinkErrored;
                 }
                 catch (Exception e)
                 {
-                    await CTX.RespondSanitizedAsync(ctx, e.ToString());
+                    if (e.Message == "Unable to connect to the remote server")
+                    {
+                        await CTX.RespondSanitizedAsync(ctx,
+                            "Lavalink is dead. Please try again in a few minutes.");
+                    }
+                    else
+                    {
+                        await CTX.RespondSanitizedAsync(ctx, $"**Unknown error.**\n{e}");
+                    }
+                    throw;
                 }
 
             var lvc = ShimakazeBot.lvn.GetConnection(ctx.Guild);
@@ -91,7 +103,16 @@ namespace Shimakaze
             }
             catch (Exception e)
             {
-                await CTX.RespondSanitizedAsync(ctx, debugResponse + e.ToString());
+                if (e.Message.Contains("The WebSocket is in an invalid state ('Aborted')"))
+                {
+                    await CTX.RespondSanitizedAsync(ctx,
+                           "Lavalink is dead. Please try again in a few minutes." +
+                           $"\n{debugResponse}");
+                }
+                else
+                {
+                    await CTX.RespondSanitizedAsync(ctx, $"{debugResponse}\n**Unknown error**\n{e}");
+                }
                 throw;
             }
 
@@ -596,6 +617,26 @@ namespace Shimakaze
             return true;
         }
 
+        private Task LavalinkDisconnected(NodeDisconnectedEventArgs e)
+        {
+            ShimakazeBot.SendToDebugRoom("Lavalink disconnected.");
+
+            ShimakazeBot.lvn.LavalinkSocketErrored -= LavalinkErrored;
+            ShimakazeBot.lvn.Disconnected -= LavalinkDisconnected;
+            ShimakazeBot.lvn = null;
+            return Task.CompletedTask;
+        }
+
+        private Task LavalinkErrored(DSharpPlus.EventArgs.SocketErrorEventArgs e)
+        {
+            ShimakazeBot.SendToDebugRoom("<@155038222794227712> <@122069680499195904>" +
+                $" Lavalink died:\n{e.Exception?.Message}");
+
+            ShimakazeBot.lvn.LavalinkSocketErrored -= LavalinkErrored;
+            ShimakazeBot.lvn.Disconnected -= LavalinkDisconnected;
+            ShimakazeBot.lvn = null;
+            return Task.CompletedTask;
+        }
 
         private Task DiscordSocketClosed(WebSocketCloseEventArgs e)
         {
