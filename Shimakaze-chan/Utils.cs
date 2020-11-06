@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading;
 using System;
 using System.Threading.Tasks;
+using System.Net.Http;
+using Newtonsoft.Json.Linq;
 
 namespace Shimakaze
 {
@@ -100,6 +102,31 @@ namespace Shimakaze
             }
 
             return roles;
+        }
+    }
+
+    public static class ShimaHttpClient
+    {
+        private static HttpClient Client = new HttpClient();
+
+        public static async Task<JObject> HttpGet(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return null;
+            }
+            try
+            {
+                var response = await Client.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+                string objectString = await response.Content.ReadAsStringAsync();
+                return JObject.Parse(objectString);
+            }
+            catch (Exception e)
+            {
+                ShimakazeBot.SendToDebugRoom($"Http GET failed.\nURL: **{url}**\nError: **{e.Message}**");
+                return null;
+            }
         }
     }
 
