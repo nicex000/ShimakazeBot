@@ -27,7 +27,7 @@ namespace Shimakaze.Attributes
                 return false;
             }
 
-            if (app.Owners.Any(x => x.Id == ctx.User.Id))
+            if (help || app.Owners.Any(x => x.Id == ctx.User.Id))
             {
                 return true;
             }

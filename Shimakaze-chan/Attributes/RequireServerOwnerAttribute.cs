@@ -29,7 +29,7 @@ namespace Shimakaze.Attributes
             var app = ctx.Client.CurrentApplication;
             if (app != null)
             {
-                bool success = ctx.Member == ctx.Guild.Owner || app.Owners.Any(x => x.Id == ctx.User.Id);
+                bool success = help || ctx.Member == ctx.Guild.Owner || app.Owners.Any(x => x.Id == ctx.User.Id);
                 if (!success && !string.IsNullOrWhiteSpace(failMessage))
                 {
                     await CTX.RespondSanitizedAsync(ctx, failMessage);

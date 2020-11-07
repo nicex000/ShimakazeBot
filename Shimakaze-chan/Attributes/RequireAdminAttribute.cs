@@ -43,7 +43,7 @@ namespace Shimakaze.Attributes
                 return false;
             }
 
-            if (user.Id == ctx.Guild.Owner.Id || app.Owners.Any(x => x.Id == ctx.User.Id))
+            if (help || user.Id == ctx.Guild.Owner.Id || app.Owners.Any(x => x.Id == ctx.User.Id))
             {
                 return true;
             }
@@ -54,10 +54,12 @@ namespace Shimakaze.Attributes
                 return true;
             }
 
-            if (!string.IsNullOrWhiteSpace(failMessage)) await CTX.RespondSanitizedAsync(ctx, failMessage);
+            if (!string.IsNullOrWhiteSpace(failMessage))
             {
-                return false;
+                await CTX.RespondSanitizedAsync(ctx, failMessage);
             }
+            
+            return false;
         }
     }
 }
