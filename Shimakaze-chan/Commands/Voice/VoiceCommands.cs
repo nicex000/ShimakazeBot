@@ -26,7 +26,8 @@ namespace Shimakaze
             var existingJoin = ShimakazeBot.DbCtx.GuildJoin.FirstOrDefault(p => p.GuildId == ctx.Guild.Id);
             if (existingJoin == null)
             {
-                await ShimakazeBot.DbCtx.GuildJoin.AddAsync(new GuildJoin { GuildId = ctx.Guild.Id, ChannelId = ctx.Channel.Id });
+                await ShimakazeBot.DbCtx.GuildJoin.AddAsync(
+                    new GuildJoin { GuildId = ctx.Guild.Id, ChannelId = ctx.Channel.Id });
             }
             else
             {
@@ -345,7 +346,8 @@ namespace Shimakaze
             lavalinkLoadResult = songName.StartsWith("http")
                 ? await ShimakazeBot.lvn.Rest.GetTracksAsync(new Uri(songName))
                 : songName.StartsWith("local") ?
-                    await ShimakazeBot.lvn.Rest.GetTracksAsync(new FileInfo(songName.Substring(songName.IndexOf("local ")+6))) :
+                    await ShimakazeBot.lvn.Rest.GetTracksAsync(
+                        new FileInfo(songName.Substring(songName.IndexOf("local ")+6))) :
                     await ShimakazeBot.lvn.Rest.GetTracksAsync(songName);
 
             switch (lavalinkLoadResult.LoadResultType)
@@ -357,8 +359,8 @@ namespace Shimakaze
                         ctx.Member.DisplayName, ctx.Member, ctx.Channel, track));
                     break;
                 case LavalinkLoadResultType.PlaylistLoaded:
-                    ShimakazeBot.playlists[ctx.Guild].songRequests.AddRange(lavalinkLoadResult.Tracks.Select(t => new SongRequest(
-                        ctx.Member.DisplayName, ctx.Member, ctx.Channel, t)));
+                    ShimakazeBot.playlists[ctx.Guild].songRequests.AddRange(lavalinkLoadResult.Tracks.Select(t => 
+                    new SongRequest(ctx.Member.DisplayName, ctx.Member, ctx.Channel, t)));
                     break;
                 case LavalinkLoadResultType.NoMatches:
                     await CTX.RespondSanitizedAsync(ctx, "No matches found.");
@@ -384,7 +386,8 @@ namespace Shimakaze
                     $"Requested by *{ctx.Member.DisplayName}*";
             }
 
-            if (lavalinkLoadResult.Tracks.Count() > 1)
+            if (lavalinkLoadResult.LoadResultType == LavalinkLoadResultType.PlaylistLoaded &&
+                lavalinkLoadResult.Tracks.Count() > 1)
             {
                 responseString += "\nAlso added " +
                     $"**{lavalinkLoadResult.Tracks.Count() - 1}** more songs to the queue.";
@@ -480,21 +483,24 @@ namespace Shimakaze
             {
                 loopCount = 1;
             }
-            else if (!int.TryParse(loopString, out loopCount) || loopCount < 0 || loopCount > ShimaConsts.MaxSongLoopCount)
+            else if (!int.TryParse(loopString, out loopCount) ||
+                loopCount < 0 || loopCount > ShimaConsts.MaxSongLoopCount)
             {
-                await CTX.RespondSanitizedAsync(ctx, $"Please type a number between **0** and **{ShimaConsts.MaxSongLoopCount}**");
+                await CTX.RespondSanitizedAsync(ctx,
+                    $"Please type a number between **0** and **{ShimaConsts.MaxSongLoopCount}**");
                 return;
             }
             if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 0)
             {
                 if (ShimakazeBot.playlists[ctx.Guild].loopCount > 0 && loopCount == 0)
                 {
-                    await CTX.RespondSanitizedAsync(ctx, $"**{ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title}** " +
-                        "will no longer loop.");
+                    await CTX.RespondSanitizedAsync(ctx,
+                        $"**{ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title}** will no longer loop.");
                 }
                 else if (loopCount > 0)
                 {
-                    await CTX.RespondSanitizedAsync(ctx, $"Set **{ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title}** " +
+                    await CTX.RespondSanitizedAsync(ctx,
+                        $"Set **{ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title}** " +
                         $"to loop {loopCount} time{(loopCount > 1 ? "s" : "")}.");
                 }
                 else
@@ -528,7 +534,8 @@ namespace Shimakaze
                 {
                     ShimakazeBot.playlists[e.Player.Guild].songRequests[0].requestedChannel.SendMessageAsync(
                         ShimakazeBot.playlists[e.Player.Guild].songRequests[0].requestMember.Mention +
-                        "Lavalink failed... Shima will leave the voice channel. Don't worry your playlist has been saved. You can make her rejoin." +
+                        "Lavalink failed... Shima will leave the voice channel. " +
+                        "Don't worry your playlist has been saved. You can make her rejoin." +
                         (ShimakazeBot.shouldSendToDebugRoom ? " The devs have been notified." : ""));
                     ForceLeave(e.Player.Guild);
                 }
@@ -566,7 +573,8 @@ namespace Shimakaze
             ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
                 LogMessageSources.PLAYLIST_NEXT_EVENT,
                 $"{e.Reason} - " +
-                $"{ShimakazeBot.playlists[e.Player.Guild].songRequests.Count} songs remaining in {e.Player.Guild.Name}.",
+                    $"{ShimakazeBot.playlists[e.Player.Guild].songRequests.Count} " +
+                    $"songs remaining in {e.Player.Guild.Name}.",
                 DateTime.Now);
 
             if (ShimakazeBot.playlists[e.Player.Guild].songRequests.Count > 0)
