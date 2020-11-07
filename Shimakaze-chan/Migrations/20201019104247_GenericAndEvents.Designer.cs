@@ -67,7 +67,8 @@ namespace Shimakaze_chan.Migrations
             modelBuilder.Entity("ShimaGeneric", b =>
                 {
                     b.Property<string>("Key")
-                        .HasColumnType("text");
+                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(200);
 
                     b.Property<string>("Value")
                         .HasColumnType("text");
@@ -105,7 +106,8 @@ namespace Shimakaze_chan.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Message")
-                        .HasColumnType("text");
+                        .HasColumnType("character varying(2000)")
+                        .HasMaxLength(2000);
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");

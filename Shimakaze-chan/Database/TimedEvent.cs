@@ -11,6 +11,7 @@ public class TimedEvent
     public int Id { get; set; }
     public EventType Type { get; set; }
     public DateTime EventTime { get; set; }
+    [MaxLength(2000)]
     public string Message { get; set; }
     public ulong ChannelId { get; set; }
     public ulong UserId { get; set; }

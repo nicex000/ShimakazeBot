@@ -12,7 +12,7 @@ namespace Shimakaze_chan.Migrations
                 name: "ShimaGeneric",
                 columns: table => new
                 {
-                    Key = table.Column<string>(nullable: false),
+                    Key = table.Column<string>(maxLength: 200, nullable: false),
                     Value = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
@@ -28,7 +28,7 @@ namespace Shimakaze_chan.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Type = table.Column<int>(nullable: false),
                     EventTime = table.Column<DateTime>(nullable: false),
-                    Message = table.Column<string>(nullable: true),
+                    Message = table.Column<string>(maxLength: 2000, nullable: true),
                     ChannelId = table.Column<decimal>(nullable: false),
                     UserId = table.Column<decimal>(nullable: false)
                 },
