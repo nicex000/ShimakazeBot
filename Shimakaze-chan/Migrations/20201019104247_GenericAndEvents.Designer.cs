@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Shimakaze;
@@ -9,9 +10,10 @@ using Shimakaze;
 namespace Shimakaze_chan.Migrations
 {
     [DbContext(typeof(ShimaContext))]
-    partial class ShimaContextModelSnapshot : ModelSnapshot
+    [Migration("20201019104247_GenericAndEvents")]
+    partial class GenericAndEvents
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,31 +64,6 @@ namespace Shimakaze_chan.Migrations
                     b.ToTable("GuildSelfAssign");
                 });
 
-            modelBuilder.Entity("GuildWarn", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<decimal>("GuildId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<DateTime>("TimeStamp")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<decimal>("UserId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<string>("WarnMessage")
-                        .HasColumnType("character varying(2000)")
-                        .HasMaxLength(2000);
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GuildWarn");
-                });
-
             modelBuilder.Entity("ShimaGeneric", b =>
                 {
                     b.Property<string>("Key")
@@ -127,12 +104,6 @@ namespace Shimakaze_chan.Migrations
 
                     b.Property<DateTime>("EventTime")
                         .HasColumnType("timestamp without time zone");
-
-                    b.Property<decimal[]>("MentionRoleIdList")
-                        .HasColumnType("numeric[]");
-
-                    b.Property<decimal[]>("MentionUserIdList")
-                        .HasColumnType("numeric[]");
 
                     b.Property<string>("Message")
                         .HasColumnType("character varying(2000)")

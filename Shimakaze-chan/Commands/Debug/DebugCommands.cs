@@ -2,11 +2,21 @@
 using DSharpPlus.CommandsNext;
 using System.Linq;
 using System.Threading.Tasks;
+using DSharpPlus;
 
 namespace Shimakaze
 {
     class DebugCommands : Commands
     {
+        [Command("channelinfo")]
+        [Description("Gets some debug info about user manage messages permissions for channel and server")]
+        public async Task GetChannelInfo(CommandContext ctx)
+        {
+            await CTX.RespondSanitizedAsync(ctx, $"Channel id: {ctx.Channel.Id}\n" + 
+                                   $"Server manage messages perms: {(ctx.Member.Guild.Permissions & Permissions.ManageMessages) != 0}\n" +
+                                   $"Channel manage messages perms: {(ctx.Channel.PermissionsFor(ctx.Member) & Permissions.ManageMessages) != 0}");
+        }
+
         [Command("debug")]
         [Attributes.RequireAdmin]
         [Aliases("supadebug", "sd", "スーパーデバッグモード")]

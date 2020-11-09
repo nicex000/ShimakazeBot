@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Shimakaze;
@@ -9,9 +10,10 @@ using Shimakaze;
 namespace Shimakaze_chan.Migrations
 {
     [DbContext(typeof(ShimaContext))]
-    partial class ShimaContextModelSnapshot : ModelSnapshot
+    [Migration("20201103120334_ManagementCommands")]
+    partial class ManagementCommands
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -87,20 +89,6 @@ namespace Shimakaze_chan.Migrations
                     b.ToTable("GuildWarn");
                 });
 
-            modelBuilder.Entity("ShimaGeneric", b =>
-                {
-                    b.Property<string>("Key")
-                        .HasColumnType("character varying(200)")
-                        .HasMaxLength(200);
-
-                    b.Property<string>("Value")
-                        .HasColumnType("text");
-
-                    b.HasKey("Key");
-
-                    b.ToTable("ShimaGeneric");
-                });
-
             modelBuilder.Entity("StreamingGuild", b =>
                 {
                     b.Property<decimal>("GuildId")
@@ -113,40 +101,6 @@ namespace Shimakaze_chan.Migrations
                     b.HasKey("GuildId");
 
                     b.ToTable("StreamingGuild");
-                });
-
-            modelBuilder.Entity("TimedEvent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<decimal>("ChannelId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<DateTime>("EventTime")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<decimal[]>("MentionRoleIdList")
-                        .HasColumnType("numeric[]");
-
-                    b.Property<decimal[]>("MentionUserIdList")
-                        .HasColumnType("numeric[]");
-
-                    b.Property<string>("Message")
-                        .HasColumnType("character varying(2000)")
-                        .HasMaxLength(2000);
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("UserId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TimedEvents");
                 });
 
             modelBuilder.Entity("UserPermissionLevel", b =>

@@ -1,4 +1,5 @@
 ﻿using DSharpPlus;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
@@ -8,9 +9,10 @@ using System.Threading.Tasks;
 
 namespace Shimakaze
 {
-    class Events
+    public class Events
     {
         private DateTime socketCloseTime = new DateTime(0);
+        private EventTimers timers = new EventTimers();
         public void LoadEvents()
         {
             ShimakazeBot.Client.Ready += DiscordReady;
@@ -22,6 +24,21 @@ namespace Shimakaze
             ShimakazeBot.Client.SocketErrored += SocketErrored;
         }
 
+        public async Task<int> AddTimerEvent(CommandContext ctx, EventType type, string message, DateTime eventTime,
+            ulong channelId = 0)
+        {
+            return await timers.AddEvent(ctx, type, message, eventTime, channelId);
+        }
+ 
+        public async Task<EventInTimer> GetTimerEvent(int id)
+        {
+            return await timers.GetEvent(id);
+        }
+
+        public async Task<bool> RemoveTimerEvent(int id)
+        {
+            return await timers.RemoveEvent(id);
+        }
 
         private Task SocketClosed(SocketCloseEventArgs e)
         {
@@ -47,6 +64,8 @@ namespace Shimakaze
                 new DiscordActivity("out for abyssals with Rensouhou-chan",
                 ActivityType.Watching),
                 UserStatus.Online);
+
+            timers.InitializeTimers();
         }
 
         private Task DiscordResumed(ReadyEventArgs e)

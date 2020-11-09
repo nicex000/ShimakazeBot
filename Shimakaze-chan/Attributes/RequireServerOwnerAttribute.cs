@@ -20,6 +20,12 @@ namespace Shimakaze.Attributes
 
         public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
         {
+            CannotBeUsedInDMAttribute checkDM = new CannotBeUsedInDMAttribute();
+            if (!await checkDM.ExecuteCheckAsync(ctx, help))
+            {
+                return false;
+            }
+
             var app = ctx.Client.CurrentApplication;
             if (app != null)
             {
