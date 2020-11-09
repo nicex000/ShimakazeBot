@@ -32,5 +32,9 @@
     "lovelive": "A path to love live music folder",
     "idolmaster": "A path to im@s music folder",
     "teamspeak": "TeamSpeak/"
+  },
+
+  "apiKeys": {
+    "imgurClientId": "Insert your imgur clientID"
   }
 }

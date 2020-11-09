@@ -41,12 +41,18 @@ namespace Shimakaze
         public string idolmaster;
         public string teamspeak;
     }
+    
+    public struct APIKeys
+    {
+        public string imgurClientId;
+    }
     public struct ShimaConfig
     {
         public SettingsConfig settings;
         public DatabaseConfig database;
         public LavalinkConfig lavalink;
         public AudioPaths audioPaths;
+        public APIKeys apiKeys;
 
         public static ShimaConfig LoadConfig()
         {

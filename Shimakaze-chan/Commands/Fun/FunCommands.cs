@@ -4,6 +4,7 @@ using DSharpPlus.Entities;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace Shimakaze
@@ -89,6 +90,39 @@ namespace Shimakaze
                    .WithTimestamp(null));
         }
 
+        [Command("dice")]
+        [Aliases("roll", "rolz")]
+        public async Task Dice(CommandContext ctx, [RemainingText] string suffix)
+        {
+            JObject response = await ShimaHttpClient.HttpGet($"https://rolz.org/api/?{suffix}.json");
+            if (response == null)
+            {
+                await CTX.RespondSanitizedAsync(ctx, "The dice fell under the table...");
+                return;
+            }
+            if (string.IsNullOrEmpty(response["result"].Value<string>()) ||
+                response["result"].Value<string>().StartsWith("Error"))
+            {
+                await CTX.RespondSanitizedAsync(ctx, $"{response["result"].Value<string>()}" +
+                    "\nYou probably want to use the website for that one: https://rolz.org");
+                return;
+            }
+
+            DateTime timestamp = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                .AddSeconds(response["timestamp"].Value<long>());
+            DiscordEmbedBuilder embed = Utils.BaseEmbedBuilder(ctx, null,
+                null, null, null, timestamp)
+                .WithAuthor(response["result"].Value<string>(), "https://rolz.org", "https://rolz.org/img/n3-d20.png")
+                .AddField("Input", response["input"].Value<string>())
+                .AddField("Details", response["details"].Value<string>());
+            if (!string.IsNullOrWhiteSpace(response["code"].Value<string>()))
+            {
+                embed.AddField("Code", response["code"].Value<string>());
+            }
+
+            await CTX.RespondSanitizedAsync(ctx, null, false, embed);
+        }
+
         [Command("uselessfact")]
         [Aliases("fact")]
         public async Task UselessFact(CommandContext ctx)
@@ -101,6 +135,20 @@ namespace Shimakaze
             }
 
             await CTX.RespondSanitizedAsync(ctx, response["text"]?.Value<string>());
+        }
+
+        [Command("inspire")]
+        [Aliases("inspireme", "inspirationalquote")]
+        public async Task Inspire(CommandContext ctx)
+        {
+            JObject response = await ShimaHttpClient.HttpGet("https://inspirobot.me/api?generate=true");
+            if (response == null)
+            {
+                await CTX.RespondSanitizedAsync(ctx, "help viscocchi");
+                return;
+            }
+
+            await CTX.RespondSanitizedAsync(ctx, $"|| {response["data"]?.Value<string>()} ||");
         }
 
         [Command("leetspeak")]
@@ -165,6 +213,39 @@ namespace Shimakaze
                    .WithImageUrl(image["url"]?.Value<string>()));
         }
 
+        [Command("randommeme")]
+        [Aliases("meme")]
+        public async Task RandomMeme(CommandContext ctx)
+        {
+            JObject response = await ShimaHttpClient.HttpGet(
+                $"https://api.imgur.com/3/g/memes/viral/{ThreadSafeRandom.ThisThreadsRandom.Next(1,9)}",
+                new AuthenticationHeaderValue("Client-ID", ShimakazeBot.Config.apiKeys.imgurClientId));
+            JToken item = null;
+            if (response != null && response["data"].HasValues)
+            {
+                int size = response["data"].Children().Count();
+                item = response["data"].Children().ToArray()[ThreadSafeRandom.ThisThreadsRandom.Next(0, size)];
+            }
+            if (item == null)
+            {
+                await CTX.RespondSanitizedAsync(ctx, "The meme factory has stopped working 😩");
+                return;
+            }
+
+            DateTime timestamp = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                .AddSeconds(item["datetime"].Value<long>());
+            DiscordEmbedBuilder embed = Utils.BaseEmbedBuilder(ctx, null, item["title"].Value<string>(), null,
+                item["id"].Value<string>(), timestamp)
+                .WithUrl(item["link"].Value<string>())
+                .WithImageUrl(item["link"].Value<string>());
+            if (!string.IsNullOrWhiteSpace(item["description"].Value<string>()))
+            {
+                embed.WithDescription(item["description"].Value<string>());
+            }
+
+            await CTX.RespondSanitizedAsync(ctx, null, false, embed);
+        }
+
         [Command("stroke")]
         [Aliases("ego", "strokeego")]
         [Description("Usage: stroke <first name> <last name>.\nOtherwise defaults to Chuck Norris.")]
@@ -187,6 +268,93 @@ namespace Shimakaze
             }
 
             await CTX.RespondSanitizedAsync(ctx, response["value"]?["joke"]?.Value<string>());
+        }
+
+        [Command("urbandictionary")]
+        [Aliases("urban")]
+        public async Task UrbanDictionary(CommandContext ctx, [RemainingText] string suffix)
+        {
+            if (string.IsNullOrWhiteSpace(suffix))
+            {
+                await CTX.RespondSanitizedAsync(ctx, ctx.User.Mention +
+                    ", If you actually tell me what word you want to look up that'll be great.");
+                return;
+            }
+            JObject response = await ShimaHttpClient.HttpGet(
+                $"http://api.urbandictionary.com/v0/define?term={suffix}");
+            JToken item = null;
+            if (response != null && response["list"].HasValues)
+            {
+                var items = response["list"].Children().ToList().OrderByDescending(i => i["thumbs_up"].Value<int>());
+                item = items.First();
+            }
+            if (item == null)
+            {
+                await CTX.RespondSanitizedAsync(ctx, "I burnt all the dictionaries because they were too slow 🔥🔥🔥");
+                return;
+            }
+            DiscordEmbedBuilder embed = Utils.BaseEmbedBuilder(ctx, null, item["word"].Value<string>(), null,
+                $"{item["thumbs_up"].Value<string>()}👍 - {item["thumbs_down"].Value<string>()}👎",
+                item["written_on"].Value<DateTime>())
+                .WithUrl(item["permalink"].Value<string>());
+
+            if (item["definition"].Value<string>().Length > 2048)
+            {
+                embed.WithDescription(item["definition"].Value<string>().Substring(0, 2042) + " [...]");
+            }
+            else
+            {
+                embed.WithDescription(item["definition"].Value<string>());
+            }
+            if (!string.IsNullOrWhiteSpace(item["example"].Value<string>()))
+            {
+                if (item["example"].Value<string>().Length > 1024)
+                {
+                    embed.AddField("Example", item["example"].Value<string>().Substring(0, 1018) + " [...]");
+                }
+                else
+                {
+                    embed.AddField("Example", item["example"].Value<string>());
+                }
+            }
+
+            await CTX.RespondSanitizedAsync(ctx, null, false, embed);
+        }
+
+        [Command("xkcd")]
+        public async Task XKCD(CommandContext ctx, [RemainingText] string suffix)
+        {
+            JObject latestComic = await ShimaHttpClient.HttpGet("https://xkcd.com/info.0.json");
+
+            if (latestComic == null)
+            {
+                await CTX.RespondSanitizedAsync(ctx, "The comic store is closed today ☹️");
+                return;
+            }
+            int latestN = latestComic["num"].Value<int>();
+            
+            int searchN;
+            if (string.IsNullOrWhiteSpace(suffix))
+            {
+                searchN = ThreadSafeRandom.ThisThreadsRandom.Next(0, latestN + 1);
+            }
+            else if (!int.TryParse(suffix, out searchN) || searchN > latestN)
+            {
+                await CTX.RespondSanitizedAsync(ctx, $"**{suffix}** is not a valid number between 0 and {latestN}.");
+                return;
+            }
+
+            JObject response = await ShimaHttpClient.HttpGet($"https://xkcd.com/{searchN}/info.0.json");
+            DateTime timestamp = new DateTime(
+                response["year"].Value<int>(),
+                response["month"].Value<int>(),
+                response["day"].Value<int>(), 0, 0, 0, DateTimeKind.Utc);
+
+            await CTX.RespondSanitizedAsync(ctx, null, false,
+                Utils.BaseEmbedBuilder(ctx, null, response["title"]?.Value<string>(), null, $"{searchN}", timestamp)
+                   .WithUrl($"https://xkcd.com/{searchN}")
+                   .WithImageUrl(response["img"]?.Value<string>())
+                   .WithDescription(response["alt"]?.Value<string>()));
         }
 
         [Command("yomomma")]
@@ -230,6 +398,14 @@ namespace Shimakaze
                 Utils.BaseEmbedBuilder(ctx, null as DiscordUser, response["insult"]?.Value<string>())
                    .WithTimestamp(null)
                    .WithImageUrl(FunConsts.FancyInsultImage));
+        }
+
+        [Command("mememaker")]
+        [Aliases("imgflip", "imgflipper")]
+        public async Task ImgFlipper(CommandContext ctx, [RemainingText] string unusedSuffix)
+        {
+            await CTX.RespondSanitizedAsync(ctx, "Just use the website, it's so much easier than trying to type the " +
+                "exact meme format you want\nhttps://imgflip.com/memegenerator");
         }
     }
 }
