@@ -47,6 +47,10 @@ namespace Shimakaze
             {'y', "\\`/"}
         };
 
+        public static readonly string FancyInsultImage =
+            "https://cdn.donmai.us/original/68/79/__kongou_kantai_collection_drawn_by_misumi_niku_kyu__" +
+            "68791ec3592899091779d132c06a0bba.jpg";
+
         public static string Random8BallChoice()
         {
             return EightBallChoices[ThreadSafeRandom.ThisThreadsRandom.Next(0, EightBallChoices.Length)];

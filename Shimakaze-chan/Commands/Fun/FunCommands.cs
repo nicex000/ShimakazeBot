@@ -2,7 +2,7 @@
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -68,8 +68,10 @@ namespace Shimakaze
                     ", I mean I can shake this 8ball all I want but without a question it's kinda dumb.");
                 return;
             }
-            //embed is better
-            await CTX.RespondSanitizedAsync(ctx, $"The magic 8 ball says: **{FunConsts.Random8BallChoice()}**");
+            await CTX.RespondSanitizedAsync(ctx, null, false,
+                Utils.BaseEmbedBuilder(ctx, null as DiscordUser, "The magic 8 ball says")
+                    .WithDescription($"{ FunConsts.Random8BallChoice()}")
+                    .WithTimestamp(null));
         }
 
         [Command("advice")]
@@ -81,8 +83,10 @@ namespace Shimakaze
                 await CTX.RespondSanitizedAsync(ctx, "I've run out of advice ☹️");
                 return;
             }
-            //use embed for the advice #
-            await CTX.RespondSanitizedAsync(ctx, response["slip"]?["advice"]?.Value<string>());
+            await CTX.RespondSanitizedAsync(ctx, null, false,
+                Utils.BaseEmbedBuilder(ctx, null, response["slip"]?["advice"]?.Value<string>(), null,
+                   $"#{response["slip"]?["id"]?.Value<string>()}")
+                   .WithTimestamp(null));
         }
 
         [Command("uselessfact")]
@@ -137,10 +141,11 @@ namespace Shimakaze
                 await CTX.RespondSanitizedAsync(ctx, "Kitties are gone ☹️");
                 return;
             }
-            // use embed for the image
-            await CTX.RespondSanitizedAsync(ctx, response["fact"]?.Value<string>());
             //alternatively https://cataas.com/cat
-            await CTX.RespondSanitizedAsync(ctx, image["file"]?.Value<string>());
+            await CTX.RespondSanitizedAsync(ctx, null, false,
+                Utils.BaseEmbedBuilder(ctx, null as DiscordUser, response["fact"]?.Value<string>())
+                   .WithTimestamp(null)
+                   .WithImageUrl(image["file"]?.Value<string>()));
         }
 
         [Command("dogfact")]
@@ -154,9 +159,10 @@ namespace Shimakaze
                 await CTX.RespondSanitizedAsync(ctx, "Doggos are gone ☹️");
                 return;
             }
-            // use embed for the image
-            await CTX.RespondSanitizedAsync(ctx, response["fact"]?.Value<string>());
-            await CTX.RespondSanitizedAsync(ctx, image["url"]?.Value<string>());
+            await CTX.RespondSanitizedAsync(ctx, null, false,
+                Utils.BaseEmbedBuilder(ctx, null as DiscordUser, response["fact"]?.Value<string>())
+                   .WithTimestamp(null)
+                   .WithImageUrl(image["url"]?.Value<string>()));
         }
 
         [Command("stroke")]
@@ -220,9 +226,10 @@ namespace Shimakaze
                 return;
             }
 
-            //embed image if keeping it
-            await CTX.RespondSanitizedAsync(ctx, response["insult"]?.Value<string>());
-            await CTX.RespondSanitizedAsync(ctx, "https://cdn.donmai.us/original/68/79/__kongou_kantai_collection_drawn_by_misumi_niku_kyu__68791ec3592899091779d132c06a0bba.jpg");
+            await CTX.RespondSanitizedAsync(ctx, null, false,
+                Utils.BaseEmbedBuilder(ctx, null as DiscordUser, response["insult"]?.Value<string>())
+                   .WithTimestamp(null)
+                   .WithImageUrl(FunConsts.FancyInsultImage));
         }
     }
 }
