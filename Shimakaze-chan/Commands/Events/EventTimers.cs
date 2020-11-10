@@ -1,5 +1,6 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,7 +52,7 @@ namespace Shimakaze
             return AddAndStartEvent(EventInTimer.MakeTimer(tEvent), tEvent.Id) ? tEvent.Id : -1;
         }
 
-        public async Task<EventInTimer> GetEvent(int id)
+        public EventInTimer GetEvent(int id)
         {
             return events.Find(eT => eT.dbEvent != null && eT.dbEvent.Id == id);
         }
@@ -122,9 +123,9 @@ namespace Shimakaze
         {
             if (eventInTimer == null)
             {
-                ShimakazeBot.Client.DebugLogger.LogMessage(DSharpPlus.LogLevel.Error,
-                    LogMessageSources.TIMER_EVENT_EVENT,
-                    $"Failed to make timer from event #{id}", DateTime.Now);
+                ShimakazeBot.Client.Logger.Log(LogLevel.Error,
+                    LogSources.TIMER_EVENT_EVENT,
+                    $"Failed to make timer from event #{id}");
                 return false;
             }
             events.Add(eventInTimer);
@@ -146,8 +147,8 @@ namespace Shimakaze
 
             if (tEvent.dbEvent == null)
             {
-                ShimakazeBot.Client.DebugLogger.LogMessage(DSharpPlus.LogLevel.Error,
-                    LogMessageSources.TIMER_EVENT_EVENT,"Timer had no event attached", DateTime.Now);
+                ShimakazeBot.Client.Logger.Log(LogLevel.Error,
+                    LogSources.TIMER_EVENT_EVENT,"Timer had no event attached");
                 return;
             }
 

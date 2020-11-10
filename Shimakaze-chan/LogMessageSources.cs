@@ -1,15 +1,16 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Shimakaze
 {
-    public static class LogMessageSources
+    public static class LogSources
     {
-        public const string WEBSOCKET_EVENT = "Websocket event";
-        public const string LAUNCHTIME_EVENT = "Launchtime message";
-        public const string PLAYLIST_NEXT_EVENT = "Playlist next event"; 
-        public const string COMMAND_EXECUTION_EVENT = "User command";
-        public const string TIMER_EVENT_EVENT = "Timer event";
+        public static readonly EventId WEBSOCKET_EVENT = new EventId(1, "Websocket event");
+        public static readonly EventId LAUNCHTIME_EVENT = new EventId(1, "Launchtime message");
+        public static readonly EventId PLAYLIST_NEXT_EVENT = new EventId(1, "Playlist next event"); 
+        public static readonly EventId COMMAND_EXECUTION_EVENT = new EventId(1, "User command");
+        public static readonly EventId TIMER_EVENT_EVENT = new EventId(1, "Timer event");
     }
 }

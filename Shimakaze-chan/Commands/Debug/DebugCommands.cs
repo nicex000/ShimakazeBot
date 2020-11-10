@@ -62,33 +62,33 @@ namespace Shimakaze
                 responseString += "**LavalinkGuildConnection status**\n";
 
                 responseString += "  - connected: " +
-                    (ShimakazeBot.lvn.GetConnection(ctx.Guild) != null ?
-                    ShimakazeBot.lvn.GetConnection(ctx.Guild).IsConnected.ToString() :
-                    "**GetConnection Failed**") + "\n";
+                    (ShimakazeBot.lvn.GetGuildConnection(ctx.Guild) != null ?
+                    ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).IsConnected.ToString() :
+                    "**GetGuildConnection Failed**") + "\n";
 
-                if (ShimakazeBot.lvn.GetConnection(ctx.Guild) != null &&
-                    ShimakazeBot.lvn.GetConnection(ctx.Guild).IsConnected)
+                if (ShimakazeBot.lvn.GetGuildConnection(ctx.Guild) != null &&
+                    ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).IsConnected)
                 {
                     responseString += "  - channel: " +
-                        (ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel != null ?
-                        ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel.Name +
-                        " (*" + ShimakazeBot.lvn.GetConnection(ctx.Guild).Channel.Id + "*)" :
+                        (ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).Channel != null ?
+                        ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).Channel.Name +
+                        " (*" + ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).Channel.Id + "*)" :
                         "**NULL**") + "\n";
 
                     responseString += "  - current state: ";
-                    if (ShimakazeBot.lvn.GetConnection(ctx.Guild).CurrentState != null)
+                    if (ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).CurrentState != null)
                     {
                         responseString += "\n";
                         responseString += "        - track: " +
-                            (ShimakazeBot.lvn.GetConnection(ctx.Guild).CurrentState.CurrentTrack != null ?
-                            ShimakazeBot.lvn.GetConnection(ctx.Guild).CurrentState.CurrentTrack.Title :
+                            (ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).CurrentState.CurrentTrack != null ?
+                            ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).CurrentState.CurrentTrack.Title :
                             "**not playing**") + "\n";
 
                         responseString += "        - position: " +
-                            ShimakazeBot.lvn.GetConnection(ctx.Guild).CurrentState.PlaybackPosition.ToString() + "\n";
+                            ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).CurrentState.PlaybackPosition.ToString() + "\n";
 
                         responseString += "        - last update: " +
-                            ShimakazeBot.lvn.GetConnection(ctx.Guild).CurrentState.LastUpdate.ToString() + "\n";
+                            ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).CurrentState.LastUpdate.ToString() + "\n";
 
 
                     }

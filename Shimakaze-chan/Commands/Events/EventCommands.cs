@@ -42,7 +42,7 @@ namespace Shimakaze
                 return;
             }
 
-            var tEvent = await ShimakazeBot.events.GetTimerEvent(id);
+            var tEvent = ShimakazeBot.events.GetTimerEvent(id);
 
             if (tEvent != null)
             {

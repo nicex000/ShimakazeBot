@@ -3,6 +3,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,10 +30,10 @@ namespace Shimakaze
         {
             return await timers.AddEvent(ctx, type, message, eventTime, channelId);
         }
- 
-        public async Task<EventInTimer> GetTimerEvent(int id)
+
+        public EventInTimer GetTimerEvent(int id)
         {
-            return await timers.GetEvent(id);
+            return timers.GetEvent(id);
         }
 
         public async Task<bool> RemoveTimerEvent(int id)
@@ -40,25 +41,24 @@ namespace Shimakaze
             return await timers.RemoveEvent(id);
         }
 
-        private Task SocketClosed(SocketCloseEventArgs e)
+        private Task SocketClosed(DiscordClient client, SocketCloseEventArgs e)
         {
             socketCloseTime = DateTime.Now;
             return Task.CompletedTask;
         }
-        private Task SocketErrored(SocketErrorEventArgs e)
+        private Task SocketErrored(DiscordClient client, SocketErrorEventArgs e)
         {
             socketCloseTime = socketCloseTime.Ticks == 0 ? DateTime.Now : socketCloseTime;
             return Task.CompletedTask;
         }
 
-        private async Task DiscordReady(ReadyEventArgs e)
+        private async Task DiscordReady(DiscordClient client, ReadyEventArgs e)
         {
-            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
-                LogMessageSources.LAUNCHTIME_EVENT,
+            ShimakazeBot.Client.Logger.Log(LogLevel.Information,
+                LogSources.LAUNCHTIME_EVENT,
                 "Ready" + (ShimakazeBot.Config.settings.isTest ?
                 " - Using ShimaTest" : "") +
-                $" on ShimaEngine v.{ShimaConsts.Version}",
-                DateTime.Now);
+                $" on ShimaEngine v.{ShimaConsts.Version}");
 
             await ShimakazeBot.Client.UpdateStatusAsync(
                 new DiscordActivity("out for abyssals with Rensouhou-chan",
@@ -68,18 +68,17 @@ namespace Shimakaze
             timers.InitializeTimers();
         }
 
-        private Task DiscordResumed(ReadyEventArgs e)
+        private Task DiscordResumed(DiscordClient client, ReadyEventArgs e)
         {
-            ShimakazeBot.Client.DebugLogger.LogMessage(LogLevel.Info,
-                LogMessageSources.WEBSOCKET_EVENT,
+            ShimakazeBot.Client.Logger.Log(LogLevel.Information,
+                LogSources.WEBSOCKET_EVENT,
                 "Gateway resumed" + (socketCloseTime.Ticks == 0 ? "" :
-                $" - down for {(DateTime.Now - socketCloseTime).TotalMilliseconds}ms"),
-                DateTime.Now);
+                $" - down for {(DateTime.Now - socketCloseTime).TotalMilliseconds}ms"));
             socketCloseTime = new DateTime(0);
             return Task.CompletedTask;
         }
 
-        private async Task UserPresenceUpdated(PresenceUpdateEventArgs e)
+        private async Task UserPresenceUpdated(DiscordClient client, PresenceUpdateEventArgs e)
         {
             bool streamStatusChanged = false;
             bool startedStreaming = false;
@@ -160,7 +159,7 @@ namespace Shimakaze
                     }
                 }
                 //if role is too high
-                catch (UnauthorizedException ex)
+                catch
                 {
                     ShimakazeBot.SendToDebugRoom($"Shima couldn't reach the streaming role {role.Name} " +
                         $"in {guild.Value.Name} (**{guild.Value.Id}**)");

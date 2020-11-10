@@ -3,6 +3,8 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Lavalink;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Shimakaze.Logger;
 
 namespace Shimakaze
 {
@@ -15,11 +17,10 @@ namespace Shimakaze
     {
         public override Task BeforeExecutionAsync(CommandContext ctx)
         {
-            ShimakazeBot.Client.DebugLogger.LogMessage(
-                LogLevel.Info,
-                LogMessageSources.COMMAND_EXECUTION_EVENT,
-                $"Executing {ctx.Message.Content} from {ctx.User.Username} in {ctx.Guild?.Name ?? "DM"}",
-                ctx.Message.Timestamp.DateTime);
+            ShimakazeBot.Client.Logger.Log(
+                LogLevel.Information,
+                LogSources.COMMAND_EXECUTION_EVENT,
+                $"Executing {ctx.Message.Content} from {ctx.User.Username} in {ctx.Guild?.Name ?? "DM"}");
             return Task.CompletedTask;
         }
     }
@@ -39,14 +40,17 @@ namespace Shimakaze
                 throw new System.ArgumentNullException("", "Config ain't set up properly (:");
             }
 
+            ShimaLoggerFactory loggerFactory = new ShimaLoggerFactory();
+            loggerFactory.AddProvider(new ShimaLoggerProvider());
+
             ShimakazeBot.Client = new DiscordClient(new DiscordConfiguration
             {
                 Token = ShimakazeBot.Config.settings.isTest ?
                         ShimakazeBot.Config.settings.testToken :
                         ShimakazeBot.Config.settings.liveToken,
                 TokenType = TokenType.Bot,
-                UseInternalLogHandler = true,
-                LogLevel = LogLevel.Info
+                MinimumLogLevel = LogLevel.Information,
+                LoggerFactory = loggerFactory
             });
             
             ShimakazeBot.DbCtx = new ShimaContext();
