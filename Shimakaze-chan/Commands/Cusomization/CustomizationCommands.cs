@@ -208,7 +208,7 @@ namespace Shimakaze
             }
 
             DiscordRole role = null;
-            ulong roleId = 0;
+            ulong roleId = 1;
             if (ctx.Message.MentionedRoles.Count() > 0)
             {
                 if (ctx.Message.MentionedRoles.Count() > 1)
@@ -226,6 +226,29 @@ namespace Shimakaze
                 if (ctx.Guild.Roles.ContainsKey(roleId))
                 {
                     role = ctx.Guild.Roles[roleId];
+                }
+                //specific case for disabling self assign
+                else if (roleId == 0)
+                {
+                    if (ShimakazeBot.SelfAssignRoleLimit.ContainsKey(ctx.Guild.Id))
+                    {
+                        ShimakazeBot.SelfAssignRoleLimit[ctx.Guild.Id] = 0;
+                        var guildSelfAssign = ShimakazeBot.DbCtx.GuildSelfAssign.First(p => p.GuildId == ctx.Guild.Id);
+                        guildSelfAssign.RoleId = 0;
+                        ShimakazeBot.DbCtx.GuildSelfAssign.Update(guildSelfAssign);
+                        await CTX.RespondSanitizedAsync(ctx,
+                            $"Successfully updated the configuration to disable self assigning roles.");
+                    }
+                    else
+                    {
+                        ShimakazeBot.SelfAssignRoleLimit.Add(ctx.Guild.Id, 0);
+                        await ShimakazeBot.DbCtx.GuildSelfAssign.AddAsync(
+                            new GuildSelfAssign { GuildId = ctx.Guild.Id, RoleId = 0 });
+                        await CTX.RespondSanitizedAsync(ctx,
+                            $"Successfully added the configuration to disable self assigning roles.");
+                    }
+                    await ShimakazeBot.DbCtx.SaveChangesAsync();
+                    return;
                 }
                 else
                 {
