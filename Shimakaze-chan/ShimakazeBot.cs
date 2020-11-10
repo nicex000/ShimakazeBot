@@ -32,10 +32,11 @@ namespace Shimakaze
         public static readonly DateTime applicationStartTime = DateTime.Now;
 
         public const string DbPressFKey = "PressF";
-
+        public const ulong GoodMorningEmojiId = 771418872804278303;
+        public const ulong GoodNightEmojiId = 771418873239961630;
+        
         public const string DateFormat = "d-M-y";
         public const string TimeFormat = "H:m:s";
-        
     }
 
     public static class ShimakazeBot

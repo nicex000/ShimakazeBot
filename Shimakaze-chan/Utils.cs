@@ -8,6 +8,9 @@ using System.Threading;
 using System;
 using DSharpPlus.Net;
 using System.Threading.Tasks;
+using System.Net.Http;
+using Newtonsoft.Json.Linq;
+using System.Net.Http.Headers;
 
 namespace Shimakaze
 {
@@ -195,6 +198,42 @@ namespace Shimakaze
             }
 
             return roles;
+        }
+    }
+
+    public static class ShimaHttpClient
+    {
+        private static HttpClient Client = new HttpClient();
+
+        public static async Task<JObject> HttpGet(string url, AuthenticationHeaderValue authentication = null)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return null;
+            }
+            try
+            {
+                using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, url))
+                {
+                    if (authentication != null)
+                    {
+                        requestMessage.Headers.Authorization = authentication;
+                    }
+                    var response = await Client.SendAsync(requestMessage);
+                    response.EnsureSuccessStatusCode();
+                    string objectString = await response.Content.ReadAsStringAsync();
+                    if (!objectString.StartsWith("{") && !objectString.EndsWith("}"))
+                    {
+                        objectString = $"{{\"data\":\"{objectString}\"}}";
+                    }
+                    return JObject.Parse(objectString);
+                }
+            }
+            catch (Exception e)
+            {
+                ShimakazeBot.SendToDebugRoom($"Http GET failed.\nURL: **{url}**\nError: **{e.Message}**");
+                return null;
+            }
         }
     }
 

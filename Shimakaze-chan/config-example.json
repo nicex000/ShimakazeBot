@@ -17,20 +17,24 @@
   "database": {
     "host": "127.0.0.1",
     "port": 5432,
-    "name": "ShimakazeDB",
-    "username": "postgres",
-    "password": "password"
+    "name": "Insert your database name here",
+    "username": "Insert your username here",
+    "password": "Insert your password here"
   },
 
   "lavalink": {
     "host": "localhost",
     "port": 2333,
-    "password": "mcdonalds"
+    "password": "Insert your password here"
   },
 
   "audioPaths": {
     "lovelive": "A path to love live music folder",
     "idolmaster": "A path to im@s music folder",
     "teamspeak": "TeamSpeak/"
+  },
+
+  "apiKeys": {
+    "imgurClientId": "Insert your imgur clientID"
   }
 }
