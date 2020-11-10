@@ -46,6 +46,7 @@ namespace Shimakaze
     {
         public string imgurClientId;
     }
+
     public struct ShimaConfig
     {
         public SettingsConfig settings;
