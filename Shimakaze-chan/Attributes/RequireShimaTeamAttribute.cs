@@ -20,6 +20,11 @@ namespace Shimakaze.Attributes
 
         public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
         {
+            if (help)
+            {
+                return false;
+            }
+
             var app = ctx.Client.CurrentApplication;
             if (app != null)
             {

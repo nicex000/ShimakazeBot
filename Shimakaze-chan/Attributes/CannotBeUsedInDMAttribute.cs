@@ -17,7 +17,7 @@ namespace Shimakaze.Attributes
 
             public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
             {
-                if (!(ctx.Guild is null))
+                if (ctx.Guild != null || help)
                 {
                     return true;
                 }

@@ -34,9 +34,13 @@ namespace Shimakaze.Attributes
             {
                 return false;
             }
+
+            if (help)
+            {
+                return true;
+            }
+
             var pBot = ctx.Channel.PermissionsFor(bot);
-
-
             var botSuccess = (pBot & Permissions.Administrator) != 0 || (pBot & permissions) == permissions;
 
             if (!botSuccess && string.IsNullOrWhiteSpace(failMessage))

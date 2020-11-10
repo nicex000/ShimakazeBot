@@ -166,7 +166,6 @@ namespace Shimakaze
                     await CTX.RespondSanitizedAsync(ctx, "No date or time provided");
                     return null;
                 }
-
             }
 
             //channel for event

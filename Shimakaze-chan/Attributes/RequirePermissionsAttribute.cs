@@ -39,8 +39,13 @@ namespace Shimakaze.Attributes
             {
                 return false;
             }
+            
+            if (help)
+            {
+                return true;
+            }
+            
             var pBot = ctx.Channel.PermissionsFor(bot);
-
 
             var userSuccess = user.Id == ctx.Guild.Owner.Id ||
                         ((pUser & Permissions.Administrator) != 0 || (pUser & permissions) == permissions);
