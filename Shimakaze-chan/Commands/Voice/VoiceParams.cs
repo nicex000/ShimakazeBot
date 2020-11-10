@@ -12,7 +12,8 @@ namespace Shimakaze
         public LavalinkTrack track;
         //public Guid unique;
 
-        public SongRequest(string requester, DiscordMember requestMember, DiscordChannel requestedChannel, LavalinkTrack track)
+        public SongRequest(string requester, DiscordMember requestMember, DiscordChannel requestedChannel,
+            LavalinkTrack track)
         {
             this.requester = requester;
             this.requestMember = requestMember;

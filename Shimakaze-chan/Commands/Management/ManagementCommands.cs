@@ -2,13 +2,11 @@
 using DSharpPlus.CommandsNext.Attributes;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Shimakaze.Attributes;
 using System.Threading.Tasks;
 using System.Linq;
 using DSharpPlus.Entities;
 using DSharpPlus;
-using DSharpPlus.Exceptions;
 
 namespace Shimakaze
 {
@@ -177,7 +175,7 @@ namespace Shimakaze
             }
 
             int purgeAmount;
-            if (!Int32.TryParse(suffixArray[0], out purgeAmount) || purgeAmount <= 0)
+            if (!int.TryParse(suffixArray[0], out purgeAmount) || purgeAmount <= 0)
             {
                 await CTX.RespondSanitizedAsync(ctx, $"{suffixArray[0]} is not a valid number between 1 and 100.");
                 return;

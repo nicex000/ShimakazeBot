@@ -16,13 +16,15 @@ namespace Shimakaze.Logger
         : this()
         { }
 
-        internal ShimaLogger(LogLevel minLevel = LogLevel.Information, string timestampFormat = "yyyy-MM-dd HH:mm:ss zzz")
+        internal ShimaLogger(LogLevel minLevel = LogLevel.Information,
+            string timestampFormat = "yyyy-MM-dd HH:mm:ss zzz")
         {
             MinimumLevel = minLevel;
             TimestampFormat = timestampFormat;
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
+            Func<TState, Exception, string> formatter)
         {
             if (!IsEnabled(logLevel))
                 return;

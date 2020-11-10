@@ -35,9 +35,12 @@ namespace Shimakaze
                             $"{uptime.Hours} {(uptime.Hours is 1 ? "hour, " : "hours, ")}" +
                             $"{uptime.Minutes} {(uptime.Minutes is 1 ? "minute, " : "minutes, ")}" +
                             $"{uptime.Hours} {(uptime.Seconds is 1 ? "second." : "seconds.")}");
-            await CTX.RespondSanitizedAsync(ctx, "This bot serves as a temporary hotfix compliment to the original Shimakaze's broken voicechat functions." +
-                                                 " We will notify You when we're done with rewriting mainline Shimakaze and bring all of her functionality back up. At least " +
-                                                 "the parts that were actively used, we will leave out some useless shit like cleverbot." +
+            await CTX.RespondSanitizedAsync(ctx, "This bot serves as a temporary hotfix compliment to the original " +
+                                                 "Shimakaze's broken voicechat functions." +
+                                                 " We will notify You when we're done with rewriting mainline " +
+                                                 "Shimakaze and bring all of her functionality back up. At least " +
+                                                 "the parts that were actively used, we will leave out some useless " +
+                                                 "shit like cleverbot." +
                                                  $"\nRunning ShimaEngine v.{ShimaConsts.Version}",
                 false, botInfo.Build());
         }

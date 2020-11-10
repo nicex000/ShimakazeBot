@@ -2,9 +2,6 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Shimakaze.Attributes
@@ -45,7 +42,8 @@ namespace Shimakaze.Attributes
 
             if (!botSuccess && string.IsNullOrWhiteSpace(failMessage))
             {
-                failMessage = $"**Permissions missing for {bot.DisplayName}:** {((pBot & permissions) ^ permissions).ToPermissionString()}";
+                failMessage = $"**Permissions missing for {bot.DisplayName}:** " +
+                    $"{((pBot & permissions) ^ permissions).ToPermissionString()}";
             }
 
             if (!botSuccess) await CTX.RespondSanitizedAsync(ctx, failMessage);

@@ -4,7 +4,6 @@ using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Shimakaze
@@ -36,7 +35,7 @@ namespace Shimakaze
         public async Task RemoveEvent(CommandContext ctx, [RemainingText] string idString)
         {
             int id;
-            if (!Int32.TryParse(idString, out id))
+            if (!int.TryParse(idString, out id))
             {
                 await CTX.RespondSanitizedAsync(ctx, $"invalid event ID. {idString} is not a proper id number.");
                 return;
@@ -50,8 +49,9 @@ namespace Shimakaze
                    !ShimakazeBot.Client.CurrentApplication.Owners.ToList().Any(user => user.Id == ctx.User.Id))
                 {
                     await CTX.RespondSanitizedAsync(ctx,
-                        "You're not allowed to remove" +
-                        $" {(tEvent.dbEvent.Type == EventType.EVENT ? "events" : "reminders")} that you didn't create." +
+                        "You're not allowed to remove " +
+                        $"{(tEvent.dbEvent.Type == EventType.EVENT ? "events" : "reminders")}" +
+                        $" that you didn't create." +
                         (tEvent.dbEvent.Type == EventType.EVENT ?
                             $"\n<@{tEvent.dbEvent.UserId}> created this event." : ""),
                         false,

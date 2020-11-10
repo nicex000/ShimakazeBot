@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Timers;
 
 namespace Shimakaze
@@ -30,7 +28,7 @@ namespace Shimakaze
         public static EventInTimer MakeTimer(TimedEvent dbEvent)
         {
             double millis = (dbEvent.EventTime - DateTime.UtcNow).TotalMilliseconds;
-            if (millis > Int32.MaxValue)
+            if (millis > int.MaxValue)
             {
                 return null;
             }

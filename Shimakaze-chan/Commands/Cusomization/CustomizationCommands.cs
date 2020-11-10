@@ -1,6 +1,5 @@
 ﻿using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -76,7 +75,8 @@ namespace Shimakaze
                 var streamingGuild = ShimakazeBot.DbCtx.StreamingGuild.First(g => g.GuildId == ctx.Guild.Id);
                 streamingGuild.RoleId = roleId;
                 ShimakazeBot.DbCtx.StreamingGuild.Update(streamingGuild);
-                await CTX.RespondSanitizedAsync(ctx, $"Streaming role configuration updated with role **{role.Name}**.");
+                await CTX.RespondSanitizedAsync(ctx,
+                    $"Streaming role configuration updated with role **{role.Name}**.");
             }
             else
             {
@@ -98,7 +98,8 @@ namespace Shimakaze
                 if (string.IsNullOrWhiteSpace(newPrefix) || newPrefix == ShimakazeBot.DefaultPrefix)
                 {
                     ShimakazeBot.CustomPrefixes.Remove(ctx.Guild.Id);
-                    ShimakazeBot.DbCtx.GuildPrefix.RemoveRange(ShimakazeBot.DbCtx.GuildPrefix.Where(p => p.GuildId == ctx.Guild.Id));
+                    ShimakazeBot.DbCtx.GuildPrefix.RemoveRange(
+                        ShimakazeBot.DbCtx.GuildPrefix.Where(p => p.GuildId == ctx.Guild.Id));
                     await ShimakazeBot.DbCtx.SaveChangesAsync();
                     await CTX.RespondSanitizedAsync(ctx, $"Prefix reset to default: **{ShimakazeBot.DefaultPrefix}**");
                 }
@@ -116,12 +117,14 @@ namespace Shimakaze
             {
                 if (string.IsNullOrWhiteSpace(newPrefix))
                 {
-                    await CTX.RespondSanitizedAsync(ctx, $"Default prefix is: **{ShimakazeBot.DefaultPrefix}**\nProvide a prefix to change it.");
+                    await CTX.RespondSanitizedAsync(ctx,
+                        $"Default prefix is: **{ShimakazeBot.DefaultPrefix}**\nProvide a prefix to change it.");
                 }
                 else
                 {
                     ShimakazeBot.CustomPrefixes.Add(ctx.Guild.Id, newPrefix);
-                    await ShimakazeBot.DbCtx.GuildPrefix.AddAsync(new GuildPrefix { GuildId = ctx.Guild.Id, Prefix = newPrefix });
+                    await ShimakazeBot.DbCtx.GuildPrefix.AddAsync(
+                        new GuildPrefix { GuildId = ctx.Guild.Id, Prefix = newPrefix });
                     await ShimakazeBot.DbCtx.SaveChangesAsync();
                     await CTX.RespondSanitizedAsync(ctx, $"Prefix updated to: **{newPrefix}**");
                 }
@@ -139,7 +142,7 @@ namespace Shimakaze
 
             var textArray = text.Split(" ");
             int level;
-            if (!Int32.TryParse(textArray[0], out level))
+            if (!int.TryParse(textArray[0], out level))
             {
                 await CTX.RespondSanitizedAsync(ctx, $"{textArray[0]} is not a valid level.");
                 return;
@@ -169,7 +172,7 @@ namespace Shimakaze
         {
             var textArray = text.Split(" ");
             int level;
-            if (!Int32.TryParse(textArray[0], out level))
+            if (!int.TryParse(textArray[0], out level))
             {
                 await CTX.RespondSanitizedAsync(ctx, $"{textArray[0]} is not a valid level.");
                 return;
@@ -247,19 +250,22 @@ namespace Shimakaze
                 var guildSelfAssign = ShimakazeBot.DbCtx.GuildSelfAssign.First(p => p.GuildId == ctx.Guild.Id);
                 guildSelfAssign.RoleId = role.Id;
                 ShimakazeBot.DbCtx.GuildSelfAssign.Update(guildSelfAssign);
-                await CTX.RespondSanitizedAsync(ctx, $"Successfully updated the configuration to use role **{role.Name}**.");
+                await CTX.RespondSanitizedAsync(ctx,
+                    $"Successfully updated the configuration to use role **{role.Name}**.");
             }
             else
             {
                 ShimakazeBot.SelfAssignRoleLimit.Add(ctx.Guild.Id, role.Id);
                 await ShimakazeBot.DbCtx.GuildSelfAssign.AddAsync(
                     new GuildSelfAssign { GuildId = ctx.Guild.Id, RoleId = role.Id });
-                await CTX.RespondSanitizedAsync(ctx, $"Successfully added the configuration with role **{role.Name}**.");
+                await CTX.RespondSanitizedAsync(ctx,
+                    $"Successfully added the configuration with role **{role.Name}**.");
             }
             await ShimakazeBot.DbCtx.SaveChangesAsync();
         }
 
-        private Dictionary<ulong, bool> PrepareUserIdList(IReadOnlyList<DiscordUser> mentionedUsers, string[] textArray)
+        private Dictionary<ulong, bool> PrepareUserIdList(IReadOnlyList<DiscordUser> mentionedUsers,
+            string[] textArray)
         {
             Dictionary<ulong, bool> idList = new Dictionary<ulong, bool>();
             ulong idFromText;
@@ -282,7 +288,8 @@ namespace Shimakaze
             return idList;
         }
 
-        private async Task SetLevelsFromList(CommandContext ctx, Dictionary<ulong, bool> idList, int level, int requesterLevel)
+        private async Task SetLevelsFromList(CommandContext ctx, Dictionary<ulong, bool> idList, int level,
+            int requesterLevel)
         {
             List<ulong> failedIDs = new List<ulong>();
             bool isGlobal = requesterLevel == (int)ShimaConsts.UserPermissionLevel.SHIMA_TEAM;
@@ -301,7 +308,7 @@ namespace Shimakaze
             string response = $"Successfully assigned level to {idList.Count() - failedIDs.Count()} IDs";
             if (failedIDs.Count() > 0)
             {
-                response += $"\nFailed to assign level to: {String.Join(", ", failedIDs)}";
+                response += $"\nFailed to assign level to: {string.Join(", ", failedIDs)}";
             }
 
             await CTX.RespondSanitizedAsync(ctx, response);

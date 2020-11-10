@@ -1,6 +1,5 @@
 using System;
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
 using System.Collections.Generic;

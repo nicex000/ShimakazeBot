@@ -20,7 +20,8 @@ namespace Shimakaze.Logger
         public bool IsEnabled(LogLevel logLevel)
             => true;
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
+            Func<TState, Exception, string> formatter)
         {
             foreach (var logger in Loggers)
                 logger.Log(logLevel, eventId, state, exception, formatter);

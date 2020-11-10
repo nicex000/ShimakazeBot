@@ -21,7 +21,8 @@ namespace Shimakaze.Logger
                 throw new InvalidOperationException("This logger factory is already disposed.");
 
             if (categoryName != typeof(BaseDiscordClient).FullName)
-                throw new ArgumentException($"This factory can only provide instances of loggers for {typeof(BaseDiscordClient).FullName}.", nameof(categoryName));
+                throw new ArgumentException("This factory can only provide instances of loggers for " +
+                    $"{typeof(BaseDiscordClient).FullName}.", nameof(categoryName));
 
             return new CompositeShimaLogger(Providers);
         }

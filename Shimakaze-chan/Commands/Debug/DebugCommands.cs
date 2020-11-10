@@ -13,8 +13,10 @@ namespace Shimakaze
         public async Task GetChannelInfo(CommandContext ctx)
         {
             await CTX.RespondSanitizedAsync(ctx, $"Channel id: {ctx.Channel.Id}\n" + 
-                                   $"Server manage messages perms: {(ctx.Member.Guild.Permissions & Permissions.ManageMessages) != 0}\n" +
-                                   $"Channel manage messages perms: {(ctx.Channel.PermissionsFor(ctx.Member) & Permissions.ManageMessages) != 0}");
+                $"Server manage messages perms:" +
+                $"{(ctx.Member.Guild.Permissions & Permissions.ManageMessages) != 0}\n" +
+                $"Channel manage messages perms:" +
+                $"{(ctx.Channel.PermissionsFor(ctx.Member) & Permissions.ManageMessages) != 0}");
         }
 
         [Command("debug")]
@@ -85,10 +87,12 @@ namespace Shimakaze
                             "**not playing**") + "\n";
 
                         responseString += "        - position: " +
-                            ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).CurrentState.PlaybackPosition.ToString() + "\n";
+                            ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).CurrentState.PlaybackPosition.ToString() +
+                            "\n";
 
                         responseString += "        - last update: " +
-                            ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).CurrentState.LastUpdate.ToString() + "\n";
+                            ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).CurrentState.LastUpdate.ToString() +
+                            "\n";
 
 
                     }

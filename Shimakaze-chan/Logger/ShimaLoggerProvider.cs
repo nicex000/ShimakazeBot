@@ -16,7 +16,8 @@ namespace Shimakaze.Logger
         : this()
         { }
 
-        internal ShimaLoggerProvider(LogLevel minLevel = LogLevel.Information, string timestampFormat = "yyyy-MM-dd HH:mm:ss zzz")
+        internal ShimaLoggerProvider(LogLevel minLevel = LogLevel.Information,
+            string timestampFormat = "yyyy-MM-dd HH:mm:ss zzz")
         {
             MinimumLevel = minLevel;
             TimestampFormat = timestampFormat;
@@ -28,7 +29,8 @@ namespace Shimakaze.Logger
                 throw new InvalidOperationException("This logger provider is already disposed.");
 
             if (categoryName != typeof(BaseDiscordClient).FullName)
-                throw new ArgumentException($"This provider can only provide instances of loggers for {typeof(BaseDiscordClient).FullName}.", nameof(categoryName));
+                throw new ArgumentException("This provider can only provide instances of loggers for " +
+                    $"{typeof(BaseDiscordClient).FullName}.", nameof(categoryName));
 
             return new ShimaLogger(MinimumLevel, TimestampFormat);
         }
