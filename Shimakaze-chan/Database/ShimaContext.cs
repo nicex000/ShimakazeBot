@@ -10,6 +10,8 @@ namespace Shimakaze
         public DbSet<GuildWarn> GuildWarn { get; set; }
         public DbSet<StreamingGuild> StreamingGuild { get; set; }
         public DbSet<UserPermissionLevel> UserPermissionLevel { get; set; }
+        public DbSet<ShimaGeneric> ShimaGeneric { get; set; }
+        public DbSet<TimedEvent> TimedEvents { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

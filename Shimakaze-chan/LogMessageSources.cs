@@ -10,5 +10,6 @@ namespace Shimakaze
         public const string LAUNCHTIME_EVENT = "Launchtime message";
         public const string PLAYLIST_NEXT_EVENT = "Playlist next event"; 
         public const string COMMAND_EXECUTION_EVENT = "User command";
+        public const string TIMER_EVENT_EVENT = "Timer event";
     }
 }

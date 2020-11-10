@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
@@ -30,6 +30,12 @@ namespace Shimakaze
         public const int MaxSongLoopCount = 100;
         public const int MaxMessageHistoryLoadCount = 500;
         public static readonly DateTime applicationStartTime = DateTime.Now;
+
+        public const string DbPressFKey = "PressF";
+
+        public const string DateFormat = "d-M-y";
+        public const string TimeFormat = "H:m:s";
+        
     }
 
     public static class ShimakazeBot
@@ -42,9 +48,13 @@ namespace Shimakaze
         public static Dictionary<ulong, ulong> SelfAssignRoleLimit = new Dictionary<ulong, ulong>();
         public static Dictionary<ulong, LevelListContainer> UserLevelList = new Dictionary<ulong, LevelListContainer>();
         public static string DefaultPrefix = "!";
-        
+
+        public static Events events = new Events();
+
         public static LavalinkNodeConnection lvn;
         public static Dictionary<DiscordGuild, GuildPlayer> playlists = new Dictionary<DiscordGuild, GuildPlayer>();
+
+        public static int DailyFCount = 0;
 
         public static List<ulong> guildDebugMode = new List<ulong>();
         public static bool shouldSendToDebugRoom = true;

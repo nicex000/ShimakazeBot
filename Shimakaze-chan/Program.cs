@@ -79,14 +79,15 @@ namespace Shimakaze
             CommandsNextExtension commandsNextExtension = ShimakazeBot.Client.UseCommandsNext(commandConfig);
             commandsNextExtension.RegisterCommands<DebugCommands>();
             commandsNextExtension.RegisterCommands<InfoCommands>();
+            commandsNextExtension.RegisterCommands<GeneralCommands>();
             commandsNextExtension.RegisterCommands<VoiceCommands>();
             commandsNextExtension.RegisterCommands<CustomizationCommands>();
             commandsNextExtension.RegisterCommands<ManagementCommands>();
+            commandsNextExtension.RegisterCommands<EventCommands>();
 
             ShimakazeBot.Client.UseLavalink();
-
-            Events events = new Events();
-            events.LoadEvents();
+           
+            ShimakazeBot.events.LoadEvents();
 
             await ShimakazeBot.Client.ConnectAsync();
             await Task.Delay(-1);
