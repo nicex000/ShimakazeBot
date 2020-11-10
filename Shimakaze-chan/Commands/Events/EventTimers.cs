@@ -10,7 +10,6 @@ using System.Timers;
 
 namespace Shimakaze
 {
-   
     class EventTimers
     {
         Timer dailyFTimer;
@@ -108,8 +107,8 @@ namespace Shimakaze
         private void ResetDailyF(object sender, ElapsedEventArgs e)
         {
             ShimakazeBot.DailyFCount = 0;
+            //keeping this for now
             ShimakazeBot.SendToDebugRoom($"reset - {ShimakazeBot.DailyFCount}");
-            
         }
 
         private void SetEventTimers()
