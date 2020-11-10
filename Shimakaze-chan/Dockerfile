@@ -4,6 +4,6 @@ WORKDIR /root
 
 COPY * Shima/
 
-WORKDIR Shima
+WORKDIR /root/Shima
 
 CMD ["dotnet", "Shimakaze-chan.dll"]

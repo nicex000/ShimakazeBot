@@ -15,7 +15,7 @@
   },
 
   "database": {
-    "host": "127.0.0.1",
+    "host": "db",
     "port": 5432,
     "name": "Insert your database name here",
     "username": "Insert your username here",
@@ -23,7 +23,7 @@
   },
 
   "lavalink": {
-    "host": "localhost",
+    "host": "lava",
     "port": 2333,
     "password": "Insert your password here"
   },

@@ -2,7 +2,6 @@
 services:
   shima:
     build: .
-    network_mode: "host"
     depends_on:
       - db
       - lava
@@ -10,8 +9,8 @@ services:
     image: fredboat/lavalink:master
     volumes:
       - ${PWD}/application.yml:/opt/Lavalink/application.yml
-    ports:
-      - "2333:2333"
+    expose:
+      - "2333"
   db:
     image: postgres:alpine
     restart: always
@@ -19,5 +18,5 @@ services:
       - ${HOME}/Shimakaze-db:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=password
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
