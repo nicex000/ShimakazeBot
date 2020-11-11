@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Shimakaze
@@ -18,7 +19,7 @@ namespace Shimakaze
         [Command("join")]
         [Aliases("j", "s", "join-voice")]
         [Description("Joins the voice channel you\'re in.")]
-        public async Task Join(CommandContext ctx)
+        public async Task Join(CommandContext ctx, bool reconnect = false)
         {
             DebugString debugResponse = new DebugString();
 
@@ -41,7 +42,7 @@ namespace Shimakaze
             if (ShimakazeBot.lvn == null)
                 try
                 {
-                    ShimakazeBot.lvn = await lv.ConnectAsync(new LavalinkConfiguration
+                   var c = await lv.ConnectAsync(new LavalinkConfiguration
                     {
                         Password = ShimakazeBot.Config.lavalink.password,
                         SocketEndpoint = new ConnectionEndpoint(
@@ -50,9 +51,22 @@ namespace Shimakaze
                         RestEndpoint = new ConnectionEndpoint(
                             ShimakazeBot.Config.lavalink.host,
                             ShimakazeBot.Config.lavalink.port),
-
-                    }).ConfigureAwait(false);
-
+                        SocketAutoReconnect = false,
+                        ResumeTimeout = 1
+                    });
+                    if (ShimakazeBot.lvn != null && !reconnect)
+                    {
+                        ShimakazeBot.lvn.ConnectedGuilds.ToList().ForEach(async g =>
+                        {
+                            await ForceLeave(g.Value.Guild);
+                        });
+                        ShimakazeBot.lvn.Disconnected -= LavalinkDisconnected;
+                        ShimakazeBot.lvn.LavalinkSocketErrored -= LavalinkErrored;
+                        ShimakazeBot.lvn = null;
+                        await Join(ctx, true);
+                        return;
+                    }
+                    ShimakazeBot.lvn = c;
                     ShimakazeBot.lvn.Disconnected += LavalinkDisconnected;
                     ShimakazeBot.lvn.LavalinkSocketErrored += LavalinkErrored;
                 }
@@ -135,8 +149,10 @@ namespace Shimakaze
             ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).PlaybackFinished += PlayNextTrack;
             ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).DiscordWebSocketClosed += DiscordSocketClosed;
 
-
-            await CTX.RespondSanitizedAsync(ctx, debugResponse + "Joined");
+            if (!string.IsNullOrWhiteSpace(debugResponse.ToString()) || !reconnect)
+            {
+                await CTX.RespondSanitizedAsync(ctx, debugResponse + "Joined");
+            }
         }
 
         [Command("leave")]
@@ -516,7 +532,7 @@ namespace Shimakaze
             }
         }
 
-        private Task PlayNextTrack(LavalinkGuildConnection lvc, TrackFinishEventArgs e)
+        private async Task PlayNextTrack(LavalinkGuildConnection lvc, TrackFinishEventArgs e)
         {
             if (e.Reason == TrackEndReason.Cleanup)
             {
@@ -531,16 +547,16 @@ namespace Shimakaze
 
                 if (ShimakazeBot.playlists[e.Player.Guild].songRequests.Count > 0)
                 {
-                    ShimakazeBot.playlists[e.Player.Guild].songRequests[0].requestedChannel.SendMessageAsync(
+                    await ShimakazeBot.playlists[e.Player.Guild].songRequests[0].requestedChannel.SendMessageAsync(
                         ShimakazeBot.playlists[e.Player.Guild].songRequests[0].requestMember.Mention +
                         "Lavalink failed... Shima will leave the voice channel. " +
                         "Don't worry your playlist has been saved. You can make her rejoin." +
                         (ShimakazeBot.shouldSendToDebugRoom ? " The devs have been notified." : ""));
-                    ForceLeave(e.Player.Guild);
+                    await ForceLeave(e.Player.Guild);
                 }
 
 
-                return Task.CompletedTask;
+                return;
             }
             if (e.Reason == TrackEndReason.LoadFailed)
             {
@@ -551,20 +567,20 @@ namespace Shimakaze
             }
 
             if (e.Reason == TrackEndReason.Replaced)
-            { 
-                return Task.CompletedTask;
+            {
+                return;
             }
 
             if (ShimakazeBot.playlists[e.Player.Guild].songRequests.Count <= 0)
-            { 
-                return Task.CompletedTask;
+            {
+                return;
             }
 
             if (ShimakazeBot.playlists[e.Player.Guild].loopCount > 0)
             {
                 ShimakazeBot.playlists[e.Player.Guild].loopCount--;
-                e.Player.PlayAsync(e.Track);
-                return Task.CompletedTask;
+                await e.Player.PlayAsync(e.Track);
+                return;
             }
 
             ShimakazeBot.playlists[e.Player.Guild].songRequests.RemoveAt(0);
@@ -576,7 +592,7 @@ namespace Shimakaze
 
             if (ShimakazeBot.playlists[e.Player.Guild].songRequests.Count > 0)
             {
-                e.Player.PlayAsync(ShimakazeBot.playlists[e.Player.Guild].songRequests.First().track);
+                await e.Player.PlayAsync(ShimakazeBot.playlists[e.Player.Guild].songRequests.First().track);
 
                 if (ShimakazeBot.CheckDebugMode(e.Player.Guild.Id))
                 {
@@ -588,10 +604,10 @@ namespace Shimakaze
             }
 
 
-            return Task.CompletedTask;
+            return;
         }
 
-        private async void ForceLeave(DiscordGuild guild)
+        private async Task ForceLeave(DiscordGuild guild)
         {
             var lvc = ShimakazeBot.lvn.GetGuildConnection(guild);
             lvc.PlaybackFinished -= PlayNextTrack;
@@ -623,27 +639,31 @@ namespace Shimakaze
 
         private Task LavalinkDisconnected(LavalinkNodeConnection lvn, NodeDisconnectedEventArgs e)
         {
-            ShimakazeBot.SendToDebugRoom("Lavalink disconnected.");
+            ShimakazeBot.SendToDebugRoom("Lavalink died.");
 
-            ShimakazeBot.lvn.LavalinkSocketErrored -= LavalinkErrored;
-            ShimakazeBot.lvn.Disconnected -= LavalinkDisconnected;
-            ShimakazeBot.lvn = null;
+           // ShimakazeBot.lvn.LavalinkSocketErrored -= LavalinkErrored;
+            //ShimakazeBot.lvn.Disconnected -= LavalinkDisconnected;
+            //ShimakazeBot.lvn = null;
             return Task.CompletedTask;
         }
 
         private Task LavalinkErrored(LavalinkNodeConnection lvn, DSharpPlus.EventArgs.SocketErrorEventArgs e)
         {
-            ShimakazeBot.SendToDebugRoom("<@155038222794227712> <@122069680499195904>" +
-                $" Lavalink died:\n{e.Exception?.Message}");
-
-            ShimakazeBot.lvn.LavalinkSocketErrored -= LavalinkErrored;
-            ShimakazeBot.lvn.Disconnected -= LavalinkDisconnected;
-            ShimakazeBot.lvn = null;
+            if (e.Exception.Message == 
+                "An attempt was made to transition a task to a final state when it had already completed.")
+            {
+                return Task.CompletedTask;
+            }
+            ShimakazeBot.SendToDebugRoom($" Lavalink error:\n{e.Exception?.Message}");
             return Task.CompletedTask;
         }
 
         private Task DiscordSocketClosed(LavalinkGuildConnection lvc, WebSocketCloseEventArgs e)
         {
+            if (e.Code == 4014)
+            {
+                return Task.CompletedTask;
+            }
             string str = $"Discord socket closed:" +
                 $"\n - Code: {e.Code}" +
                 $"\n - Reason: {e.Reason}" +
