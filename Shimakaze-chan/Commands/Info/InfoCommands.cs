@@ -13,7 +13,7 @@ namespace Shimakaze
     class InfoCommands : Commands
     {
         [Command("info")]
-        [Description("Quick tooltip regarding the purpose of this bot.")]
+        [Description("I'll tell you some information about myself.")]
         public async Task DisplayInfo(CommandContext ctx)
         {
             var uptime = (DateTime.Now - ShimaConsts.applicationStartTime);
@@ -21,7 +21,7 @@ namespace Shimakaze
                 .WithAuthor($"Shimakaze-chan", "", $"{ctx.Client.CurrentUser.AvatarUrl}")
                 .WithColor(new DiscordColor("#3498db"))
                 .WithTitle($"Running on ShimaEngine version {ShimaConsts.Version}")
-                .WithUrl($"https://github.com/nicex000/ShimaTempVoice")
+                .WithUrl($"https://github.com/nicex000/ShimakazeBot")
                 .WithTimestamp(DateTime.Now)
                 .AddField($"Servers connected", $"```{ctx.Client.Guilds.Count}```", true)
                 .AddField($"Users known", $"```{ctx.Client.Guilds.Sum(guild => guild.Value.MemberCount)}```", true)
@@ -35,14 +35,7 @@ namespace Shimakaze
                             $"{uptime.Hours} {(uptime.Hours is 1 ? "hour, " : "hours, ")}" +
                             $"{uptime.Minutes} {(uptime.Minutes is 1 ? "minute, " : "minutes, ")}" +
                             $"{uptime.Hours} {(uptime.Seconds is 1 ? "second." : "seconds.")}");
-            await CTX.RespondSanitizedAsync(ctx, "This bot serves as a temporary hotfix compliment to the original " +
-                                                 "Shimakaze's broken voicechat functions." +
-                                                 " We will notify You when we're done with rewriting mainline " +
-                                                 "Shimakaze and bring all of her functionality back up. At least " +
-                                                 "the parts that were actively used, we will leave out some useless " +
-                                                 "shit like cleverbot." +
-                                                 $"\nRunning ShimaEngine v.{ShimaConsts.Version}",
-                false, botInfo.Build());
+            await CTX.RespondSanitizedAsync(ctx, null, false, botInfo.Build());
         }
 
         [Command("server-info")]
