@@ -29,6 +29,13 @@ namespace Shimakaze.Logger
             if (!IsEnabled(logLevel))
                 return;
 
+            if (eventId.Id == 105)
+            {
+                var message = formatter(state, exception);
+                if (message.StartsWith("Unknown event: INTEGRATION_UPDATE"))
+                    return;
+            }
+
             lock (_lock)
             {
                 var ename = eventId.Name;
