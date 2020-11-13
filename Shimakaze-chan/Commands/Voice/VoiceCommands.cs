@@ -658,19 +658,38 @@ namespace Shimakaze
             return Task.CompletedTask;
         }
 
-        private Task DiscordSocketClosed(LavalinkGuildConnection lvc, WebSocketCloseEventArgs e)
+        private async Task DiscordSocketClosed(LavalinkGuildConnection lvc, WebSocketCloseEventArgs e)
         {
             if (e.Code == 4014)
             {
-                return Task.CompletedTask;
+                return;
             }
+            if (e.Code == 1001 || e.Code == 1006 || e.Code == 4000)
+            {
+                var track = lvc.CurrentState?.CurrentTrack;
+                var time = lvc.CurrentState?.PlaybackPosition;
+                var ch = lvc.Channel;
+                await lvc.DisconnectAsync();
+                var newLvc = await ShimakazeBot.lvn.ConnectAsync(ch);
+                if (track != null)
+                {
+                    await newLvc.PlayAsync(track);
+                    if (time != null)
+                    {
+                        await newLvc.SeekAsync(time.Value);
+                    }
+                }
+                return;
+            }
+
             string str = $"Discord socket closed:" +
                 $"\n - Code: {e.Code}" +
                 $"\n - Reason: {e.Reason}" +
-                $"\n - Remote: {e.Remote}";
+                $"\n - Remote: {e.Remote}" +
+                $"\n - Channel: {lvc?.Channel.Name} ({lvc?.Guild.Name})";
             
             ShimakazeBot.SendToDebugRoom(str);
-            return Task.CompletedTask;
+            return;
         }
     }
 }
