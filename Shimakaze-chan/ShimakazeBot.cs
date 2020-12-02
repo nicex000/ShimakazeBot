@@ -33,6 +33,7 @@ namespace Shimakaze
         public const string DbPressFKey = "PressF";
         public const ulong GoodMorningEmojiId = 771418872804278303;
         public const ulong GoodNightEmojiId = 771418873239961630;
+        public const string VoteSkipEmote = "next_track";
         
         public const string DateFormat = "d-M-y";
         public const string TimeFormat = "H:m:s";
@@ -53,6 +54,7 @@ namespace Shimakaze
 
         public static LavalinkNodeConnection lvn;
         public static Dictionary<DiscordGuild, GuildPlayer> playlists = new Dictionary<DiscordGuild, GuildPlayer>();
+        public static string SpotifyToken;
 
         public static int DailyFCount = 0;
 

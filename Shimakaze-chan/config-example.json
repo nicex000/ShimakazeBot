@@ -35,6 +35,8 @@
   },
 
   "apiKeys": {
-    "imgurClientId": "Insert your imgur clientID"
+    "imgurClientId": "Insert your imgur clientID",
+    "spotifyClientId": "Insert your spotify clientID",
+    "spotifyClientSecret": "Insert your spotify client secret"
   }
 }

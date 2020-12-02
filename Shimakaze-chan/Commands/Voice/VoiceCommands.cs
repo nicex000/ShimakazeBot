@@ -5,11 +5,13 @@ using DSharpPlus.Lavalink;
 using DSharpPlus.Lavalink.EventArgs;
 using DSharpPlus.Net;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Shimakaze
@@ -42,7 +44,7 @@ namespace Shimakaze
             if (ShimakazeBot.lvn == null)
                 try
                 {
-                   var c = await lv.ConnectAsync(new LavalinkConfiguration
+                    var c = await lv.ConnectAsync(new LavalinkConfiguration
                     {
                         Password = ShimakazeBot.Config.lavalink.password,
                         SocketEndpoint = new ConnectionEndpoint(
@@ -63,12 +65,14 @@ namespace Shimakaze
                         ShimakazeBot.lvn.Disconnected -= LavalinkDisconnected;
                         ShimakazeBot.lvn.LavalinkSocketErrored -= LavalinkErrored;
                         ShimakazeBot.lvn = null;
+                        ShimakazeBot.Client.MessageReactionAdded -= VoteSkipUpdate;
                         await Join(ctx, true);
                         return;
                     }
                     ShimakazeBot.lvn = c;
                     ShimakazeBot.lvn.Disconnected += LavalinkDisconnected;
                     ShimakazeBot.lvn.LavalinkSocketErrored += LavalinkErrored;
+                    ShimakazeBot.Client.MessageReactionAdded += VoteSkipUpdate;
                 }
                 catch (Exception e)
                 {
@@ -106,7 +110,7 @@ namespace Shimakaze
                     await CTX.RespondSanitizedAsync(ctx, "attempting connectAsync to " + chn.Name);
                 }
                 await ShimakazeBot.lvn.ConnectAsync(chn).ConfigureAwait(false);
-                debugResponse.AddWithDebug("Connection status after: " 
+                debugResponse.AddWithDebug("Connection status after: "
                     + (ShimakazeBot.lvn.GetGuildConnection(ctx.Guild) != null).ToString(), ctx);
                 if (ShimakazeBot.lvn.GetGuildConnection(ctx.Guild) != null)
                 {
@@ -149,7 +153,8 @@ namespace Shimakaze
             ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).PlaybackFinished += PlayNextTrack;
             ShimakazeBot.lvn.GetGuildConnection(ctx.Guild).DiscordWebSocketClosed += DiscordSocketClosed;
 
-            if (!string.IsNullOrWhiteSpace(debugResponse.ToString()) || !reconnect)
+            if (!string.IsNullOrWhiteSpace(debugResponse.ToString()) ||
+                (!reconnect && !ctx.Message.Content.Substring(ctx.Prefix.Length).StartsWith("s")))
             {
                 await CTX.RespondSanitizedAsync(ctx, debugResponse + "Joined");
             }
@@ -255,7 +260,7 @@ namespace Shimakaze
                         if (i == 0)
                         {
                             msg += lvc == null ? "Starting with " :
-                                (ShimakazeBot.playlists[ctx.Guild].isPaused ? 
+                                (ShimakazeBot.playlists[ctx.Guild].isPaused ?
                                 "***PAUSED*** " : "Now playing ");
                         }
                         else if (i > 10)
@@ -323,9 +328,9 @@ namespace Shimakaze
             }
 
             ShimakazeBot.playlists[ctx.Guild].loopCount = 0;
-            ShimakazeBot.playlists[ctx.Guild].songRequests = new List<SongRequest> 
+            ShimakazeBot.playlists[ctx.Guild].songRequests = new List<SongRequest>
             {
-                ShimakazeBot.playlists[ctx.Guild].songRequests[0] 
+                ShimakazeBot.playlists[ctx.Guild].songRequests[0]
             };
             await CTX.RespondSanitizedAsync(ctx, "Playlist cleared.");
         }
@@ -354,17 +359,32 @@ namespace Shimakaze
 
             var path = Path.Combine(Directory.GetCurrentDirectory(), songName);
 
-            if (songName.StartsWith("local"))
+            if (songName.StartsWith("http"))
+            {
+                if (songName.StartsWith("https://open.spotify"))
+                {
+                    lavalinkLoadResult = await GetSpotifyTracks(ctx, songName);
+                }
+                else
+                {
+                    lavalinkLoadResult = await ShimakazeBot.lvn.Rest.GetTracksAsync(new Uri(songName));
+                }
+            }
+            else if (songName.StartsWith("local"))
             {
                 await CTX.RespondSanitizedAsync(ctx, songName.Substring(songName.IndexOf("local ") + 6));
+                lavalinkLoadResult = await ShimakazeBot.lvn.Rest.GetTracksAsync(
+                    new FileInfo(songName.Substring(songName.IndexOf("local ") + 6)));
+            }
+            else
+            {
+                lavalinkLoadResult = await ShimakazeBot.lvn.Rest.GetTracksAsync(songName);
             }
 
-            lavalinkLoadResult = songName.StartsWith("http")
-                ? await ShimakazeBot.lvn.Rest.GetTracksAsync(new Uri(songName))
-                : songName.StartsWith("local") ?
-                    await ShimakazeBot.lvn.Rest.GetTracksAsync(
-                        new FileInfo(songName.Substring(songName.IndexOf("local ")+6))) :
-                    await ShimakazeBot.lvn.Rest.GetTracksAsync(songName);
+            if (lavalinkLoadResult == null)
+            {
+                return;
+            }
 
             switch (lavalinkLoadResult.LoadResultType)
             {
@@ -375,7 +395,7 @@ namespace Shimakaze
                         ctx.Member.DisplayName, ctx.Member, ctx.Channel, track));
                     break;
                 case LavalinkLoadResultType.PlaylistLoaded:
-                    ShimakazeBot.playlists[ctx.Guild].songRequests.AddRange(lavalinkLoadResult.Tracks.Select(t => 
+                    ShimakazeBot.playlists[ctx.Guild].songRequests.AddRange(lavalinkLoadResult.Tracks.Select(t =>
                     new SongRequest(ctx.Member.DisplayName, ctx.Member, ctx.Channel, t)));
                     break;
                 case LavalinkLoadResultType.NoMatches:
@@ -428,25 +448,64 @@ namespace Shimakaze
                 return;
             }
 
-            string title = ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title;
-            ShimakazeBot.playlists[ctx.Guild].songRequests.RemoveAt(0);
-            bool wasLooping = false;
-            if (ShimakazeBot.playlists[ctx.Guild].loopCount > 0)
+            if (lavaConnection.Channel.Users.Count() > 3 &&
+                ctx.User.Id != ShimakazeBot.playlists[ctx.Guild].songRequests[0].requestMember.Id &&
+                !ShimakazeBot.Client.CurrentApplication.Owners.Contains(ctx.User))
             {
-                wasLooping = true;
-                ShimakazeBot.playlists[ctx.Guild].loopCount = 0;
+                await CTX.RespondSanitizedAsync(ctx, "You can only skip songs you requested, use voteskip instead");
+                return;
             }
 
-            if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count > 0)
+            await SkipSong(ctx.Guild, ctx.Channel, lavaConnection);
+        }
+
+        [Command("voteskip")]
+        [Description("Skips the current song if the majority votes so")]
+        [Aliases("vskip")]
+        public async Task VoteSkip(CommandContext ctx)
+        {
+            var lavaConnection = ShimakazeBot.lvn?.GetGuildConnection(ctx.Guild);
+            if (!await CheckVoiceAndChannel(ctx, lavaConnection))
             {
-                await lavaConnection.PlayAsync(ShimakazeBot.playlists[ctx.Guild].songRequests.First().track);
-                await CTX.RespondSanitizedAsync(ctx, $"Skipped *{title}*{(wasLooping ? " and stopped loop" : "")}.");
+                return;
             }
-            else
+
+            if (ShimakazeBot.playlists[ctx.Guild].songRequests.Count == 0)
             {
-                await lavaConnection.StopAsync();
-                await CTX.RespondSanitizedAsync(ctx, $"Playlist ended with skip. (Skipped *{title}*" +
-                    $"{(wasLooping ? " and stopped loop" : "")})");
+                await CTX.RespondSanitizedAsync(ctx, "Playlist is empty.");
+                return;
+            }
+
+            if (lavaConnection.Channel.Users.Count() <= 3)
+            {
+                ShimakazeBot.playlists[ctx.Guild].voteSkip = new VoteSkip(ctx.Message, ctx.Member);
+                await SkipSong(ctx.Guild, ctx.Channel, lavaConnection, true);
+                return;
+            }
+            if (ShimakazeBot.playlists[ctx.Guild].voteSkip != null)
+            {
+                await CTX.RespondSanitizedAsync(ctx, "Vote skip already requested: " +
+                    ShimakazeBot.playlists[ctx.Guild].voteSkip.message.JumpLink);
+                return;
+            }
+
+            var reactionEmote = DiscordEmoji.FromName(ShimakazeBot.Client, $":{ShimaConsts.VoteSkipEmote}:");
+
+            ShimakazeBot.playlists[ctx.Guild].voteSkip = new VoteSkip(
+                await CTX.RespondSanitizedAsync(ctx,
+                    $"{ctx.Member.Mention} requested a voteskip on" +
+                    $" **{ShimakazeBot.playlists[ctx.Guild].songRequests[0].track.Title}**" +
+                    $"\nReact with {reactionEmote} to vote.",
+                    false, null, new List<IMention> { }),
+                ctx.Member
+                );
+            try
+            {
+                await ShimakazeBot.playlists[ctx.Guild].voteSkip.message.CreateReactionAsync(reactionEmote);
+            }
+            catch (Exception e)
+            {
+                await CTX.RespondSanitizedAsync(ctx, e.Message);
             }
         }
 
@@ -532,6 +591,83 @@ namespace Shimakaze
             }
         }
 
+        private async Task<LavalinkLoadResult> GetSpotifyTracks(CommandContext ctx, string spotifyURI)
+        {
+            var tracks = new List<string>();
+            spotifyURI = spotifyURI.Replace("https://open.spotify.com/", "");
+            var type = spotifyURI.Substring(0, spotifyURI.IndexOf("/"));
+            var id = spotifyURI.Substring(type.Length + 1);
+            bool isPlaylist = type is "playlist";
+
+
+            if (!isPlaylist && type != "track")
+            {
+                await CTX.RespondSanitizedAsync(ctx, "Use a spotify playlist or track URL");
+                return null;
+            }
+            if (string.IsNullOrWhiteSpace(ShimakazeBot.SpotifyToken))
+            {
+                var tokenResponse = await ShimaHttpClient.HttpPost("https://accounts.spotify.com/api/token",
+                    new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes(
+                        $"{ShimakazeBot.Config.apiKeys.spotifyClientId}:" +
+                        $"{ShimakazeBot.Config.apiKeys.spotifyClientSecret}"))));
+                if (tokenResponse == null)
+                {
+                    await CTX.RespondSanitizedAsync(ctx, "Spotify authentication failed.");
+                    return null;
+                }
+                ShimakazeBot.SpotifyToken = tokenResponse["access_token"].Value<string>();
+                ShimakazeBot.events.InitializeSpotifyResetTimer(tokenResponse["expires_in"].Value<int>());
+            }
+
+            var response = await ShimaHttpClient.HttpGet($"https://api.spotify.com/v1/{type}s/{id}" +
+                (isPlaylist ? "/tracks" : ""), new AuthenticationHeaderValue("Bearer", ShimakazeBot.SpotifyToken));
+            if (response == null)
+            {
+                await CTX.RespondSanitizedAsync(ctx, "Bad response from Spotify.");
+                return null;
+            }
+
+            if (!isPlaylist)
+            {
+                tracks.Add($"{response["artists"]?.Children().ToArray()[0]["name"].Value<string>()}" +
+                    $" - {response["name"].Value<string>()}");
+            }
+            else
+            {
+                response["tracks"]?["items"]?.Children().ToList().ForEach(item =>
+                {
+                    tracks.Add($"{item["track"]?["artists"]?.Children().ToArray()[0]["name"].Value<string>()}" +
+                        $" - {item["track"]?["name"].Value<string>()}");
+                });
+            }
+
+            var result = new SpotifyLoadResult();
+            result.Tracks = new List<LavalinkTrack>();
+            bool firstLoaded = false;
+            foreach (var track in tracks)
+            {
+                var trackResult = await ShimakazeBot.lvn.Rest.GetTracksAsync(track);
+                if (trackResult.LoadResultType != LavalinkLoadResultType.NoMatches &&
+                    trackResult.LoadResultType != LavalinkLoadResultType.LoadFailed)
+                {
+                    if (!firstLoaded)
+                    {
+                        await Play(ctx, track);
+                        firstLoaded = true;
+                    }
+                    else
+                    {
+                        result.Tracks.Add(trackResult.Tracks.First());
+                    }
+                }
+            }
+            result.LoadResultType = firstLoaded ?
+                LavalinkLoadResultType.PlaylistLoaded : LavalinkLoadResultType.NoMatches;
+
+            return (LavalinkLoadResult)result;
+        }
+
         private async Task PlayNextTrack(LavalinkGuildConnection lvc, TrackFinishEventArgs e)
         {
             if (e.Reason == TrackEndReason.Cleanup)
@@ -584,6 +720,7 @@ namespace Shimakaze
             }
 
             ShimakazeBot.playlists[e.Player.Guild].songRequests.RemoveAt(0);
+            ShimakazeBot.playlists[e.Player.Guild].voteSkip = null;
             ShimakazeBot.Client.Logger.Log(LogLevel.Information,
                 LogSources.PLAYLIST_NEXT_EVENT,
                 $"{e.Reason} - " +
@@ -635,6 +772,77 @@ namespace Shimakaze
                 return false;
             }
             return true;
+        }
+
+        private async Task SkipSong(DiscordGuild guild, DiscordChannel channel,
+            LavalinkGuildConnection lvc, bool fromVoteSkip = false)
+        {
+            string title = ShimakazeBot.playlists[guild].songRequests[0].track.Title;
+            ShimakazeBot.playlists[guild].songRequests.RemoveAt(0);
+            bool wasLooping = false;
+            if (ShimakazeBot.playlists[guild].loopCount > 0)
+            {
+                wasLooping = true;
+                ShimakazeBot.playlists[guild].loopCount = 0;
+            }
+
+            if (ShimakazeBot.playlists[guild].songRequests.Count > 0)
+            {
+                await lvc.PlayAsync(ShimakazeBot.playlists[guild].songRequests.First().track);
+                await CTX.SendSanitizedMessageAsync(channel,
+                    $"Skipped *{title}*{(wasLooping ? " and stopped loop" : "")}." +
+                    (fromVoteSkip ? 
+                        $"\nSkip requested by **{ShimakazeBot.playlists[guild].voteSkip.requester.DisplayName}**" :
+                        ""));
+            }
+            else
+            {
+                await lvc.StopAsync();
+                await CTX.SendSanitizedMessageAsync(channel, $"Playlist ended with skip. (Skipped *{title}*" +
+                    $"{(wasLooping ? " and stopped loop" : "")})" +
+                    (fromVoteSkip ?
+                        $"\nSkip requested by **{ShimakazeBot.playlists[guild].voteSkip.requester.DisplayName}**" :
+                        ""));
+            }
+
+            ShimakazeBot.playlists[guild].voteSkip = null;
+        }
+
+        private async Task VoteSkipUpdate(DSharpPlus.DiscordClient client,
+            DSharpPlus.EventArgs.MessageReactionAddEventArgs messageReactionAdd)
+        {
+            var voteSkipMessage = ShimakazeBot.playlists[messageReactionAdd.Guild]?.voteSkip?.message;
+            if (voteSkipMessage == messageReactionAdd.Message)
+            {
+                var lvc = ShimakazeBot.lvn?.GetGuildConnection(messageReactionAdd.Guild);
+                
+                if (lvc != null)
+                {
+                    var reactionEmote = DiscordEmoji.FromName(ShimakazeBot.Client, $":{ShimaConsts.VoteSkipEmote}:");
+
+                    
+
+                    if (ShimakazeBot.playlists[messageReactionAdd.Guild]
+                        .voteSkip.requester.Id != messageReactionAdd.User.Id &&
+
+                        lvc.Channel.Users.FirstOrDefault(member => member.Id == messageReactionAdd.User.Id) != null &&
+
+                        messageReactionAdd.Emoji == reactionEmote)
+                    {
+                        if (messageReactionAdd.Message.Reactions.FirstOrDefault(reaction => 
+                                reaction.Emoji == reactionEmote)
+                            .Count >= Math.Ceiling(lvc.Channel.Users.Count() / 2.0))
+                        {
+                            await SkipSong(messageReactionAdd.Guild, messageReactionAdd.Channel, lvc, true);
+                        }
+                    }
+                    else
+                    {
+                        await messageReactionAdd.Message.DeleteReactionAsync(
+                            messageReactionAdd.Emoji, messageReactionAdd.User);
+                    }
+                }
+            }
         }
 
         private Task LavalinkDisconnected(LavalinkNodeConnection lvn, NodeDisconnectedEventArgs e)

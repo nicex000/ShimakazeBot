@@ -40,6 +40,11 @@ namespace Shimakaze
             return await timers.RemoveEvent(id);
         }
 
+        public void InitializeSpotifyResetTimer(int expiry)
+        {
+            timers.InitializeSpotifyReset(expiry);
+        }
+
         private Task SocketClosed(DiscordClient client, SocketCloseEventArgs e)
         {
             socketCloseTime = DateTime.Now;

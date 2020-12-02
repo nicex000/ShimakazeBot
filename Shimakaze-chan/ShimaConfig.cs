@@ -43,6 +43,8 @@ namespace Shimakaze
     public struct APIKeys
     {
         public string imgurClientId;
+        public string spotifyClientId;
+        public string spotifyClientSecret;
     }
 
     public struct ShimaConfig

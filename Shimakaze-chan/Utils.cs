@@ -233,6 +233,39 @@ namespace Shimakaze
                 return null;
             }
         }
+
+        public static async Task<JObject> HttpPost(string url, AuthenticationHeaderValue authentication = null)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return null;
+            }
+            try
+            {
+                using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, url))
+                {
+                    if (authentication != null)
+                    {
+                        requestMessage.Headers.Authorization = authentication;
+                    }
+                    requestMessage.Content = new StringContent("grant_type=client_credentials");
+                    requestMessage.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+                    var response = await Client.SendAsync(requestMessage);
+                    response.EnsureSuccessStatusCode();
+                    string objectString = await response.Content.ReadAsStringAsync();
+                    if (!objectString.StartsWith("{") && !objectString.EndsWith("}"))
+                    {
+                        objectString = $"{{\"data\":\"{objectString}\"}}";
+                    }
+                    return JObject.Parse(objectString);
+                }
+            }
+            catch (Exception e)
+            {
+                ShimakazeBot.SendToDebugRoom($"Http POST failed.\nURL: **{url}**\nError: **{e.Message}**");
+                return null;
+            }
+        }
     }
 
     public static class ThreadSafeRandom

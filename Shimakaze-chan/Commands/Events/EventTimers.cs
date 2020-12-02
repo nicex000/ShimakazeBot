@@ -13,6 +13,7 @@ namespace Shimakaze
     class EventTimers
     {
         Timer dailyFTimer;
+        Timer spotifyTokenTimer;
         List<EventInTimer> events = new List<EventInTimer>();
         public void InitializeTimers()
         {
@@ -77,6 +78,14 @@ namespace Shimakaze
             return true;
         }
 
+        public void InitializeSpotifyReset(int expiry)
+        {
+            spotifyTokenTimer = new Timer(expiry * 1000);
+            spotifyTokenTimer.Elapsed += ResetSpotifyToken;
+            spotifyTokenTimer.AutoReset = false;
+            spotifyTokenTimer.Start();
+        }
+
         private void InitializeFTimer()
         {
             DateTime now = DateTime.UtcNow;
@@ -107,8 +116,13 @@ namespace Shimakaze
         private void ResetDailyF(object sender, ElapsedEventArgs e)
         {
             ShimakazeBot.DailyFCount = 0;
-            //keeping this for now
-            ShimakazeBot.SendToDebugRoom($"reset - {ShimakazeBot.DailyFCount}");
+        }
+        
+        private void ResetSpotifyToken(object sender, ElapsedEventArgs e)
+        {
+            ShimakazeBot.SpotifyToken = null;
+            spotifyTokenTimer.Elapsed -= ResetSpotifyToken;
+            spotifyTokenTimer.Stop();
         }
 
         private void SetEventTimers()
