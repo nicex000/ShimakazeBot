@@ -35,7 +35,16 @@ namespace Shimakaze
                 mentions = new List<IMention>() { RoleMention.All, UserMention.All };
             }
 
-            return await channel.SendMessageAsync(content, isTTS, embed, mentions);
+            DiscordMessageBuilder builder = new DiscordMessageBuilder();
+            builder.WithContent(content);
+            builder.WithAllowedMentions(mentions);
+
+            if (embed != null)
+            {
+                builder.AddEmbed(embed);
+            }
+
+            return await channel.SendMessageAsync(builder);
         }
     }
     class DebugString

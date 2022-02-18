@@ -50,7 +50,8 @@ namespace Shimakaze
                         ShimakazeBot.Config.settings.liveToken,
                 TokenType = TokenType.Bot,
                 MinimumLogLevel = LogLevel.Information,
-                LoggerFactory = loggerFactory
+                LoggerFactory = loggerFactory,
+                Intents = DiscordIntents.All
             });
             
             ShimakazeBot.DbCtx = new ShimaContext();
