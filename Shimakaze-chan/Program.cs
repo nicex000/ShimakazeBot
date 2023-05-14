@@ -1,7 +1,10 @@
+using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
+using DSharpPlus.SlashCommands;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shimakaze.Logger;
@@ -13,18 +16,34 @@ namespace Shimakaze
     // Visco: Useless since we can use lavalink internal stuff
     // nice lie ^
 
-    public class Commands : BaseCommandModule
+    public class Commands : ApplicationCommandModule
     {
-        public override Task BeforeExecutionAsync(CommandContext ctx)
+        public override Task<bool> BeforeSlashExecutionAsync(InteractionContext ctx)
         {
             ShimakazeBot.Client.Logger.Log(
                 LogLevel.Information,
-                LogSources.COMMAND_EXECUTION_EVENT,
-                $"Executing {ctx.Message.Content} from {ctx.User.Username} in {ctx.Guild?.Name ?? "DM"}");
-            return Task.CompletedTask;
+                LogSources.SLASH_COMMAND_EXECUTION_EVENT,
+                $"Executing {PrintInteractionData(ctx.Interaction.Data)} from {ctx.User.Username} in {ctx.Guild?.Name ?? "DM"}");
+            return Task.FromResult(true);
+        }
+
+        public string PrintInteractionData(DiscordInteractionData ctxInteractionData)
+        {
+            string stringData = ctxInteractionData.Name;
+
+            if (ctxInteractionData.Options != null && ctxInteractionData.Options.Any())
+            {
+                stringData += " [";
+                foreach (DiscordInteractionDataOption option in ctxInteractionData.Options)
+                {
+                    stringData += $"{option.Name}={option.Value} ";
+                }
+                stringData += "]";
+            }
+            
+            return stringData;
         }
     }
-
 
     class Program
     {
@@ -63,6 +82,16 @@ namespace Shimakaze
             ShimakazeBot.FetchSelfAssignLimits();
             ShimakazeBot.FetchPermissionLevels();
 
+            SlashCommandsExtension slashCommandsExtension = ShimakazeBot.Client.UseSlashCommands();
+            slashCommandsExtension.RegisterCommands<DebugCommands>();
+            // slashCommandsExtension.RegisterCommands<InfoCommands>();
+            // slashCommandsExtension.RegisterCommands<GeneralCommands>();
+            // slashCommandsExtension.RegisterCommands<FunCommands>();
+            // slashCommandsExtension.RegisterCommands<VoiceCommands>();
+            // slashCommandsExtension.RegisterCommands<CustomizationCommands>();
+            slashCommandsExtension.RegisterCommands<ManagementCommands>();
+            // slashCommandsExtension.RegisterCommands<EventCommands>();
+
             CommandsNextConfiguration commandConfig = new CommandsNextConfiguration
             {
                 PrefixResolver = (msg) =>
@@ -82,14 +111,7 @@ namespace Shimakaze
             };
 
             CommandsNextExtension commandsNextExtension = ShimakazeBot.Client.UseCommandsNext(commandConfig);
-            commandsNextExtension.RegisterCommands<DebugCommands>();
-            commandsNextExtension.RegisterCommands<InfoCommands>();
-            commandsNextExtension.RegisterCommands<GeneralCommands>();
-            commandsNextExtension.RegisterCommands<FunCommands>();
-            commandsNextExtension.RegisterCommands<VoiceCommands>();
-            commandsNextExtension.RegisterCommands<CustomizationCommands>();
-            commandsNextExtension.RegisterCommands<ManagementCommands>();
-            commandsNextExtension.RegisterCommands<EventCommands>();
+           // commandsNextExtension.RegisterCommands<ManagementCommands>();
 
             ShimakazeBot.Client.UseLavalink();
            

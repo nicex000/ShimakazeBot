@@ -9,9 +9,68 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
+using DSharpPlus.SlashCommands;
 
 namespace Shimakaze
 {
+    // TODO remove XTX and rename SCTX to CTX once all commands have been converted
+    class SCTX
+    {
+        public static async Task RespondSanitizedAsync(
+            InteractionContext ctx, string content = null, DiscordEmbed embed = null,
+            IEnumerable<IMention> mentions = null)
+        {
+            if (string.IsNullOrWhiteSpace(content) && embed == null)
+            {
+                return;
+            }
+
+            if (mentions == null)
+            {
+                mentions = new List<IMention>() { RoleMention.All, UserMention.All };
+            }
+
+            DiscordMessageBuilder messageBuilder = new DiscordMessageBuilder();
+            messageBuilder.WithContent(content);
+            messageBuilder.WithAllowedMentions(mentions);
+
+            if (embed != null)
+            {
+                messageBuilder.AddEmbed(embed);
+            }
+
+            DiscordInteractionResponseBuilder interactionBuilder = 
+                new DiscordInteractionResponseBuilder(messageBuilder);
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, interactionBuilder);
+        }
+        public static async Task<DiscordMessage> SendSanitizedMessageAsync(
+            DiscordChannel channel, string content = null, DiscordEmbed embed = null,
+            IEnumerable<IMention> mentions = null)
+        {
+            if (string.IsNullOrWhiteSpace(content) && embed == null)
+            {
+                return null;
+            }
+
+            if (mentions == null)
+            {
+                mentions = new List<IMention>() { RoleMention.All, UserMention.All };
+            }
+
+            DiscordMessageBuilder builder = new DiscordMessageBuilder();
+            builder.WithContent(content);
+            builder.WithAllowedMentions(mentions);
+
+            if (embed != null)
+            {
+                builder.AddEmbed(embed);
+            }
+
+            return await channel.SendMessageAsync(builder);
+        }
+    }
+    
     class CTX
     {
         public static async Task<DiscordMessage> RespondSanitizedAsync(

@@ -1,13 +1,12 @@
 ﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.SlashCommands;
 using System;
 using System.Threading.Tasks;
 
 namespace Shimakaze.Attributes
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    class RequirePermissionsAttribute : CheckBaseAttribute
+    class RequirePermissionsAttribute : SlashCheckBaseAttribute
     {
         public Permissions permissions;
 
@@ -16,10 +15,10 @@ namespace Shimakaze.Attributes
             this.permissions = permissions;
         }
 
-        public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
+        public override async Task<bool> ExecuteChecksAsync(InteractionContext ctx)
         {
             CannotBeUsedInDMAttribute checkDM = new CannotBeUsedInDMAttribute();
-            if (!await checkDM.ExecuteCheckAsync(ctx, help))
+            if (!await checkDM.ExecuteChecksAsync(ctx))
             {
                 return false;
             }
@@ -36,12 +35,7 @@ namespace Shimakaze.Attributes
             {
                 return false;
             }
-            
-            if (help)
-            {
-                return true;
-            }
-            
+          
             var pBot = ctx.Channel.PermissionsFor(bot);
 
             var userSuccess = user.Id == ctx.Guild.Owner.Id ||
@@ -60,7 +54,7 @@ namespace Shimakaze.Attributes
                     $"{((pBot & permissions) ^ permissions).ToPermissionString()}";
             }
 
-            if (!string.IsNullOrWhiteSpace(failMessage)) await CTX.RespondSanitizedAsync(ctx, failMessage);
+            if (!string.IsNullOrWhiteSpace(failMessage)) await SCTX.RespondSanitizedAsync(ctx, failMessage);
             return userSuccess && botSuccess;
         }
     }

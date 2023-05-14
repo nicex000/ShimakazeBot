@@ -3,51 +3,76 @@ using DSharpPlus.CommandsNext;
 using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
+using System.Collections.Generic;
+using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 
 namespace Shimakaze
 {
     class DebugCommands : Commands
     {
-        [Command("channelinfo")]
-        [Description("Gets some debug info about user manage messages permissions for channel and server")]
-        public async Task GetChannelInfo(CommandContext ctx)
+        [SlashCommand("channelinfo", "Gets some debug info about user manage messages permissions for channel and server")]
+        public async Task GetChannelInfo(InteractionContext ctx)
         {
-            await CTX.RespondSanitizedAsync(ctx, $"Channel id: {ctx.Channel.Id}\n" + 
+            await SCTX.RespondSanitizedAsync(ctx, $"Channel id: {ctx.Channel.Id}\n" + 
                 $"Server manage messages perms:" +
                 $"{(ctx.Member.Guild.Permissions & Permissions.ManageMessages) != 0}\n" +
                 $"Channel manage messages perms:" +
                 $"{(ctx.Channel.PermissionsFor(ctx.Member) & Permissions.ManageMessages) != 0}");
         }
 
-        [Command("debug")]
+        [SlashCommand("debug", "Enables or disables debug mode")]
         [Attributes.RequireAdmin]
-        [Aliases("supadebug", "sd", "スーパーデバッグモード")]
-        public async Task DebugMode(CommandContext ctx)
+        public async Task DebugMode(InteractionContext ctx,
+            [Option("Enable", "true to enable")] bool enable = true)
         {
             bool toRemove = ShimakazeBot.guildDebugMode.Contains(ctx.Guild.Id);
-            if (toRemove)
+            if (toRemove && !enable)
             {
                 ShimakazeBot.guildDebugMode.Remove(ctx.Guild.Id);
             }
-            else ShimakazeBot.guildDebugMode.Add(ctx.Guild.Id);
+            else if (enable)
+            {
+                ShimakazeBot.guildDebugMode.Add(ctx.Guild.Id);
+            }
 
-            await CTX.RespondSanitizedAsync(ctx, "スーパーデバッグモード" + 
-                $" **{(!toRemove ? "enabled" : "disabled")}**" +
+            await SCTX.RespondSanitizedAsync(ctx, "スーパーデバッグモード" + 
+                $" **{(enable ? "enabled" : "disabled")}**" +
                 $" for {ctx.Guild.Name} ({ctx.Guild.Id})") ;
         }
-
-        [Command("debugchannel")]
-        [Attributes.RequireShimaTeam]
-        [Aliases("debugflag")]
-        public async Task DebugChannelFlag(CommandContext ctx)
+        #region Aliases
+        [SlashCommand("supadebug", "Enables or disables debug mode")]
+        [Attributes.RequireAdmin]
+        public async Task DebugMode_supadebug(InteractionContext ctx,
+            [Option("Enable", "true to enable")] bool enable = true)
         {
-            ShimakazeBot.shouldSendToDebugRoom = !ShimakazeBot.shouldSendToDebugRoom;
-            await CTX.RespondSanitizedAsync(ctx, "Shima debug channel **" +
+            await this.DebugMode(ctx, enable);
+        }
+
+        [SlashCommand("スーパーデバッグモード", "Enables or disables debug mode")]
+        [Attributes.RequireAdmin]
+        public async Task DebugMode_jp(InteractionContext ctx,
+            [Option("Enable", "true to enable")] bool enable = true)
+        {
+            await this.DebugMode(ctx, enable);
+        }
+        #endregion
+
+
+        [SlashCommand("debugchannel", "Enables or disables the debug channel")]
+        [Attributes.RequireShimaTeam]
+        //[Aliases("debugflag")]
+        public async Task SetDebugChannel(InteractionContext ctx, 
+            [Option("Enable", "true to enable")] bool enable = true)
+        {
+            ShimakazeBot.shouldSendToDebugRoom = enable;
+            await SCTX.RespondSanitizedAsync(ctx, "Shima debug channel **" +
                 $"{(ShimakazeBot.shouldSendToDebugRoom ? "enabled" : "disabled")}**");
         }
 
-        [Command("status")]
-        public async Task Status(CommandContext ctx)
+        [SlashCommand("status", "Disaplays the current status of vc related stuff (lavalink, channel, playlist)")]
+        public async Task Status(InteractionContext ctx)
         {
             string responseString = "⛺\n";
 
@@ -110,7 +135,7 @@ namespace Shimakaze
                 ShimakazeBot.playlists[ctx.Guild].songRequests.Count().ToString() :
                 "**no playlist**");
 
-            await CTX.RespondSanitizedAsync(ctx, responseString);
+            await SCTX.RespondSanitizedAsync(ctx, responseString);
         }
     }
 }

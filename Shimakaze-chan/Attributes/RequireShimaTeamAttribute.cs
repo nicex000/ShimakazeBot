@@ -1,5 +1,4 @@
-﻿using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
+﻿using DSharpPlus.SlashCommands;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,7 +6,7 @@ using System.Threading.Tasks;
 namespace Shimakaze.Attributes
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    class RequireShimaTeamAttribute : CheckBaseAttribute
+    class RequireShimaTeamAttribute : SlashCheckBaseAttribute
     {
         public string failMessage;
 
@@ -16,20 +15,15 @@ namespace Shimakaze.Attributes
             this.failMessage = failMessage;
         }
 
-        public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
+        public override async Task<bool> ExecuteChecksAsync(InteractionContext ctx)
         {
-            if (help)
-            {
-                return false;
-            }
-
-            var app = ctx.Client.CurrentApplication;
+           var app = ctx.Client.CurrentApplication;
             if (app != null)
             {
                 bool success = app.Owners.Any(x => x.Id == ctx.User.Id);
                 if (!success && !string.IsNullOrWhiteSpace(failMessage))
                 {
-                    await CTX.RespondSanitizedAsync(ctx, failMessage);
+                    await SCTX.RespondSanitizedAsync(ctx, failMessage);
                 }
 
                 return success;
