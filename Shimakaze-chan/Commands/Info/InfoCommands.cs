@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using Shimakaze.Attributes;
+using DSharpPlus.SlashCommands;
 
 namespace Shimakaze
 {
@@ -215,13 +216,12 @@ namespace Shimakaze
                 "\n You can change the prefix with **cprefix**");
         }
 
-        [Command("ping")]
-        [Description("I'll reply to you with pong!")]
-        public async Task Ping(CommandContext ctx)
+        [SlashCommand("ping", "I'll reply to you with pong!")]
+        public async Task Ping(InteractionContext ctx)
         {
-            var message = await CTX.RespondSanitizedAsync(ctx, "Pong!");
-            await message.ModifyAsync("Pong! Time taken: " +
-                $"{(message.CreationTimestamp - ctx.Message.CreationTimestamp).TotalMilliseconds}ms.");            
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Pong!"));
+            var message = await ctx.GetOriginalResponseAsync();
+            await message.ModifyAsync("Pong! Bottom text");
         }
 
         [Command("join-server")]

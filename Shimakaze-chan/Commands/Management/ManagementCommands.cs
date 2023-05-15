@@ -164,23 +164,21 @@ namespace Shimakaze
             return true;
         }
 
-         [Command("addrole")]
-         [Attributes.RequireBotPermissions(Permissions.ManageRoles, "I don't have enough permissions to do this!")]
-         [Aliases("gibrole", "assignrole")]
-         public async Task AddRole(CommandContext ctx, [RemainingText] string roleString)
-         {
-             await SetRole(ctx, roleString);
-         }
+        [SlashCommand("addrole", "):")]
+        [Attributes.RequireBotPermissions(Permissions.ManageRoles, "I don't have enough permissions to do this!")]
+        public async Task AddRole(InteractionContext ctx, [Option("role", "):")] DiscordRole role)
+        {
+            await SetRole(ctx, role);
+        }
 
-         [Command("removerole")]
-         [Attributes.RequireBotPermissions(Permissions.ManageRoles, "I don't have enough permissions to do this!")]
-         [Aliases("takerole", "unassignrole")]
-         public async Task RemoveRole(CommandContext ctx, [RemainingText] string roleString)
-         {
-             await SetRole(ctx, roleString, false);
-         }
+        [SlashCommand("removerole", "):")]
+        [Attributes.RequireBotPermissions(Permissions.ManageRoles, "I don't have enough permissions to do this!")]
+        public async Task RemoveRole(InteractionContext ctx, [Option("role", "):")] DiscordRole role)
+        {
+            await SetRole(ctx, role, false);
+        }
 
-         [Command("purge")]
+        [Command("purge")]
          [Attributes.RequirePermissions(Permissions.ManageMessages)]
          [Description("Usage: purge amount <[user]>")]
          public async Task Purge(CommandContext ctx, [RemainingText] string suffix)
@@ -411,7 +409,7 @@ namespace Shimakaze
              await ctx.Guild.LeaveAsync();
          }
 
-         private async Task SetRole(CommandContext ctx, string roleString, bool assign = true)
+         private async Task SetRole(InteractionContext ctx, DiscordRole role, bool assign = true)
          {
              int selfAssignLimit = 0;
              if (ShimakazeBot.SelfAssignRoleLimit.ContainsKey(ctx.Guild.Id))
@@ -426,7 +424,7 @@ namespace Shimakaze
                  }
                  else
                  {
-                     await CTX.RespondSanitizedAsync(ctx, "Self assignable role isn't properly set up. " +
+                     await SCTX.RespondSanitizedAsync(ctx, "Self assignable role isn't properly set up. " +
                          "Please contact an Admin to reset it in the customization command.");
                      return;
                  }
@@ -434,21 +432,18 @@ namespace Shimakaze
 
              if (selfAssignLimit == -1)
              {
-                 await CTX.RespondSanitizedAsync(ctx,
+                 await SCTX.RespondSanitizedAsync(ctx,
                      $"I am not allowed to {(assign ? "assign" : "unassign")} roles on this server. " +
                      $"Please contact an Admin to {(assign ? "add" : "remove")} your role.");
                  return;
              }
-
-             List<DiscordRole> roles = Utils.GetRolesFromString(ctx.Guild, roleString);
-             roles = roles.Concat(ctx.Message.MentionedRoles).ToList();
 
              int highestRolePos = ctx.Guild.Members[ShimakazeBot.Client.CurrentUser.Id].Roles.
                  OrderByDescending(role => role.Position).First().Position;
 
              string responseString = "";
 
-             foreach (var role in roles)
+             if (role != null)
              {
                  if (role.Position == 0 || role.Name.StartsWith("@")) //ignore
                  { }
@@ -482,8 +477,12 @@ namespace Shimakaze
                      }
                  }
              }
+             else
+            {
+                responseString += "Please provide a role.";
+            }
 
-             await CTX.RespondSanitizedAsync(ctx, responseString);
+             await SCTX.RespondSanitizedAsync(ctx, responseString);
          }
 
          private async Task ModerateUser(CommandContext ctx, string suffix, ShimaConsts.ModerationType type)
