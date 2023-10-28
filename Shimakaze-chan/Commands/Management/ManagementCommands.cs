@@ -411,14 +411,10 @@ namespace Shimakaze
 
          private async Task SetRole(InteractionContext ctx, DiscordRole role, bool assign = true)
          {
-             int selfAssignLimit = 0;
+             int selfAssignLimit = -1;
              if (ShimakazeBot.SelfAssignRoleLimit.ContainsKey(ctx.Guild.Id))
              {
-                 if (ShimakazeBot.SelfAssignRoleLimit[ctx.Guild.Id] == 0)
-                 {
-                     selfAssignLimit = -1;
-                 }
-                 else if (ctx.Guild.Roles.ContainsKey(ShimakazeBot.SelfAssignRoleLimit[ctx.Guild.Id]))
+                 if (ctx.Guild.Roles.ContainsKey(ShimakazeBot.SelfAssignRoleLimit[ctx.Guild.Id]))
                  {
                      selfAssignLimit = ctx.Guild.Roles[ShimakazeBot.SelfAssignRoleLimit[ctx.Guild.Id]].Position;
                  }

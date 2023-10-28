@@ -13,9 +13,8 @@ namespace Shimakaze
 {
     class InfoCommands : Commands
     {
-        [Command("info")]
-        [Description("I'll tell you some information about myself.")]
-        public async Task DisplayInfo(CommandContext ctx)
+        [SlashCommand("info", "I'll tell you some information about myself.")]
+        public async Task DisplayInfo(InteractionContext ctx)
         {
             var uptime = (DateTime.Now - ShimaConsts.applicationStartTime);
             var botInfo = new DiscordEmbedBuilder()
@@ -36,13 +35,12 @@ namespace Shimakaze
                             $"{uptime.Hours} {(uptime.Hours is 1 ? "hour, " : "hours, ")}" +
                             $"{uptime.Minutes} {(uptime.Minutes is 1 ? "minute, " : "minutes, ")}" +
                             $"{uptime.Hours} {(uptime.Seconds is 1 ? "second." : "seconds.")}");
-            await CTX.RespondSanitizedAsync(ctx, null, false, botInfo.Build());
+            await SCTX.RespondSanitizedAsync(ctx, null, botInfo.Build());
         }
 
-        [Command("server-info")]
+        [SlashCommand("server_info", "I'll tell you some information about the server you're currently in.")]
         [CannotBeUsedInDM]
-        [Description("I'll tell you some information about the server you're currently in.")]
-        public async Task DisplayServerInfo(CommandContext ctx)
+        public async Task DisplayServerInfo(InteractionContext ctx)
         {
             var textChannels = string.Join(", ",
                 from channel in ctx.Guild.Channels.Values
@@ -68,8 +66,8 @@ namespace Shimakaze
                 roles = "Too many to list!";
             }
             var serverInfo = new DiscordEmbedBuilder()
-                .WithAuthor($"Information requested by {ctx.Message.Author.Username}", "",
-                    $"{ctx.Message.Author.AvatarUrl}")
+                .WithAuthor($"Information requested by {ctx.Member.Username}", "",
+                    $"{ctx.Member.AvatarUrl}")
                 .WithTimestamp(DateTime.Now)
                 .WithColor(new DiscordColor("#3498db"))
                 .AddField($"Server name", $"{ctx.Guild.Name} [{ctx.Guild.Id}]")
@@ -82,12 +80,11 @@ namespace Shimakaze
                 .AddField($"Text Channels", $"```{textChannels}```")
                 .AddField($"Voice Channels", $"```{voiceChannels}```")
                 .AddField($"AFK-channel", $"```{ctx.Guild.AfkChannel.Name} [{ctx.Guild.AfkChannel.Id}]```")
-                .AddField($"Current Region", $"```{ctx.Guild.VoiceRegion.Name}```", true)
                 .AddField($"Total Roles", $"```{ctx.Guild.Roles.Count}```", true)
                 .AddField($"Roles", $"```{roles}```")
                 .WithThumbnail($"{ctx.Guild.IconUrl}");
 
-            await CTX.RespondSanitizedAsync(ctx,"", false, serverInfo.Build());
+            await SCTX.RespondSanitizedAsync(ctx, null, serverInfo.Build());
         }
 
         [Command("userinfo")]
